@@ -8,12 +8,17 @@ import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
+    @Mapping(source = "is_admin", target = "isAdmin")
     UserDto toDto(User user);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "games", ignore = true)
-    @Mapping(target = "admin", constant = "false")
+    @Mapping(target = "is_admin", constant = "false")
+    @Mapping(target = "password", ignore = true)
     User toEntity(UserRegAuthDto userRegAuthDto);
 
+    @Mapping(target = "password", ignore = true)
+    @Mapping(target = "games", ignore = true)
+    @Mapping(source = "isAdmin", target = "is_admin")
     void updateEntity(UserDto userDto, @MappingTarget User user);
 }
