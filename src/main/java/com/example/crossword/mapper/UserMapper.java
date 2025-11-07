@@ -12,7 +12,7 @@ public interface UserMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "games", ignore = true)
-    @Mapping(target = "is_admin", constant = "false")
+    @Mapping(target = "admin", constant = "false")
     User toEntity(UserRegAuthDto userRegAuthDto);
 
     void updateEntity(UserDto userDto, @MappingTarget User user);
