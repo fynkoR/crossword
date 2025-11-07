@@ -1,0 +1,509 @@
+{
+  "info": {
+    "name": "Crossword API",
+    "_postman_id": "crossword-api-collection",
+    "description": "API для приложения Кроссворды",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Регистрация пользователя",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"newuser\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/users/register",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["users", "register"]
+            }
+          }
+        },
+        {
+          "name": "Получить всех пользователей",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/users",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["users"]
+            }
+          }
+        },
+        {
+          "name": "Получить пользователя по ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/users/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["users", "1"]
+            }
+          }
+        },
+        {
+          "name": "Удалить пользователя",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/users/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["users", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dictionaries",
+      "item": [
+        {
+          "name": "Создать словарь",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Новый словарь\",\n  \"description\": \"Описание словаря\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/dictionaries",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["dictionaries"]
+            }
+          }
+        },
+        {
+          "name": "Получить все словари",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/dictionaries",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["dictionaries"]
+            }
+          }
+        },
+        {
+          "name": "Получить словарь по ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/dictionaries/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["dictionaries", "1"]
+            }
+          }
+        },
+        {
+          "name": "Обновить словарь",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 1,\n  \"title\": \"Обновленный словарь\",\n  \"description\": \"Новое описание\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/dictionaries/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["dictionaries", "1"]
+            }
+          }
+        },
+        {
+          "name": "Удалить словарь",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/dictionaries/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["dictionaries", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Words",
+      "item": [
+        {
+          "name": "Создать слово",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"word\": \"солнце\",\n  \"definition\": \"Звезда, вокруг которой вращается Земля\",\n  \"dictionaryId\": 1\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/words",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["words"]
+            }
+          }
+        },
+        {
+          "name": "Получить все слова",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/words",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["words"]
+            }
+          }
+        },
+        {
+          "name": "Получить слово по ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/words/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["words", "1"]
+            }
+          }
+        },
+        {
+          "name": "Обновить слово",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 1,\n  \"word\": \"луна\",\n  \"definition\": \"Естественный спутник Земли\",\n  \"dictionaryId\": 1\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/words/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["words", "1"]
+            }
+          }
+        },
+        {
+          "name": "Удалить слово",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/words/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["words", "1"]
+            }
+          }
+        },
+        {
+          "name": "Получить слова по словарю",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/words/dictionary/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["words", "dictionary", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Crosswords",
+      "item": [
+        {
+          "name": "Создать кроссворд",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Простой кроссворд\",\n  \"gridWidth\": 10,\n  \"gridHeight\": 10,\n  \"gridData\": \"{\\\"cells\\\":[]}\",\n  \"wordsData\": \"{\\\"words\\\":[]}\",\n  \"dictionaryId\": 1\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/crosswords",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["crosswords"]
+            }
+          }
+        },
+        {
+          "name": "Получить все кроссворды",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/crosswords",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["crosswords"]
+            }
+          }
+        },
+        {
+          "name": "Получить кроссворд по ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/crosswords/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["crosswords", "1"]
+            }
+          }
+        },
+        {
+          "name": "Получить детали кроссворда",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/crosswords/1/detail",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["crosswords", "1", "detail"]
+            }
+          }
+        },
+        {
+          "name": "Получить статистику кроссворда",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/crosswords/1/statistics",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["crosswords", "1", "statistics"]
+            }
+          }
+        },
+        {
+          "name": "Обновить кроссворд",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Обновленный кроссворд\",\n  \"gridWidth\": 15,\n  \"gridHeight\": 15,\n  \"gridData\": \"{\\\"cells\\\":[]}\",\n  \"wordsData\": \"{\\\"words\\\":[]}\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/crosswords/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["crosswords", "1"]
+            }
+          }
+        },
+        {
+          "name": "Удалить кроссворд",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/crosswords/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["crosswords", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Games",
+      "item": [
+        {
+          "name": "Создать игру",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 1,\n  \"crosswordId\": 1\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/games",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["games"]
+            }
+          }
+        },
+        {
+          "name": "Получить игру по ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/games/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["games", "1"]
+            }
+          }
+        },
+        {
+          "name": "Получить игры пользователя",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/games/user/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["games", "user", "1"]
+            }
+          }
+        },
+        {
+          "name": "Получить игры по кроссворду",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/games/crossword/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["games", "crossword", "1"]
+            }
+          }
+        },
+        {
+          "name": "Обновить игру",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 1,\n  \"hintsUsed\": 3,\n  \"gameOver\": false,\n  \"solvedWordsCount\": 7,\n  \"isPaused\": true,\n  \"userId\": 1,\n  \"crosswordId\": 1\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/games/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["games", "1"]
+            }
+          }
+        },
+        {
+          "name": "Удалить игру",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/games/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["games", "1"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+
