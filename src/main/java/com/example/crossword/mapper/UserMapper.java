@@ -14,7 +14,7 @@ public interface UserMapper {
     
     @AfterMapping
     default void setIsAdmin(User user, @MappingTarget UserDto userDto) {
-        userDto.setIsAdmin(user.is_admin());
+        userDto.setAdmin(user.is_admin());
     }
 
     @Mapping(target = "id", ignore = true)
