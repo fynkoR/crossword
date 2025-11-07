@@ -9,6 +9,7 @@ import com.example.crossword.mapper.GameMapper;
 import com.example.crossword.repository.CrosswordRepository;
 import com.example.crossword.repository.GameRepository;
 import com.example.crossword.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class GameService {
     private final GameMapper gameMapper;
     private final CrosswordJsonService crosswordJsonService;
 
+    @Autowired
     public GameService(GameRepository gameRepository,
                        UserRepository userRepository,
                        CrosswordRepository crosswordRepository,
@@ -89,7 +91,7 @@ public class GameService {
         game.setUser(user);
         game.setCrossword(crossword);
         game.setHints_used(0);
-        game.setGame_over(false);
+        game.setGameOver(false);
         game.setSolved_words_count(0);
 
         Game savedGame = gameRepository.save(game);
@@ -105,7 +107,7 @@ public class GameService {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new RuntimeException("Игра не найдена"));
 
-        if (game.isGame_over()) {
+        if (game.isGameOver()) {
             return createResult(false, "Игра уже завершена", null, true, gameMapper.toDTO(game));
         }
 
@@ -131,7 +133,7 @@ public class GameService {
             boolean gameComplete = checkIfGameComplete(game, words);
 
             if (gameComplete) {
-                game.setGame_over(true);
+                game.setGameOver(true);
                 gameRepository.save(game);
                 return createResult(true, "Поздравляем! Вы отгадали весь кроссворд!",
                         null, true, gameMapper.toDTO(game));
@@ -152,7 +154,7 @@ public class GameService {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new RuntimeException("Игра не найдена"));
 
-        if (game.isGame_over()) {
+        if (game.isGameOver()) {
             return createResult(false, "Игра уже завершена", null, true, gameMapper.toDTO(game));
         }
 
@@ -175,7 +177,7 @@ public class GameService {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new RuntimeException("Игра не найдена"));
 
-        game.setGame_over(true);
+        game.setGameOver(true);
         Game savedGame = gameRepository.save(game);
 
         return createResult(true, "Игра завершена", null, true, gameMapper.toDTO(savedGame));
@@ -245,7 +247,7 @@ public class GameService {
         // Сбрасываем прогресс
         game.setHints_used(0);
         game.setSolved_words_count(0);
-        game.setGame_over(false);
+        game.setGameOver(false);
 
         Game restartedGame = gameRepository.save(game);
 
@@ -263,21 +265,21 @@ public class GameService {
         // или создание точки сохранения
         Game savedGame = gameRepository.save(game); // JPA автоматически сохраняет изменения
 
-        return createResult(true, "Прогресс сохранен", null, game.isGame_over(), gameMapper.toDTO(savedGame));
+        return createResult(true, "Прогресс сохранен", null, game.isGameOver(), gameMapper.toDTO(savedGame));
     }
     private GameResultDto pauseGame(int gameId) {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new RuntimeException("Игра не найдена"));
 
-        if (game.isGame_over()) {
+        if (game.isGameOver()) {
             return createResult(false, "Нельзя приостановить завершенную игру", null, true, gameMapper.toDTO(game));
         }
 
         // Переключаем состояние паузы
-        game.set_paused(!game.is_paused());
+        game.setPaused(!game.isPaused());
         Game savedGame = gameRepository.save(game);
 
-        String message = game.is_paused() ? "Игра приостановлена" : "Игра возобновлена";
+        String message = game.isPaused() ? "Игра приостановлена" : "Игра возобновлена";
         return createResult(true, message, null, false, gameMapper.toDTO(savedGame));
     }
 }

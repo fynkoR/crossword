@@ -15,16 +15,16 @@ public interface GameRepository extends JpaRepository<Game, Integer> {
 
     List<Game> findByCrosswordId(int crosswordId);
 
-    @Query("SELECT g FROM Game g WHERE g.game_over = false")
+    @Query("SELECT g FROM Game g WHERE g.gameOver = false")
     List<Game> findByGame_overFalse();
 
-    @Query("SELECT g FROM Game g WHERE g.user.id = :userId AND g.game_over = :gameOver")
+    @Query("SELECT g FROM Game g WHERE g.user.id = :userId AND g.gameOver = :gameOver")
     List<Game> findByUserIdAndGame_over(@Param("userId") int userId, @Param("gameOver") boolean gameOver);
 
-    @Query("SELECT g FROM Game g WHERE g.user.id = :userId AND g.crossword.id = :crosswordId AND g.game_over = false")
+    @Query("SELECT g FROM Game g WHERE g.user.id = :userId AND g.crossword.id = :crosswordId AND g.gameOver = false")
     Optional<Game> findByUserIdAndCrosswordIdAndGame_overFalse(@Param("userId") int userId, @Param("crosswordId") int crosswordId);
 
-    @Query("SELECT CASE WHEN COUNT(g) > 0 THEN true ELSE false END FROM Game g WHERE g.user.id = :userId AND g.crossword.id = :crosswordId AND g.game_over = false")
+    @Query("SELECT CASE WHEN COUNT(g) > 0 THEN true ELSE false END FROM Game g WHERE g.user.id = :userId AND g.crossword.id = :crosswordId AND g.gameOver = false")
     boolean existsByUserIdAndCrosswordIdAndGame_overFalse(@Param("userId") int userId, @Param("crosswordId") int crosswordId);
     
     /**
@@ -35,6 +35,6 @@ public interface GameRepository extends JpaRepository<Game, Integer> {
     /**
      * Получить количество завершенных игр по кроссворду
      */
-    @Query("SELECT COUNT(g) FROM Game g WHERE g.crossword.id = :crosswordId AND g.game_over = true")
+    @Query("SELECT COUNT(g) FROM Game g WHERE g.crossword.id = :crosswordId AND g.gameOver = true")
     Long countByCrosswordIdAndGame_overTrue(@Param("crosswordId") Integer crosswordId);
 }

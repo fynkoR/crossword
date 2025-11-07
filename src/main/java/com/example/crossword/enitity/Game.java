@@ -15,9 +15,9 @@ public class Game {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private int hints_used;
-    private boolean game_over;
+    private boolean gameOver;
     private int solved_words_count;
-    private boolean is_paused;
+    private boolean isPaused;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
