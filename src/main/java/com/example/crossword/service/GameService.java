@@ -15,8 +15,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.example.crossword.dtoGame.ResponseHelper.createErrorResponse;
-
 @Service
 public class GameService {
     private final GameRepository gameRepository;

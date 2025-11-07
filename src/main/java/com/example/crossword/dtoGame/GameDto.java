@@ -1,6 +1,4 @@
 package com.example.crossword.dtoGame;
-import com.example.crossword.dtoCrossword.CrosswordDto;
-import com.example.crossword.dtoUser.UserDto;
 import lombok.*;
 
 @AllArgsConstructor

@@ -20,4 +20,14 @@ public interface GameRepository extends JpaRepository<Game, Integer> {
     Optional<Game> findByUserIdAndCrosswordIdAndGameOverFalse(int userId, int crosswordId);
 
     boolean existsByUserIdAndCrosswordIdAndGameOverFalse(int userId, int crosswordId);
+    
+    /**
+     * Получить количество игр по кроссворду
+     */
+    Long countByCrosswordId(Integer crosswordId);
+    
+    /**
+     * Получить количество завершенных игр по кроссворду
+     */
+    Long countByCrosswordIdAndGameOverTrue(Integer crosswordId);
 }
