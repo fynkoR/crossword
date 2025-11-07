@@ -6,19 +6,33 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
+import org.mapstruct.AfterMapping;
+
 @Mapper(componentModel = "spring")
 public interface UserMapper {
-    @Mapping(source = "is_admin", target = "isAdmin")
     UserDto toDto(User user);
+    
+    @AfterMapping
+    default void setIsAdmin(User user, @MappingTarget UserDto userDto) {
+        userDto.setAdmin(user.is_admin());
+    }
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "games", ignore = true)
-    @Mapping(target = "is_admin", constant = "false")
     @Mapping(target = "password", ignore = true)
     User toEntity(UserRegAuthDto userRegAuthDto);
+    
+    @AfterMapping
+    default void setUserAdmin(UserRegAuthDto userRegAuthDto, @MappingTarget User user) {
+        user.set_admin(false);
+    }
 
     @Mapping(target = "password", ignore = true)
     @Mapping(target = "games", ignore = true)
-    @Mapping(source = "isAdmin", target = "is_admin")
     void updateEntity(UserDto userDto, @MappingTarget User user);
+    
+    @AfterMapping
+    default void updateUserAdmin(UserDto userDto, @MappingTarget User user) {
+        user.set_admin(userDto.isAdmin());
+    }
 }
