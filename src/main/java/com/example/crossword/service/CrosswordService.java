@@ -218,7 +218,7 @@ public class CrosswordService {
 
         Crossword crossword = crosswordRepository.findById(crosswordId).get();
         long gamesCount = gameRepository.countByCrosswordId(crosswordId);
-        long completedGamesCount = gameRepository.countByCrosswordIdAndGameOverTrue(crosswordId);
+        long completedGamesCount = gameRepository.countByCrosswordIdAndGame_overTrue(crosswordId);
 
         CrosswordStatisticsDto stats = new CrosswordStatisticsDto();
         stats.setCrosswordId(crosswordId);

@@ -76,7 +76,7 @@ public class GameService {
                 .orElseThrow(() -> new RuntimeException("Кроссворд не найден"));
 
         // Проверяем, нет ли активной игры
-        Optional<Game> existingGame = gameRepository.findByUserIdAndCrosswordIdAndGameOverFalse(
+        Optional<Game> existingGame = gameRepository.findByUserIdAndCrosswordIdAndGame_overFalse(
                 action.getUserId(), action.getCrosswordId());
 
         if (existingGame.isPresent()) {
