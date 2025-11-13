@@ -13,7 +13,7 @@ import lombok.*;
 public class Word {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
     private String word;
     private String definition;
     @ManyToOne(fetch = FetchType.LAZY)

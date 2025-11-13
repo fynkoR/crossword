@@ -1,8 +1,8 @@
 package com.example.crossword.mapper;
 
-import com.example.crossword.dtoWord.WordCreateDto;
-import com.example.crossword.dtoWord.WordDto;
-import com.example.crossword.dtoWord.WordUpdateDto;
+import com.example.crossword.dto.dtoWord.WordCreateDto;
+import com.example.crossword.dto.dtoWord.WordDto;
+import com.example.crossword.dto.dtoWord.WordUpdateDto;
 import com.example.crossword.enitity.Word;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

@@ -7,17 +7,17 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface CrosswordRepository extends JpaRepository<Crossword, Integer> {
+public interface CrosswordRepository extends JpaRepository<Crossword, Long> {
     
     /**
      * Найти все кроссворды по ID словаря
      */
-    List<Crossword> findByDictionaryId(Integer dictionaryId);
+    List<Crossword> findByDictionaryId(Long dictionaryId);
     
     /**
      * Получить количество кроссвордов в словаре
      */
-    Long countByDictionaryId(Integer dictionaryId);
+    Long countByDictionaryId(Long dictionaryId);
     
     /**
      * Поиск кроссвордов по подстроке в названии

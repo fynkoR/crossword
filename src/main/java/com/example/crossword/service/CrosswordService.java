@@ -1,6 +1,6 @@
 package com.example.crossword.service;
 
-import com.example.crossword.dtoCrossword.*;
+import com.example.crossword.dto.dtoCrossword.*;
 import com.example.crossword.enitity.Crossword;
 import com.example.crossword.enitity.Dictionary;
 import com.example.crossword.mapper.CrosswordMapper;
@@ -83,7 +83,7 @@ public class CrosswordService {
      * Получить кроссворд по ID (базовая информация)
      */
     @Transactional(readOnly = true)
-    public CrosswordDto getCrosswordById(Integer id) {
+    public CrosswordDto getCrosswordById(Long id) {
         Crossword crossword = crosswordRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Кроссворд с ID " + id + " не найден"));
         return crosswordMapper.toDto(crossword);
@@ -93,7 +93,7 @@ public class CrosswordService {
      * Получить детальную информацию о кроссворде (включая сетку и слова)
      */
     @Transactional(readOnly = true)
-    public CrosswordDetailDto getCrosswordDetailById(Integer id) {
+    public CrosswordDetailDto getCrosswordDetailById(Long id) {
         Crossword crossword = crosswordRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Кроссворд с ID " + id + " не найден"));
         
@@ -127,7 +127,7 @@ public class CrosswordService {
      * Получить все кроссворды из конкретного словаря
      */
     @Transactional(readOnly = true)
-    public List<CrosswordDto> getCrosswordsByDictionaryId(Integer dictionaryId) {
+    public List<CrosswordDto> getCrosswordsByDictionaryId(Long dictionaryId) {
         if (!dictionaryRepository.existsById(dictionaryId)) {
             throw new RuntimeException("Словарь с ID " + dictionaryId + " не найден");
         }
@@ -150,7 +150,7 @@ public class CrosswordService {
     /**
      * Обновить кроссворд
      */
-    public CrosswordDto updateCrossword(Integer id, CrosswordUpdateDto crosswordUpdateDto) {
+    public CrosswordDto updateCrossword(Long id, CrosswordUpdateDto crosswordUpdateDto) {
         Crossword crossword = crosswordRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Кроссворд с ID " + id + " не найден"));
 
@@ -192,7 +192,7 @@ public class CrosswordService {
     /**
      * Удалить кроссворд
      */
-    public void deleteCrossword(Integer id) {
+    public void deleteCrossword(Long id) {
         if (!crosswordRepository.existsById(id)) {
             throw new RuntimeException("Кроссворд с ID " + id + " не найден");
         }
@@ -211,7 +211,7 @@ public class CrosswordService {
      * Получить статистику по кроссворду
      */
     @Transactional(readOnly = true)
-    public CrosswordStatisticsDto getCrosswordStatistics(Integer crosswordId) {
+    public CrosswordStatisticsDto getCrosswordStatistics(Long crosswordId) {
         if (!crosswordRepository.existsById(crosswordId)) {
             throw new RuntimeException("Кроссворд с ID " + crosswordId + " не найден");
         }
@@ -239,7 +239,7 @@ public class CrosswordService {
     /**
      * Валидация кроссворда перед сохранением
      */
-    public boolean validateCrossword(Integer crosswordId) {
+    public boolean validateCrossword(Long crosswordId) {
         Crossword crossword = crosswordRepository.findById(crosswordId)
                 .orElseThrow(() -> new RuntimeException("Кроссворд с ID " + crosswordId + " не найден"));
 
@@ -268,16 +268,16 @@ public class CrosswordService {
      * DTO для статистики кроссворда
      */
     public static class CrosswordStatisticsDto {
-        private Integer crosswordId;
+        private Long crosswordId;
         private Long gamesCount;
         private Long completedGamesCount;
         private Long wordsCount;
 
-        public Integer getCrosswordId() {
+        public Long getCrosswordId() {
             return crosswordId;
         }
 
-        public void setCrosswordId(Integer crosswordId) {
+        public void setCrosswordId(Long crosswordId) {
             this.crosswordId = crosswordId;
         }
 

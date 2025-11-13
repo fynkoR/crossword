@@ -1,4 +1,4 @@
-package com.example.crossword.dtoWord;
+package com.example.crossword.dto.dtoWord;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

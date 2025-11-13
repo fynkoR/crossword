@@ -1,6 +1,6 @@
 package com.example.crossword.mapper;
-import com.example.crossword.dtoUser.UserDto;
-import com.example.crossword.dtoUser.UserRegAuthDto;
+import com.example.crossword.dto.dtoUser.UserDto;
+import com.example.crossword.dto.dtoUser.UserRegAuthDto;
 import com.example.crossword.enitity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -14,7 +14,7 @@ public interface UserMapper {
     
     @AfterMapping
     default void setIsAdmin(User user, @MappingTarget UserDto userDto) {
-        userDto.setAdmin(user.is_admin());
+        userDto.setIsAdmin(user.getIs_admin());
     }
 
     @Mapping(target = "id", ignore = true)
@@ -24,7 +24,7 @@ public interface UserMapper {
     
     @AfterMapping
     default void setUserAdmin(UserRegAuthDto userRegAuthDto, @MappingTarget User user) {
-        user.set_admin(false);
+        user.setIs_admin(false);
     }
 
     @Mapping(target = "password", ignore = true)
@@ -33,6 +33,6 @@ public interface UserMapper {
     
     @AfterMapping
     default void updateUserAdmin(UserDto userDto, @MappingTarget User user) {
-        user.set_admin(userDto.isAdmin());
+        user.setIs_admin(userDto.getIsAdmin());
     }
 }

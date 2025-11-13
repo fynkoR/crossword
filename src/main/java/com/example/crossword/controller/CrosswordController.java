@@ -1,9 +1,9 @@
 package com.example.crossword.controller;
 
-import com.example.crossword.dtoCrossword.CrosswordCreateDto;
-import com.example.crossword.dtoCrossword.CrosswordDetailDto;
-import com.example.crossword.dtoCrossword.CrosswordDto;
-import com.example.crossword.dtoCrossword.CrosswordUpdateDto;
+import com.example.crossword.dto.dtoCrossword.CrosswordCreateDto;
+import com.example.crossword.dto.dtoCrossword.CrosswordDetailDto;
+import com.example.crossword.dto.dtoCrossword.CrosswordDto;
+import com.example.crossword.dto.dtoCrossword.CrosswordUpdateDto;
 import com.example.crossword.service.CrosswordService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,7 +43,7 @@ public class CrosswordController {
      * GET /crosswords/{id}
      */
     @GetMapping("/{id}")
-    public ResponseEntity<CrosswordDto> getCrosswordById(@PathVariable Integer id) {
+    public ResponseEntity<CrosswordDto> getCrosswordById(@PathVariable Long id) {
         try {
             CrosswordDto crossword = crosswordService.getCrosswordById(id);
             return ResponseEntity.ok(crossword);
@@ -57,7 +57,7 @@ public class CrosswordController {
      * GET /crosswords/{id}/detail
      */
     @GetMapping("/{id}/detail")
-    public ResponseEntity<CrosswordDetailDto> getCrosswordDetailById(@PathVariable Integer id) {
+    public ResponseEntity<CrosswordDetailDto> getCrosswordDetailById(@PathVariable Long id) {
         try {
             CrosswordDetailDto crosswordDetail = crosswordService.getCrosswordDetailById(id);
             return ResponseEntity.ok(crosswordDetail);
@@ -81,7 +81,7 @@ public class CrosswordController {
      * GET /crosswords/dictionary/{dictionaryId}
      */
     @GetMapping("/dictionary/{dictionaryId}")
-    public ResponseEntity<List<CrosswordDto>> getCrosswordsByDictionary(@PathVariable Integer dictionaryId) {
+    public ResponseEntity<List<CrosswordDto>> getCrosswordsByDictionary(@PathVariable Long dictionaryId) {
         try {
             List<CrosswordDto> crosswords = crosswordService.getCrosswordsByDictionaryId(dictionaryId);
             return ResponseEntity.ok(crosswords);
@@ -105,7 +105,7 @@ public class CrosswordController {
      * PUT /crosswords/{id}
      */
     @PutMapping("/{id}")
-    public ResponseEntity<CrosswordDto> updateCrossword(@PathVariable Integer id,
+    public ResponseEntity<CrosswordDto> updateCrossword(@PathVariable Long id,
                                                         @RequestBody CrosswordUpdateDto crosswordUpdateDto) {
         try {
             CrosswordDto updatedCrossword = crosswordService.updateCrossword(id, crosswordUpdateDto);
@@ -120,7 +120,7 @@ public class CrosswordController {
      * DELETE /crosswords/{id}
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCrossword(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteCrossword(@PathVariable Long id) {
         try {
             crosswordService.deleteCrossword(id);
             return ResponseEntity.noContent().build();
@@ -134,7 +134,7 @@ public class CrosswordController {
      * GET /crosswords/{id}/statistics
      */
     @GetMapping("/{id}/statistics")
-    public ResponseEntity<CrosswordService.CrosswordStatisticsDto> getCrosswordStatistics(@PathVariable Integer id) {
+    public ResponseEntity<CrosswordService.CrosswordStatisticsDto> getCrosswordStatistics(@PathVariable Long id) {
         try {
             CrosswordService.CrosswordStatisticsDto statistics = crosswordService.getCrosswordStatistics(id);
             return ResponseEntity.ok(statistics);
@@ -148,7 +148,7 @@ public class CrosswordController {
      * GET /crosswords/{id}/validate
      */
     @GetMapping("/{id}/validate")
-    public ResponseEntity<Boolean> validateCrossword(@PathVariable Integer id) {
+    public ResponseEntity<Boolean> validateCrossword(@PathVariable Long id) {
         try {
             boolean isValid = crosswordService.validateCrossword(id);
             return ResponseEntity.ok(isValid);

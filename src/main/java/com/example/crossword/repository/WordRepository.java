@@ -7,17 +7,17 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface WordRepository extends JpaRepository<Word, Integer> {
+public interface WordRepository extends JpaRepository<Word, Long> {
     
     /**
      * Найти все слова по ID словаря
      */
-    List<Word> findByDictionaryId(Integer dictionaryId);
+    List<Word> findByDictionaryId(Long dictionaryId);
     
     /**
      * Проверить существование слова в конкретном словаре
      */
-    boolean existsByWordAndDictionaryId(String word, Integer dictionaryId);
+    boolean existsByWordAndDictionaryId(String word, Long dictionaryId);
     
     /**
      * Поиск слов по подстроке (игнорируя регистр)
@@ -27,10 +27,10 @@ public interface WordRepository extends JpaRepository<Word, Integer> {
     /**
      * Удалить все слова из словаря
      */
-    void deleteByDictionaryId(Integer dictionaryId);
+    void deleteByDictionaryId(Long dictionaryId);
     
     /**
      * Получить количество слов в словаре
      */
-    Long countByDictionaryId(Integer dictionaryId);
+    Long countByDictionaryId(Long dictionaryId);
 }

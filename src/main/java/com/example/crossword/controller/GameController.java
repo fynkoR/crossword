@@ -1,8 +1,8 @@
 package com.example.crossword.controller;
 
-import com.example.crossword.dtoGame.GameActionDto;
-import com.example.crossword.dtoGame.GameDto;
-import com.example.crossword.dtoGame.GameResultDto;
+import com.example.crossword.dto.dtoGame.GameActionDto;
+import com.example.crossword.dto.dtoGame.GameDto;
+import com.example.crossword.dto.dtoGame.GameResultDto;
 import com.example.crossword.service.GameService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,7 +50,7 @@ public class GameController {
      * - save: сохранить прогресс
      */
     @PostMapping("/{id}/action")
-    public ResponseEntity<GameResultDto> gameAction(@PathVariable int id, @RequestBody GameActionDto action) {
+    public ResponseEntity<GameResultDto> gameAction(@PathVariable Long id, @RequestBody GameActionDto action) {
         try {
             GameResultDto result = gameService.handleAction(id, action);
             return ResponseEntity.ok(result);
@@ -64,7 +64,7 @@ public class GameController {
      * GET /games/{id}
      */
     @GetMapping("/{id}")
-    public ResponseEntity<GameDto> getGame(@PathVariable int id) {
+    public ResponseEntity<GameDto> getGame(@PathVariable Long id) {
         try {
             GameDto game = gameService.getGameById(id);
             return ResponseEntity.ok(game);
@@ -78,7 +78,7 @@ public class GameController {
      * GET /games/user/{userId}
      */
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<GameDto>> getUserGames(@PathVariable int userId) {
+    public ResponseEntity<List<GameDto>> getUserGames(@PathVariable Long userId) {
         try {
             List<GameDto> games = gameService.getGamesByUser(userId);
             return ResponseEntity.ok(games);
@@ -92,7 +92,7 @@ public class GameController {
      * DELETE /games/{id}
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteGame(@PathVariable int id) {
+    public ResponseEntity<Void> deleteGame(@PathVariable Long id) {
         try {
             gameService.deleteGame(id);
             return ResponseEntity.noContent().build();

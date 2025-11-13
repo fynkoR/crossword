@@ -1,7 +1,7 @@
 package com.example.crossword.service;
 
-import com.example.crossword.dtoUser.UserDto;
-import com.example.crossword.dtoUser.UserRegAuthDto;
+import com.example.crossword.dto.dtoUser.UserDto;
+import com.example.crossword.dto.dtoUser.UserRegAuthDto;
 import com.example.crossword.enitity.User;
 import com.example.crossword.mapper.UserMapper;
 import com.example.crossword.repository.UserRepository;
@@ -41,23 +41,23 @@ public class UserService {
         }
         return userMapper.toDto(user);
     }
-    public void deleteUser(Integer id){
+    public void deleteUser(Long id){
         if(!userRepository.existsById(id)){
             throw new RuntimeException("Пользователь не найден");
         }
         userRepository.deleteById(id);
     }
-    public UserDto setAdmin(Integer id, boolean is_admin){
+    public UserDto setAdmin(Long id, Boolean is_admin){
         Optional<User> userOptional = userRepository.findById(id);
         if(userOptional.isEmpty()){
             throw new RuntimeException("Пользователь не найден");
         }
         User user = userOptional.get();
-        user.set_admin(is_admin);
+        user.setIs_admin(is_admin);
         User updUser = userRepository.save(user);
         return userMapper.toDto(updUser);
     }
-    public UserDto getUserById(Integer id){
+    public UserDto getUserById(Long id){
         Optional<User> userOptional = userRepository.findById(id);
         if(userOptional.isEmpty()){
             throw new RuntimeException("Пользователь не найден");

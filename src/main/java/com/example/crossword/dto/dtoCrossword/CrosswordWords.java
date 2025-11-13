@@ -1,4 +1,4 @@
-package com.example.crossword.dtoCrossword;
+package com.example.crossword.dto.dtoCrossword;
 
 import lombok.Data;
 
@@ -11,7 +11,7 @@ public class CrosswordWords {
 
     @Data
     public static class CrosswordWord {
-        private Integer wordId;          // ID слова из базы
+        private Long wordId;          // ID слова из базы
         private String text;             // текст слова
         private String definition;       // определение/вопрос
         private Integer startX;          // начальная координата X
@@ -25,8 +25,8 @@ public class CrosswordWords {
 
     @Data
     public static class WordIntersection {
-        private Integer word1Id;     // ID первого слова
-        private Integer word2Id;     // ID второго слова
+        private Long word1Id;     // ID первого слова
+        private Long word2Id;     // ID второго слова
         private Integer position1;   // позиция пересечения в первом слове
         private Integer position2;   // позиция пересечения во втором слове
         private String letter;       // общая буква

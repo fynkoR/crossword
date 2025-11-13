@@ -1,8 +1,8 @@
 package com.example.crossword.controller;
 
-import com.example.crossword.dtoWord.WordCreateDto;
-import com.example.crossword.dtoWord.WordDto;
-import com.example.crossword.dtoWord.WordUpdateDto;
+import com.example.crossword.dto.dtoWord.WordCreateDto;
+import com.example.crossword.dto.dtoWord.WordDto;
+import com.example.crossword.dto.dtoWord.WordUpdateDto;
 import com.example.crossword.service.WordService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,7 +42,7 @@ public class WordController {
      * GET /words/{id}
      */
     @GetMapping("/{id}")
-    public ResponseEntity<WordDto> getWordById(@PathVariable Integer id) {
+    public ResponseEntity<WordDto> getWordById(@PathVariable Long id) {
         try {
             WordDto word = wordService.getWordById(id);
             return ResponseEntity.ok(word);
@@ -66,7 +66,7 @@ public class WordController {
      * GET /words/dictionary/{dictionaryId}
      */
     @GetMapping("/dictionary/{dictionaryId}")
-    public ResponseEntity<List<WordDto>> getWordsByDictionary(@PathVariable Integer dictionaryId) {
+    public ResponseEntity<List<WordDto>> getWordsByDictionary(@PathVariable Long dictionaryId) {
         try {
             List<WordDto> words = wordService.getWordsByDictionaryId(dictionaryId);
             return ResponseEntity.ok(words);
@@ -90,7 +90,7 @@ public class WordController {
      * PUT /words/{id}
      */
     @PutMapping("/{id}")
-    public ResponseEntity<WordDto> updateWord(@PathVariable Integer id, 
+    public ResponseEntity<WordDto> updateWord(@PathVariable Long id,
                                              @RequestBody WordUpdateDto wordUpdateDto) {
         try {
             WordDto updatedWord = wordService.updateWord(id, wordUpdateDto);
@@ -105,7 +105,7 @@ public class WordController {
      * DELETE /words/{id}
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteWord(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteWord(@PathVariable Long id) {
         try {
             wordService.deleteWord(id);
             return ResponseEntity.noContent().build();
@@ -119,7 +119,7 @@ public class WordController {
      * GET /words/dictionary/{dictionaryId}/count
      */
     @GetMapping("/dictionary/{dictionaryId}/count")
-    public ResponseEntity<Long> getWordCount(@PathVariable Integer dictionaryId) {
+    public ResponseEntity<Long> getWordCount(@PathVariable Long dictionaryId) {
         try {
             Long count = wordService.getWordCountByDictionary(dictionaryId);
             return ResponseEntity.ok(count);

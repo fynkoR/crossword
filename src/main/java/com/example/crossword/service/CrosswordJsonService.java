@@ -1,7 +1,7 @@
 package com.example.crossword.service;
 
-import com.example.crossword.dtoCrossword.CrosswordGrid;
-import com.example.crossword.dtoCrossword.CrosswordWords;
+import com.example.crossword.dto.dtoCrossword.CrosswordGrid;
+import com.example.crossword.dto.dtoCrossword.CrosswordWords;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;

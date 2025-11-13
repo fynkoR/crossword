@@ -1,7 +1,7 @@
 package com.example.crossword.service;
 
-import com.example.crossword.dtoDictionary.DictionaryDto;
-import com.example.crossword.dtoWord.WordDto;
+import com.example.crossword.dto.dtoDictionary.DictionaryDto;
+import com.example.crossword.dto.dtoWord.WordDto;
 import com.example.crossword.enitity.Dictionary;
 import com.example.crossword.mapper.DictionaryMapper;
 import com.example.crossword.mapper.WordMapper;
@@ -60,7 +60,7 @@ public class DictionaryService {
      * Получить словарь по ID
      */
     @Transactional(readOnly = true)
-    public DictionaryDto getDictionaryById(Integer id) {
+    public DictionaryDto getDictionaryById(Long id) {
         Dictionary dictionary = dictionaryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Словарь с ID " + id + " не найден"));
         return dictionaryMapper.toDto(dictionary);
@@ -89,7 +89,7 @@ public class DictionaryService {
     /**
      * Обновить словарь
      */
-    public DictionaryDto updateDictionary(Integer id, DictionaryDto dictionaryDto) {
+    public DictionaryDto updateDictionary(Long id, DictionaryDto dictionaryDto) {
         Dictionary dictionary = dictionaryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Словарь с ID " + id + " не найден"));
 
@@ -109,7 +109,7 @@ public class DictionaryService {
      * Удалить словарь
      * При удалении словаря также удаляются все связанные слова и кроссворды
      */
-    public void deleteDictionary(Integer id) {
+    public void deleteDictionary(Long id) {
         if (!dictionaryRepository.existsById(id)) {
             throw new RuntimeException("Словарь с ID " + id + " не найден");
         }
@@ -128,7 +128,7 @@ public class DictionaryService {
      * Получить все слова из словаря
      */
     @Transactional(readOnly = true)
-    public List<WordDto> getWordsFromDictionary(Integer dictionaryId) {
+    public List<WordDto> getWordsFromDictionary(Long dictionaryId) {
         if (!dictionaryRepository.existsById(dictionaryId)) {
             throw new RuntimeException("Словарь с ID " + dictionaryId + " не найден");
         }
@@ -142,7 +142,7 @@ public class DictionaryService {
      * Получить статистику по словарю
      */
     @Transactional(readOnly = true)
-    public DictionaryStatisticsDto getDictionaryStatistics(Integer dictionaryId) {
+    public DictionaryStatisticsDto getDictionaryStatistics(Long dictionaryId) {
         if (!dictionaryRepository.existsById(dictionaryId)) {
             throw new RuntimeException("Словарь с ID " + dictionaryId + " не найден");
         }
@@ -162,15 +162,15 @@ public class DictionaryService {
      * DTO для статистики словаря
      */
     public static class DictionaryStatisticsDto {
-        private Integer dictionaryId;
+        private Long dictionaryId;
         private Long wordsCount;
         private Long crosswordsCount;
 
-        public Integer getDictionaryId() {
+        public Long getDictionaryId() {
             return dictionaryId;
         }
 
-        public void setDictionaryId(Integer dictionaryId) {
+        public void setDictionaryId(Long dictionaryId) {
             this.dictionaryId = dictionaryId;
         }
 

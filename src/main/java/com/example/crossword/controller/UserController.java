@@ -1,7 +1,7 @@
 package com.example.crossword.controller;
 
-import com.example.crossword.dtoUser.UserDto;
-import com.example.crossword.dtoUser.UserRegAuthDto;
+import com.example.crossword.dto.dtoUser.UserDto;
+import com.example.crossword.dto.dtoUser.UserRegAuthDto;
 import com.example.crossword.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -55,7 +55,7 @@ public class UserController {
      * GET /users/{id}
      */
     @GetMapping("/{id}")
-    public ResponseEntity<UserDto> getUserDto(@PathVariable Integer id) {
+    public ResponseEntity<UserDto> getUserDto(@PathVariable Long id) {
         try {
             UserDto user = userService.getUserById(id);
             return ResponseEntity.ok(user);
@@ -93,7 +93,7 @@ public class UserController {
      * DELETE /users/{id}
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         try {
             userService.deleteUser(id);
             return ResponseEntity.noContent().build();
@@ -107,7 +107,7 @@ public class UserController {
      * PATCH /users/{id}/admin
      */
     @PatchMapping("/{id}/admin")
-    public ResponseEntity<UserDto> setAdmin(@PathVariable Integer id, @RequestParam Boolean is_admin) {
+    public ResponseEntity<UserDto> setAdmin(@PathVariable Long id, @RequestParam Boolean is_admin) {
         try {
             UserDto updatedUser = userService.setAdmin(id, is_admin);
             return ResponseEntity.ok(updatedUser);

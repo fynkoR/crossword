@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface DictionaryRepository extends JpaRepository<Dictionary, Integer> {
+public interface DictionaryRepository extends JpaRepository<Dictionary, Long> {
     
     /**
      * Проверить существование словаря по названию

@@ -1,7 +1,9 @@
 package com.example.crossword.service;
 
-import com.example.crossword.dtoCrossword.CrosswordWords;
-import com.example.crossword.dtoGame.*;
+import com.example.crossword.dto.dtoCrossword.CrosswordWords;
+import com.example.crossword.dto.dtoGame.GameActionDto;
+import com.example.crossword.dto.dtoGame.GameDto;
+import com.example.crossword.dto.dtoGame.GameResultDto;
 import com.example.crossword.enitity.Crossword;
 import com.example.crossword.enitity.Game;
 import com.example.crossword.enitity.User;
@@ -40,7 +42,7 @@ public class GameService {
     /**
      * Универсальный метод для всех действий с игрой
      */
-    public GameResultDto handleAction(int gameId, GameActionDto action) {
+    public GameResultDto handleAction(Long gameId, GameActionDto action) {
         switch (action.getAction()) {
             case "check":
                 return checkAnswer(gameId, action);
@@ -103,11 +105,11 @@ public class GameService {
     /**
      * Проверить ответ
      */
-    private GameResultDto checkAnswer(int gameId, GameActionDto action) {
+    private GameResultDto checkAnswer(Long gameId, GameActionDto action) {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new RuntimeException("Игра не найдена"));
 
-        if (game.isGameOver()) {
+        if (game.getGameOver()) {
             return createResult(false, "Игра уже завершена", null, true, gameMapper.toDTO(game));
         }
 
@@ -150,11 +152,11 @@ public class GameService {
     /**
      * Использовать подсказку
      */
-    private GameResultDto useHint(int gameId) {
+    private GameResultDto useHint(Long gameId) {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new RuntimeException("Игра не найдена"));
 
-        if (game.isGameOver()) {
+        if (game.getGameOver()) {
             return createResult(false, "Игра уже завершена", null, true, gameMapper.toDTO(game));
         }
 
@@ -173,7 +175,7 @@ public class GameService {
     /**
      * Завершить игру
      */
-    private GameResultDto completeGame(int gameId) {
+    private GameResultDto completeGame(Long gameId) {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new RuntimeException("Игра не найдена"));
 
@@ -203,8 +205,8 @@ public class GameService {
         return game.getSolved_words_count() == words.getWords().size();
     }
 
-    private GameResultDto createResult(boolean success, String message, String data,
-                                       boolean gameComplete, GameDto game) {
+    private GameResultDto createResult(Boolean success, String message, String data,
+                                       Boolean gameComplete, GameDto game) {
         GameResultDto result = new GameResultDto();
         result.setSuccess(success);
         result.setMessage(message);
@@ -217,20 +219,20 @@ public class GameService {
     /**
      * Методы для получения данных (без изменений)
      */
-    public GameDto getGameById(int id) {
+    public GameDto getGameById(Long id) {
         Game game = gameRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Игра не найдена"));
         return gameMapper.toDTO(game);
     }
 
-    public List<GameDto> getGamesByUser(int userId) {
+    public List<GameDto> getGamesByUser(Long userId) {
         List<Game> games = gameRepository.findByUserId(userId);
         return games.stream()
                 .map(gameMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
-    public void deleteGame(int id) {
+    public void deleteGame(Long id) {
         if (!gameRepository.existsById(id)) {
             throw new RuntimeException("Игра не найдена");
         }
@@ -240,7 +242,7 @@ public class GameService {
     /**
      * Начать игру заново
      */
-    private GameResultDto restartGame(int gameId) {
+    private GameResultDto restartGame(Long gameId) {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new RuntimeException("Игра не найдена"));
 
@@ -257,7 +259,7 @@ public class GameService {
     /**
      * Сохранить прогресс игры
      */
-    private GameResultDto saveGame(int gameId) {
+    private GameResultDto saveGame(Long gameId) {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new RuntimeException("Игра не найдена"));
 
@@ -265,21 +267,21 @@ public class GameService {
         // или создание точки сохранения
         Game savedGame = gameRepository.save(game); // JPA автоматически сохраняет изменения
 
-        return createResult(true, "Прогресс сохранен", null, game.isGameOver(), gameMapper.toDTO(savedGame));
+        return createResult(true, "Прогресс сохранен", null, game.getGameOver(), gameMapper.toDTO(savedGame));
     }
-    private GameResultDto pauseGame(int gameId) {
+    private GameResultDto pauseGame(Long gameId) {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new RuntimeException("Игра не найдена"));
 
-        if (game.isGameOver()) {
+        if (game.getGameOver()) {
             return createResult(false, "Нельзя приостановить завершенную игру", null, true, gameMapper.toDTO(game));
         }
 
         // Переключаем состояние паузы
-        game.setPaused(!game.isPaused());
+        game.setIsPaused(!game.getIsPaused());
         Game savedGame = gameRepository.save(game);
 
-        String message = game.isPaused() ? "Игра приостановлена" : "Игра возобновлена";
+        String message = game.getIsPaused() ? "Игра приостановлена" : "Игра возобновлена";
         return createResult(true, message, null, false, gameMapper.toDTO(savedGame));
     }
 }

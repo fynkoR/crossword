@@ -1,7 +1,7 @@
 package com.example.crossword.controller;
 
-import com.example.crossword.dtoDictionary.DictionaryDto;
-import com.example.crossword.dtoWord.WordDto;
+import com.example.crossword.dto.dtoDictionary.DictionaryDto;
+import com.example.crossword.dto.dtoWord.WordDto;
 import com.example.crossword.service.DictionaryService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,7 +41,7 @@ public class DictionaryController {
      * GET /dictionaries/{id}
      */
     @GetMapping("/{id}")
-    public ResponseEntity<DictionaryDto> getDictionaryById(@PathVariable Integer id) {
+    public ResponseEntity<DictionaryDto> getDictionaryById(@PathVariable Long id) {
         try {
             DictionaryDto dictionary = dictionaryService.getDictionaryById(id);
             return ResponseEntity.ok(dictionary);
@@ -75,7 +75,7 @@ public class DictionaryController {
      * PUT /dictionaries/{id}
      */
     @PutMapping("/{id}")
-    public ResponseEntity<DictionaryDto> updateDictionary(@PathVariable Integer id,
+    public ResponseEntity<DictionaryDto> updateDictionary(@PathVariable Long id,
                                                           @RequestBody DictionaryDto dictionaryDto) {
         try {
             DictionaryDto updatedDictionary = dictionaryService.updateDictionary(id, dictionaryDto);
@@ -90,7 +90,7 @@ public class DictionaryController {
      * DELETE /dictionaries/{id}
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDictionary(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteDictionary(@PathVariable Long id) {
         try {
             dictionaryService.deleteDictionary(id);
             return ResponseEntity.noContent().build();
@@ -104,7 +104,7 @@ public class DictionaryController {
      * GET /dictionaries/{id}/words
      */
     @GetMapping("/{id}/words")
-    public ResponseEntity<List<WordDto>> getWordsFromDictionary(@PathVariable Integer id) {
+    public ResponseEntity<List<WordDto>> getWordsFromDictionary(@PathVariable Long id) {
         try {
             List<WordDto> words = dictionaryService.getWordsFromDictionary(id);
             return ResponseEntity.ok(words);
@@ -118,7 +118,7 @@ public class DictionaryController {
      * GET /dictionaries/{id}/statistics
      */
     @GetMapping("/{id}/statistics")
-    public ResponseEntity<DictionaryService.DictionaryStatisticsDto> getDictionaryStatistics(@PathVariable Integer id) {
+    public ResponseEntity<DictionaryService.DictionaryStatisticsDto> getDictionaryStatistics(@PathVariable Long id) {
         try {
             DictionaryService.DictionaryStatisticsDto statistics = dictionaryService.getDictionaryStatistics(id);
             return ResponseEntity.ok(statistics);

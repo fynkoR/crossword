@@ -1,4 +1,4 @@
-package com.example.crossword.dtoWord;
+package com.example.crossword.dto.dtoWord;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,5 +13,5 @@ import lombok.NoArgsConstructor;
 public class WordCreateDto {
     private String word;
     private String definition;
-    private Integer dictionaryId;
+    private Long dictionaryId;
 }

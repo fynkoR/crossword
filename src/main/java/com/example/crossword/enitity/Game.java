@@ -13,11 +13,11 @@ import lombok.*;
 public class Game {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
-    private int hints_used;
-    private boolean gameOver;
-    private int solved_words_count;
-    private boolean isPaused;
+    private Long id;
+    private Integer hints_used;
+    private Boolean gameOver;
+    private Integer solved_words_count;
+    private Boolean isPaused;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

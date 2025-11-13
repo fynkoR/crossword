@@ -1,4 +1,4 @@
-package com.example.crossword.dtoCrossword;
+package com.example.crossword.dto.dtoCrossword;
 
 import lombok.Data;
 import java.util.List;

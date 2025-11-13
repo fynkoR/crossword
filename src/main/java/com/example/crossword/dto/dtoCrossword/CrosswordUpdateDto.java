@@ -1,4 +1,4 @@
-package com.example.crossword.dtoCrossword;
+package com.example.crossword.dto.dtoCrossword;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,10 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CrosswordUpdateDto {
-    private String title;
-    private Integer gridWidth;
-    private Integer gridHeight;
+public class CrosswordUpdateDto extends CrosswordDtoBase{
     private CrosswordGrid gridData;
     private CrosswordWords wordsData;
 }

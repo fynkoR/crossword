@@ -16,10 +16,10 @@ import java.util.List;
 public class Crossword {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
     private String title;
-    private int grid_width;
-    private int grid_height;
+    private Integer grid_width;
+    private Integer grid_height;
     @OneToMany(mappedBy = "crossword", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Game> games;
     @Column(columnDefinition = "JSON")

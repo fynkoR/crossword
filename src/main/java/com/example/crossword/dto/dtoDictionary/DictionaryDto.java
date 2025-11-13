@@ -1,10 +1,10 @@
-package com.example.crossword.dtoDictionary;
+package com.example.crossword.dto.dtoDictionary;
 
 import lombok.Data;
 
 @Data
 public class DictionaryDto {
-    private int id;
+    private Long id;
     private String title;
     private String description;
     // ❌ НЕТ words - чтобы не грузить все слова

@@ -1,6 +1,6 @@
 package com.example.crossword.mapper;
 
-import com.example.crossword.dtoDictionary.DictionaryDto;
+import com.example.crossword.dto.dtoDictionary.DictionaryDto;
 import com.example.crossword.enitity.Dictionary;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

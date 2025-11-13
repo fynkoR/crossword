@@ -1,4 +1,4 @@
-package com.example.crossword.dtoGame;
+package com.example.crossword.dto.dtoGame;
 
 import org.springframework.stereotype.Component;
 
@@ -22,7 +22,7 @@ public class ResponseHelper {
         return response;
     }
 
-    public static CheckAnswerResponse createSuccessResponse(String message, boolean gameComplete) {
+    public static CheckAnswerResponse createSuccessResponse(String message, Boolean gameComplete) {
         CheckAnswerResponse response = new CheckAnswerResponse();
         response.setCorrect(true);
         response.setMessage(message);
@@ -30,10 +30,10 @@ public class ResponseHelper {
         return response;
     }
 
-    public static CheckAnswerResponse createSuccessResponse(String message, boolean gameComplete, int solvedWords, int totalWords) {
+    public static CheckAnswerResponse createSuccessResponse(String message, Boolean gameComplete, Integer solvedWords, Integer totalWords) {
         CheckAnswerResponse response = new CheckAnswerResponse();
         response.setCorrect(true);
-        response.setMessage(message + " Отгадано: " + solvedWords + "/" + totalWords);
+        response.setMessage(String.format("%s Отгадано: %d/%d ", message, solvedWords, totalWords));
         response.setGameComplete(gameComplete);
         return response;
     }

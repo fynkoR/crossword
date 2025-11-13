@@ -1,4 +1,4 @@
-package com.example.crossword.dtoUser;
+package com.example.crossword.dto.dtoUser;
 
 import lombok.Data;
 

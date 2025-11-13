@@ -1,8 +1,8 @@
 package com.example.crossword.service;
 
-import com.example.crossword.dtoWord.WordCreateDto;
-import com.example.crossword.dtoWord.WordDto;
-import com.example.crossword.dtoWord.WordUpdateDto;
+import com.example.crossword.dto.dtoWord.WordCreateDto;
+import com.example.crossword.dto.dtoWord.WordDto;
+import com.example.crossword.dto.dtoWord.WordUpdateDto;
 import com.example.crossword.enitity.Dictionary;
 import com.example.crossword.enitity.Word;
 import com.example.crossword.mapper.WordMapper;
@@ -59,7 +59,7 @@ public class WordService {
      * Получить слово по ID
      */
     @Transactional(readOnly = true)
-    public WordDto getWordById(Integer id) {
+    public WordDto getWordById(Long id) {
         Word word = wordRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Слово с ID " + id + " не найдено"));
         return wordMapper.toDto(word);
@@ -79,7 +79,7 @@ public class WordService {
      * Получить все слова из конкретного словаря
      */
     @Transactional(readOnly = true)
-    public List<WordDto> getWordsByDictionaryId(Integer dictionaryId) {
+    public List<WordDto> getWordsByDictionaryId(Long dictionaryId) {
         // Проверяем существование словаря
         if (!dictionaryRepository.existsById(dictionaryId)) {
             throw new RuntimeException("Словарь с ID " + dictionaryId + " не найден");
@@ -103,7 +103,7 @@ public class WordService {
     /**
      * Обновить слово
      */
-    public WordDto updateWord(Integer id, WordUpdateDto wordUpdateDto) {
+    public WordDto updateWord(Long id, WordUpdateDto wordUpdateDto) {
         Word word = wordRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Слово с ID " + id + " не найдено"));
 
@@ -116,7 +116,7 @@ public class WordService {
     /**
      * Удалить слово
      */
-    public void deleteWord(Integer id) {
+    public void deleteWord(Long id) {
         if (!wordRepository.existsById(id)) {
             throw new RuntimeException("Слово с ID " + id + " не найдено");
         }
@@ -126,7 +126,7 @@ public class WordService {
     /**
      * Удалить все слова из словаря
      */
-    public void deleteWordsByDictionaryId(Integer dictionaryId) {
+    public void deleteWordsByDictionaryId(Long dictionaryId) {
         if (!dictionaryRepository.existsById(dictionaryId)) {
             throw new RuntimeException("Словарь с ID " + dictionaryId + " не найден");
         }
@@ -137,7 +137,7 @@ public class WordService {
      * Получить количество слов в словаре
      */
     @Transactional(readOnly = true)
-    public Long getWordCountByDictionary(Integer dictionaryId) {
+    public Long getWordCountByDictionary(Long dictionaryId) {
         if (!dictionaryRepository.existsById(dictionaryId)) {
             throw new RuntimeException("Словарь с ID " + dictionaryId + " не найден");
         }
