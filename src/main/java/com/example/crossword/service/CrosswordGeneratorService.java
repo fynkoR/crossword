@@ -107,7 +107,7 @@ public class CrosswordGeneratorService {
     
     /**
      * Находит цепочку слов, где последняя буква предыдущего = первая буква следующего
-     * Использует улучшенный алгоритм для поиска всех возможных цепочек
+     * Находит ВСЕ возможные цепочки без ограничений
      */
     private List<Word> findWordChain(List<Word> allWords, int count) {
         // Сортируем слова по ID для детерминированности
@@ -117,33 +117,39 @@ public class CrosswordGeneratorService {
         // Строим граф связей между словами
         Map<Long, List<Word>> graph = buildWordGraph(words);
         
-        // Оптимизация: ищем цепочку с ограничением на количество вариантов
-        ChainSearchResult searchResult = new ChainSearchResult();
+        // Ищем ВСЕ возможные цепочки нужной длины
+        List<List<Word>> allChains = new ArrayList<>();
         
-        // Пробуем начать с каждого слова
+        // Пробуем начать с КАЖДОГО слова
         for (Word startWord : words) {
-            if (searchResult.foundTargetLength) {
-                break; // Если уже нашли цепочку нужной длины, прекращаем поиск
-            }
-            
             List<Word> currentChain = new ArrayList<>();
             Set<Long> used = new HashSet<>();
             
-            findAllChainsOptimized(startWord, currentChain, used, count, graph, searchResult);
+            // Рекурсивно ищем все цепочки, начинающиеся с этого слова
+            findAllChainsRecursive(startWord, currentChain, used, count, graph, allChains);
         }
         
-        // Возвращаем лучшую найденную цепочку
-        return searchResult.bestChain;
-    }
-    
-    /**
-     * Класс для хранения результатов поиска цепочек
-     */
-    private static class ChainSearchResult {
-        List<Word> bestChain = new ArrayList<>();
-        boolean foundTargetLength = false;
-        int chainsChecked = 0;
-        static final int MAX_CHAINS_TO_CHECK = 1000; // Ограничение для производительности
+        System.out.println("Найдено цепочек нужной длины (" + count + " слов): " + allChains.size());
+        
+        // Если нашли хотя бы одну цепочку нужной длины, возвращаем первую
+        if (!allChains.isEmpty()) {
+            // Выводим первые 5 вариантов для отладки
+            int limit = Math.min(5, allChains.size());
+            System.out.println("Примеры найденных цепочек:");
+            for (int i = 0; i < limit; i++) {
+                List<Word> chain = allChains.get(i);
+                System.out.print("  " + (i+1) + ". ");
+                for (int j = 0; j < chain.size(); j++) {
+                    System.out.print(chain.get(j).getWord());
+                    if (j < chain.size() - 1) System.out.print(" → ");
+                }
+                System.out.println();
+            }
+            return allChains.get(0);
+        }
+        
+        // Если не нашли цепочку нужной длины, возвращаем пустой список
+        return new ArrayList<>();
     }
     
     /**
@@ -173,52 +179,34 @@ public class CrosswordGeneratorService {
     }
     
     /**
-     * Рекурсивно находит цепочки слов с оптимизацией
+     * Рекурсивно находит ВСЕ цепочки слов БЕЗ ОГРАНИЧЕНИЙ
      */
-    private void findAllChainsOptimized(Word currentWord, List<Word> currentChain, Set<Long> used, 
+    private void findAllChainsRecursive(Word currentWord, List<Word> currentChain, Set<Long> used, 
                                        int targetLength, Map<Long, List<Word>> graph, 
-                                       ChainSearchResult result) {
-        // Проверка ограничения на количество проверенных цепочек
-        if (result.chainsChecked >= ChainSearchResult.MAX_CHAINS_TO_CHECK) {
-            return;
-        }
-        
-        // Если уже нашли цепочку нужной длины, не продолжаем
-        if (result.foundTargetLength) {
-            return;
-        }
-        
+                                       List<List<Word>> allChains) {
         // Добавляем текущее слово в цепочку
         currentChain.add(currentWord);
         used.add(currentWord.getId());
         
         // Если достигли нужной длины, сохраняем цепочку
         if (currentChain.size() == targetLength) {
-            result.bestChain = new ArrayList<>(currentChain);
-            result.foundTargetLength = true;
-            result.chainsChecked++;
+            allChains.add(new ArrayList<>(currentChain));
         } 
-        // Если цепочка короче, продолжаем поиск
+        // Если цепочка короче, продолжаем поиск со ВСЕМИ возможными следующими словами
         else if (currentChain.size() < targetLength) {
-            // Обновляем лучшую цепочку, если текущая длиннее
-            if (currentChain.size() > result.bestChain.size()) {
-                result.bestChain = new ArrayList<>(currentChain);
-            }
-            
             List<Word> possibleNextWords = graph.get(currentWord.getId());
             
             if (possibleNextWords != null) {
+                // Пробуем КАЖДОЕ возможное следующее слово
                 for (Word nextWord : possibleNextWords) {
-                    if (!used.contains(nextWord.getId()) && !result.foundTargetLength) {
-                        findAllChainsOptimized(nextWord, currentChain, used, targetLength, graph, result);
+                    if (!used.contains(nextWord.getId())) {
+                        findAllChainsRecursive(nextWord, currentChain, used, targetLength, graph, allChains);
                     }
                 }
             }
-            
-            result.chainsChecked++;
         }
         
-        // Откатываем изменения (backtracking)
+        // Откатываем изменения (backtracking) для проверки других веток
         currentChain.remove(currentChain.size() - 1);
         used.remove(currentWord.getId());
     }
