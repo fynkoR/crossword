@@ -187,9 +187,27 @@ class DictionaryManager {
 
         try {
             await ApiService.deleteDictionary(id);
+            alert('Словарь успешно удалён');
             this.loadDictionaries();
+            
+            // Закрываем модальное окно, если оно открыто
+            document.getElementById('dictionary-detail-modal').classList.remove('active');
         } catch (error) {
-            alert('Ошибка удаления словаря: ' + error.message);
+            console.error('Ошибка удаления словаря:', error);
+            let errorMessage = 'Ошибка удаления словаря';
+            
+            if (error.message) {
+                // Пробуем извлечь более понятное сообщение
+                if (error.message.includes('кроссворд')) {
+                    errorMessage = error.message;
+                } else if (error.message.includes('не найден')) {
+                    errorMessage = 'Словарь не найден';
+                } else {
+                    errorMessage = error.message;
+                }
+            }
+            
+            alert(errorMessage);
         }
     }
 

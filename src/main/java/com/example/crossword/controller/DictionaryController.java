@@ -107,7 +107,7 @@ public class DictionaryController {
      * DELETE /dictionaries/{id}
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDictionary(@PathVariable Long id) {
+    public ResponseEntity<?> deleteDictionary(@PathVariable Long id) {
         try {
             logger.info("DELETE /dictionaries/{} - Удаление словаря", id);
             dictionaryService.deleteDictionary(id);
@@ -115,7 +115,10 @@ public class DictionaryController {
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
             logger.error("Ошибка при удалении словаря ID {}: {}", id, e.getMessage());
-            return ResponseEntity.badRequest().build();
+            java.util.Map<String, String> errorResponse = new java.util.HashMap<>();
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
     }
 
