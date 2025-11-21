@@ -1,0 +1,243 @@
+.game-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    background: var(--bg-color);
+    min-height: calc(100vh - 80px);
+}
+
+.game-header {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 32px;
+    box-shadow: var(--shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.game-info h2 {
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.game-info p {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.game-stats {
+    display: flex;
+    gap: 24px;
+}
+
+.stat {
+    text-align: center;
+}
+
+.stat-label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.stat span:last-child {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.game-area {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: var(--shadow);
+}
+
+/* Цепочка слов */
+.words-chain {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 32px;
+    padding: 24px;
+    background: var(--bg-color);
+    border-radius: 12px;
+    min-height: 120px;
+    align-items: center;
+    justify-content: center;
+}
+
+.word-in-chain {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+}
+
+.word-in-chain.correct {
+    background: #d1fae5;
+    color: var(--success-color);
+    border: 2px solid var(--success-color);
+}
+
+.word-in-chain.incorrect {
+    background: #fee2e2;
+    color: var(--error-color);
+    border: 2px solid var(--error-color);
+}
+
+.word-connector {
+    font-size: 24px;
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+/* Текущее слово */
+.current-word-section {
+    background: var(--bg-color);
+    padding: 24px;
+    border-radius: 12px;
+}
+
+.word-hint {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: white;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.word-hint p {
+    margin-bottom: 8px;
+}
+
+.word-hint p:last-child {
+    margin-bottom: 0;
+    color: var(--text-secondary);
+}
+
+.word-input-section {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    margin-bottom: 16px;
+}
+
+.word-input-section label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.word-input {
+    flex: 1;
+    padding: 14px 16px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: all 0.3s ease;
+}
+
+.word-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.word-input.correct {
+    border-color: var(--success-color);
+    background: #d1fae5;
+}
+
+.word-input.incorrect {
+    border-color: var(--error-color);
+    background: #fee2e2;
+}
+
+.word-feedback {
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-align: center;
+    display: none;
+}
+
+.word-feedback.show {
+    display: block;
+}
+
+.word-feedback.success {
+    background: #d1fae5;
+    color: var(--success-color);
+}
+
+.word-feedback.error {
+    background: #fee2e2;
+    color: var(--error-color);
+}
+
+.word-feedback.info {
+    background: #dbeafe;
+    color: #3b82f6;
+}
+
+/* Модальное окно завершения игры */
+#game-complete-modal .modal-content {
+    text-align: center;
+}
+
+#game-complete-modal h2 {
+    font-size: 32px;
+    margin-bottom: 16px;
+    color: var(--success-color);
+}
+
+#game-complete-modal p {
+    font-size: 18px;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+}
+
+#game-complete-modal button {
+    margin: 8px;
+    min-width: 150px;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .game-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .word-input-section {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .words-chain {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .word-connector {
+        transform: rotate(90deg);
+    }
+}
+

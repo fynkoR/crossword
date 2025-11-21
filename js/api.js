@@ -1,0 +1,180 @@
+// API конфигурация
+const API_BASE_URL = 'http://localhost:8080';
+
+// Утилиты для работы с API
+class ApiService {
+    static async request(endpoint, options = {}) {
+        const url = `${API_BASE_URL}${endpoint}`;
+        const defaultOptions = {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        };
+
+        const config = { ...defaultOptions, ...options };
+        
+        // Если есть тело запроса и это не FormData, преобразуем в JSON
+        if (config.body && !(config.body instanceof FormData)) {
+            config.body = JSON.stringify(config.body);
+        }
+
+        try {
+            const response = await fetch(url, config);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || `HTTP error! status: ${response.status}`);
+            }
+
+            // Если ответ пустой, возвращаем null
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                return null;
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('API Error:', error);
+            throw error;
+        }
+    }
+
+    // Пользователи
+    static async register(login, password) {
+        return this.request('/users/register', {
+            method: 'POST',
+            body: { login, password },
+        });
+    }
+
+    static async login(login, password) {
+        return this.request('/users/auth', {
+            method: 'POST',
+            body: { login, password },
+        });
+    }
+
+    static async getUser(id) {
+        return this.request(`/users/${id}`);
+    }
+
+    // Словари
+    static async getDictionaries() {
+        return this.request('/dictionaries');
+    }
+
+    static async getDictionary(id) {
+        return this.request(`/dictionaries/${id}`);
+    }
+
+    static async createDictionary(title, description) {
+        return this.request('/dictionaries', {
+            method: 'POST',
+            body: { title, description },
+        });
+    }
+
+    static async updateDictionary(id, title, description) {
+        return this.request(`/dictionaries/${id}`, {
+            method: 'PUT',
+            body: { title, description },
+        });
+    }
+
+    static async deleteDictionary(id) {
+        return this.request(`/dictionaries/${id}`, {
+            method: 'DELETE',
+        });
+    }
+
+    static async getWordsFromDictionary(dictionaryId) {
+        return this.request(`/dictionaries/${dictionaryId}/words`);
+    }
+
+    static async importDictionary(dictionaryId, file, skipDuplicates = true) {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        return this.request(`/dictionaries/${dictionaryId}/import?skipDuplicates=${skipDuplicates}`, {
+            method: 'POST',
+            headers: {}, // Не устанавливаем Content-Type для FormData
+            body: formData,
+        });
+    }
+
+    static async exportDictionary(dictionaryId) {
+        const url = `${API_BASE_URL}/dictionaries/${dictionaryId}/export`;
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = 'dictionary.txt';
+        
+        if (contentDisposition) {
+            const filenameMatch = contentDisposition.match(/filename="?(.+?)"?$/);
+            if (filenameMatch) {
+                filename = filenameMatch[1];
+            }
+        }
+
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(downloadUrl);
+    }
+
+    // Слова
+    static async createWord(dictionaryId, word, definition) {
+        return this.request('/words', {
+            method: 'POST',
+            body: { dictionaryId, word, definition },
+        });
+    }
+
+    static async updateWord(id, word, definition) {
+        return this.request(`/words/${id}`, {
+            method: 'PUT',
+            body: { word, definition },
+        });
+    }
+
+    static async deleteWord(id) {
+        return this.request(`/words/${id}`, {
+            method: 'DELETE',
+        });
+    }
+
+    // Кроссворды
+    static async getCrosswords() {
+        return this.request('/crosswords');
+    }
+
+    static async getCrossword(id) {
+        return this.request(`/crosswords/${id}`);
+    }
+
+    // Игры
+    static async startGame(crosswordId, userId) {
+        return this.request('/games', {
+            method: 'POST',
+            body: {
+                crosswordId,
+                userId,
+                action: 'start'
+            },
+        });
+    }
+
+    static async getGame(id) {
+        return this.request(`/games/${id}`);
+    }
+}
+

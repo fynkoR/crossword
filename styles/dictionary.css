@@ -1,0 +1,181 @@
+.dictionary-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    background: var(--bg-color);
+    min-height: calc(100vh - 80px);
+}
+
+.dictionary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    background: white;
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+}
+
+.dictionary-header h1 {
+    color: var(--text-primary);
+}
+
+.dictionaries-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+}
+
+.dictionary-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.dictionary-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.dictionary-card h3 {
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.dictionary-card p {
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.dictionary-stats {
+    display: flex;
+    gap: 16px;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.dictionary-actions {
+    margin-top: 16px;
+    display: flex;
+    gap: 8px;
+}
+
+.dictionary-actions button {
+    flex: 1;
+    padding: 8px;
+    font-size: 14px;
+}
+
+/* Вкладки в модальном окне */
+.dictionary-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+/* Список слов */
+.words-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.words-list {
+    display: grid;
+    gap: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.word-item {
+    background: var(--bg-color);
+    padding: 16px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.word-item .word-text {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.word-item .word-definition {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.word-item-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.word-item-actions button {
+    padding: 6px 12px;
+    font-size: 14px;
+}
+
+/* Импорт/Экспорт */
+.help-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    font-family: 'Courier New', monospace;
+    background: var(--bg-color);
+    padding: 8px;
+    border-radius: 4px;
+}
+
+.import-result {
+    margin-top: 24px;
+    padding: 16px;
+    border-radius: 8px;
+    background: var(--bg-color);
+}
+
+.import-result.success {
+    background: #d1fae5;
+    color: var(--success-color);
+}
+
+.import-result.error {
+    background: #fee2e2;
+    color: var(--error-color);
+}
+
+.import-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.import-stat {
+    text-align: center;
+    padding: 12px;
+    background: white;
+    border-radius: 8px;
+}
+
+.import-stat-number {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--primary-color);
+    display: block;
+}
+
+.import-stat-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+

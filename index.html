@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кроссворды - Главная</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/auth.css">
+    <link rel="stylesheet" href="styles/dashboard.css">
+    <link rel="stylesheet" href="styles/dictionary.css">
+    <link rel="stylesheet" href="styles/game.css">
+</head>
+<body>
+    <!-- Экран авторизации/регистрации -->
+    <div id="auth-screen" class="screen active">
+        <div class="auth-container">
+            <div class="auth-tabs">
+                <button class="tab-btn active" data-tab="login">Вход</button>
+                <button class="tab-btn" data-tab="register">Регистрация</button>
+            </div>
+            
+            <!-- Форма входа -->
+            <div id="login-form" class="auth-form active">
+                <h2>Вход в систему</h2>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="login-username">Логин</label>
+                        <input type="text" id="login-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Пароль</label>
+                        <input type="password" id="login-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Войти</button>
+                </form>
+                <div id="login-error" class="error-message"></div>
+            </div>
+            
+            <!-- Форма регистрации -->
+            <div id="register-form" class="auth-form">
+                <h2>Регистрация</h2>
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label for="register-username">Логин</label>
+                        <input type="text" id="register-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Пароль</label>
+                        <input type="password" id="register-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+                </form>
+                <div id="register-error" class="error-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Главный экран (выбор игры и настройки) -->
+    <div id="dashboard-screen" class="screen">
+        <nav class="navbar">
+            <div class="navbar-brand">🎯 Кроссворды</div>
+            <div class="navbar-user">
+                <span id="user-name"></span>
+                <button id="logout-btn" class="btn btn-secondary">Выйти</button>
+            </div>
+        </nav>
+        
+        <div class="dashboard-container">
+            <div class="dashboard-header">
+                <h1>Добро пожаловать!</h1>
+                <p>Выберите режим игры или настройки</p>
+            </div>
+            
+            <div class="dashboard-cards">
+                <div class="card" id="play-card">
+                    <div class="card-icon">🎮</div>
+                    <h3>Играть</h3>
+                    <p>Начать новую игру в линейный кроссворд</p>
+                </div>
+                
+                <div class="card" id="dictionary-card">
+                    <div class="card-icon">📚</div>
+                    <h3>Словари</h3>
+                    <p>Управление словарями и словами</p>
+                </div>
+                
+                <div class="card" id="settings-card">
+                    <div class="card-icon">⚙️</div>
+                    <h3>Настройки</h3>
+                    <p>Настройки игры</p>
+                </div>
+            </div>
+            
+            <!-- Настройки игры -->
+            <div id="game-settings" class="settings-panel" style="display: none;">
+                <h2>Настройки игры</h2>
+                <div class="form-group">
+                    <label for="dictionary-select">Выберите словарь:</label>
+                    <select id="dictionary-select" class="form-control">
+                        <option value="">Загрузка...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="difficulty-select">Сложность:</label>
+                    <select id="difficulty-select" class="form-control">
+                        <option value="easy">Легкая</option>
+                        <option value="medium" selected>Средняя</option>
+                        <option value="hard">Сложная</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="word-count">Количество слов:</label>
+                    <input type="number" id="word-count" class="form-control" value="5" min="3" max="10">
+                </div>
+                <button id="start-game-btn" class="btn btn-primary">Начать игру</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран работы со словарем -->
+    <div id="dictionary-screen" class="screen">
+        <nav class="navbar">
+            <div class="navbar-brand">📚 Управление словарями</div>
+            <button id="back-to-dashboard" class="btn btn-secondary">← Назад</button>
+        </nav>
+        
+        <div class="dictionary-container">
+            <div class="dictionary-header">
+                <h1>Словари</h1>
+                <button id="create-dictionary-btn" class="btn btn-primary">+ Создать словарь</button>
+            </div>
+            
+            <div id="dictionaries-list" class="dictionaries-grid">
+                <!-- Словари будут загружены динамически -->
+            </div>
+            
+            <!-- Модальное окно создания словаря -->
+            <div id="create-dictionary-modal" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2>Создать новый словарь</h2>
+                    <form id="create-dictionary-form">
+                        <div class="form-group">
+                            <label for="dictionary-title">Название:</label>
+                            <input type="text" id="dictionary-title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="dictionary-description">Описание:</label>
+                            <textarea id="dictionary-description" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Создать</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Модальное окно работы со словарем -->
+            <div id="dictionary-detail-modal" class="modal">
+                <div class="modal-content large">
+                    <span class="close">&times;</span>
+                    <h2 id="dictionary-detail-title">Словарь</h2>
+                    
+                    <div class="dictionary-tabs">
+                        <button class="tab-btn active" data-tab="words">Слова</button>
+                        <button class="tab-btn" data-tab="import">Импорт</button>
+                        <button class="tab-btn" data-tab="export">Экспорт</button>
+                    </div>
+                    
+                    <!-- Вкладка слов -->
+                    <div id="words-tab" class="tab-content active">
+                        <div class="words-header">
+                            <button id="add-word-btn" class="btn btn-primary">+ Добавить слово</button>
+                        </div>
+                        <div id="words-list" class="words-list">
+                            <!-- Слова будут загружены динамически -->
+                        </div>
+                    </div>
+                    
+                    <!-- Вкладка импорта -->
+                    <div id="import-tab" class="tab-content">
+                        <h3>Импорт слов из файла</h3>
+                        <p class="help-text">Формат файла: каждая строка содержит слово и определение, разделённые символом |</p>
+                        <p class="help-text">Пример: кот|домашнее животное семейства кошачьих</p>
+                        <form id="import-form">
+                            <div class="form-group">
+                                <label for="import-file">Выберите файл .txt:</label>
+                                <input type="file" id="import-file" accept=".txt" required>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="skip-duplicates" checked>
+                                    Пропускать дубликаты
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Импортировать</button>
+                        </form>
+                        <div id="import-result" class="import-result"></div>
+                    </div>
+                    
+                    <!-- Вкладка экспорта -->
+                    <div id="export-tab" class="tab-content">
+                        <h3>Экспорт словаря</h3>
+                        <p>Скачайте все слова из словаря в текстовом формате</p>
+                        <button id="export-btn" class="btn btn-primary">Экспортировать словарь</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран игры -->
+    <div id="game-screen" class="screen">
+        <nav class="navbar">
+            <div class="navbar-brand">🎮 Игра</div>
+            <button id="back-to-dashboard-from-game" class="btn btn-secondary">← Назад</button>
+        </nav>
+        
+        <div class="game-container">
+            <div class="game-header">
+                <div class="game-info">
+                    <h2>Линейный кроссворд</h2>
+                    <p>Последняя буква предыдущего слова должна быть первой буквой следующего</p>
+                </div>
+                <div class="game-stats">
+                    <div class="stat">
+                        <span class="stat-label">Слов:</span>
+                        <span id="words-count">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Правильно:</span>
+                        <span id="correct-count">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="game-area">
+                <div id="words-chain" class="words-chain">
+                    <!-- Цепочка слов будет отображаться здесь -->
+                </div>
+                
+                <div class="current-word-section">
+                    <div class="word-hint">
+                        <p><strong>Подсказка:</strong></p>
+                        <p id="word-definition">Загрузка...</p>
+                    </div>
+                    
+                    <div class="word-input-section">
+                        <label for="word-input">Введите слово:</label>
+                        <input type="text" id="word-input" class="word-input" autocomplete="off">
+                        <button id="check-word-btn" class="btn btn-primary">Проверить</button>
+                    </div>
+                    
+                    <div id="word-feedback" class="word-feedback"></div>
+                </div>
+            </div>
+            
+            <div id="game-complete-modal" class="modal">
+                <div class="modal-content">
+                    <h2>🎉 Игра завершена!</h2>
+                    <p>Вы успешно составили цепочку из <span id="final-words-count">0</span> слов!</p>
+                    <button id="play-again-btn" class="btn btn-primary">Играть снова</button>
+                    <button id="back-to-menu-btn" class="btn btn-secondary">В меню</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/dictionary.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,83 @@
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.dashboard-header {
+    text-align: center;
+    color: white;
+    margin-bottom: 48px;
+}
+
+.dashboard-header h1 {
+    font-size: 48px;
+    margin-bottom: 12px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.dashboard-header p {
+    font-size: 20px;
+    opacity: 0.9;
+}
+
+.dashboard-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+.card {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow);
+}
+
+.card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-lg);
+}
+
+.card-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+}
+
+.card h3 {
+    font-size: 24px;
+    margin-bottom: 12px;
+    color: var(--text-primary);
+}
+
+.card p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.settings-panel {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: var(--shadow);
+    margin-top: 32px;
+}
+
+.settings-panel h2 {
+    margin-bottom: 24px;
+    color: var(--text-primary);
+}
+
+.settings-panel .form-group {
+    margin-bottom: 24px;
+}
+
+.settings-panel button {
+    width: 100%;
+    margin-top: 8px;
+}
+
