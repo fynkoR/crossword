@@ -101,17 +101,19 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="difficulty-select">Сложность:</label>
-                    <select id="difficulty-select" class="form-control">
-                        <option value="easy">Легкая</option>
-                        <option value="medium" selected>Средняя</option>
-                        <option value="hard">Сложная</option>
+                    <label for="word-count">Количество слов в кроссворде:</label>
+                    <select id="word-count" class="form-control">
+                        <option value="3">3 слова</option>
+                        <option value="4">4 слова</option>
+                        <option value="5" selected>5 слов</option>
+                        <option value="6">6 слов</option>
+                        <option value="7">7 слов</option>
+                        <option value="8">8 слов</option>
+                        <option value="9">9 слов</option>
+                        <option value="10">10 слов</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="word-count">Количество слов:</label>
-                    <input type="number" id="word-count" class="form-control" value="5" min="3" max="10">
-                </div>
+                <div id="generation-status" class="generation-status"></div>
                 <button id="start-game-btn" class="btn btn-primary">Начать игру</button>
             </div>
         </div>
@@ -234,8 +236,14 @@
             
             <div class="game-area">
                 <div class="crossword-container">
-                    <div id="crossword-grid" class="crossword-grid">
-                        <!-- Сетка кроссворда будет отображаться здесь -->
+                    <div class="grid-section">
+                        <div id="current-word-hint" class="current-word-hint">
+                            <span class="hint-label">Подсказка:</span>
+                            <span id="current-hint-text" class="hint-text">Выберите слово из списка</span>
+                        </div>
+                        <div id="crossword-grid" class="crossword-grid">
+                            <!-- Сетка кроссворда будет отображаться здесь -->
+                        </div>
                     </div>
                     
                     <div class="words-panel">

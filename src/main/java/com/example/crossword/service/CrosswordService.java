@@ -299,6 +299,30 @@ public class CrosswordService {
     }
 
     /**
+     * Проверить, какие варианты кроссворда доступны для словаря
+     */
+    public java.util.Map<Integer, Boolean> checkAvailableVariants(Long dictionaryId, int minWords, int maxWords) {
+        // Проверяем существование словаря
+        if (!dictionaryRepository.existsById(dictionaryId)) {
+            throw new RuntimeException("Словарь с ID " + dictionaryId + " не найден");
+        }
+
+        java.util.Map<Integer, Boolean> variants = new java.util.HashMap<>();
+        
+        for (int wordCount = minWords; wordCount <= maxWords; wordCount++) {
+            try {
+                // Пробуем сгенерировать кроссворд
+                crosswordGeneratorService.generateCrossword(dictionaryId, wordCount);
+                variants.put(wordCount, true);
+            } catch (RuntimeException e) {
+                variants.put(wordCount, false);
+            }
+        }
+        
+        return variants;
+    }
+
+    /**
      * DTO для статистики кроссворда
      */
     public static class CrosswordStatisticsDto {

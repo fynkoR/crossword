@@ -251,6 +251,16 @@ class GameManager {
         if (wordItem) {
             wordItem.classList.add('active');
         }
+        
+        // Обновляем текущую подсказку
+        this.updateCurrentHint(word);
+    }
+
+    updateCurrentHint(word) {
+        const hintText = document.getElementById('current-hint-text');
+        if (hintText && word) {
+            hintText.textContent = `${word.number}. ${word.definition || 'Нет описания'}`;
+        }
     }
 
     handleCellInput(input, x, y) {

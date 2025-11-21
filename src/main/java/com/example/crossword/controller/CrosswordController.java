@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * REST контроллер для работы с кроссвордами
@@ -189,6 +190,25 @@ public class CrosswordController {
             return ResponseEntity.status(HttpStatus.CREATED).body(crossword);
         } catch (RuntimeException e) {
             logger.error("Ошибка при генерации кроссворда: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * Проверить, какие варианты кроссворда можно создать из словаря
+     * GET /crosswords/check-variants
+     */
+    @GetMapping("/check-variants")
+    public ResponseEntity<?> checkVariants(
+            @RequestParam Long dictionaryId,
+            @RequestParam(defaultValue = "3") int minWords,
+            @RequestParam(defaultValue = "10") int maxWords) {
+        try {
+            logger.info("GET /crosswords/check-variants - Проверка вариантов для словаря {}", dictionaryId);
+            Map<Integer, Boolean> availableVariants = crosswordService.checkAvailableVariants(dictionaryId, minWords, maxWords);
+            return ResponseEntity.ok(availableVariants);
+        } catch (RuntimeException e) {
+            logger.error("Ошибка при проверке вариантов: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }

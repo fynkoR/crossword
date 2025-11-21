@@ -198,6 +198,10 @@ class ApiService {
         });
     }
 
+    static async checkCrosswordVariants(dictionaryId, minWords = 3, maxWords = 10) {
+        return this.request(`/crosswords/check-variants?dictionaryId=${dictionaryId}&minWords=${minWords}&maxWords=${maxWords}`);
+    }
+
     // Игры
     static async startGame(crosswordId, userId) {
         return this.request('/games', {

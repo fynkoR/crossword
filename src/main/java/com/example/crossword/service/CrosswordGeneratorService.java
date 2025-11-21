@@ -44,8 +44,65 @@ public class CrosswordGeneratorService {
             throw new RuntimeException("Не удалось найти цепочку из " + wordCount + " слов. Найдено только " + chainWords.size());
         }
         
+        // Валидируем цепочку - проверяем, что все слова правильно соединены
+        validateWordChain(chainWords);
+        
         // Генерируем сетку и размещаем слова
         return placeWordsInGrid(chainWords);
+    }
+    
+    /**
+     * Генерирует все возможные варианты кроссворда для словаря
+     * Пробует создать кроссворды с разным количеством слов (от minWords до maxWords)
+     */
+    public Map<Integer, CrosswordGenerationResult> generateAllVariants(Long dictionaryId, int minWords, int maxWords) {
+        Map<Integer, CrosswordGenerationResult> variants = new HashMap<>();
+        
+        List<Word> allWords = wordRepository.findByDictionaryId(dictionaryId);
+        
+        if (allWords.isEmpty()) {
+            throw new RuntimeException("Словарь пуст");
+        }
+        
+        for (int wordCount = minWords; wordCount <= maxWords; wordCount++) {
+            if (wordCount > allWords.size()) {
+                break; // Не хватает слов
+            }
+            
+            try {
+                CrosswordGenerationResult result = generateCrossword(dictionaryId, wordCount);
+                variants.put(wordCount, result);
+            } catch (RuntimeException e) {
+                // Не удалось создать кроссворд с таким количеством слов, пропускаем
+                System.out.println("Не удалось создать кроссворд с " + wordCount + " словами: " + e.getMessage());
+            }
+        }
+        
+        if (variants.isEmpty()) {
+            throw new RuntimeException("Не удалось создать ни одного варианта кроссворда для данного словаря");
+        }
+        
+        return variants;
+    }
+    
+    /**
+     * Валидирует цепочку слов - проверяет, что каждое следующее слово начинается с последней буквы предыдущего
+     */
+    private void validateWordChain(List<Word> chain) {
+        for (int i = 1; i < chain.size(); i++) {
+            Word prevWord = chain.get(i - 1);
+            Word currWord = chain.get(i);
+            
+            String lastLetter = getLastLetter(prevWord.getWord());
+            String firstLetter = getFirstLetter(currWord.getWord());
+            
+            if (!lastLetter.equals(firstLetter)) {
+                throw new RuntimeException(
+                    String.format("Ошибка валидации: слово '%s' не может следовать за словом '%s' (последняя буква '%s' != первая буква '%s')",
+                        currWord.getWord(), prevWord.getWord(), lastLetter, firstLetter)
+                );
+            }
+        }
     }
     
     /**

@@ -81,3 +81,30 @@
     margin-top: 8px;
 }
 
+/* Статус генерации */
+.generation-status {
+    margin: 16px 0;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.generation-status p {
+    margin: 0;
+}
+
+.generation-status .checking {
+    color: #3b82f6;
+    background: #dbeafe;
+}
+
+.generation-status .success {
+    color: var(--success-color);
+    background: #d1fae5;
+}
+
+.generation-status .error {
+    color: var(--error-color);
+    background: #fee2e2;
+}
+
