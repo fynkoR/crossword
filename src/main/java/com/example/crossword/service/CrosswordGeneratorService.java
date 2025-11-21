@@ -107,77 +107,120 @@ public class CrosswordGeneratorService {
     
     /**
      * Находит цепочку слов, где последняя буква предыдущего = первая буква следующего
+     * Использует улучшенный алгоритм для поиска всех возможных цепочек
      */
     private List<Word> findWordChain(List<Word> allWords, int count) {
-        // Преобразуем в список для удобства
+        // Сортируем слова по ID для детерминированности
         List<Word> words = new ArrayList<>(allWords);
+        words.sort(Comparator.comparing(Word::getId));
         
-        // Пробуем найти цепочку, начиная с разных слов
-        List<Word> bestChain = new ArrayList<>();
+        // Строим граф связей между словами
+        Map<Long, List<Word>> graph = buildWordGraph(words);
         
-        // Пробуем несколько раз с разными начальными словами
-        for (int attempt = 0; attempt < Math.min(words.size(), 20); attempt++) {
-            Collections.shuffle(words); // Перемешиваем для разнообразия
-            
-            List<Word> chain = buildChain(words, count);
-            
-            // Если нашли достаточно длинную цепочку, возвращаем
-            if (chain.size() >= count) {
-                return chain;
+        // Оптимизация: ищем цепочку с ограничением на количество вариантов
+        ChainSearchResult searchResult = new ChainSearchResult();
+        
+        // Пробуем начать с каждого слова
+        for (Word startWord : words) {
+            if (searchResult.foundTargetLength) {
+                break; // Если уже нашли цепочку нужной длины, прекращаем поиск
             }
             
-            // Сохраняем лучший результат
-            if (chain.size() > bestChain.size()) {
-                bestChain = chain;
-            }
+            List<Word> currentChain = new ArrayList<>();
+            Set<Long> used = new HashSet<>();
+            
+            findAllChainsOptimized(startWord, currentChain, used, count, graph, searchResult);
         }
         
-        return bestChain;
+        // Возвращаем лучшую найденную цепочку
+        return searchResult.bestChain;
     }
     
     /**
-     * Строит цепочку слов начиная с первого слова в списке
+     * Класс для хранения результатов поиска цепочек
      */
-    private List<Word> buildChain(List<Word> words, int maxCount) {
-        List<Word> chain = new ArrayList<>();
-        Set<Long> used = new HashSet<>();
+    private static class ChainSearchResult {
+        List<Word> bestChain = new ArrayList<>();
+        boolean foundTargetLength = false;
+        int chainsChecked = 0;
+        static final int MAX_CHAINS_TO_CHECK = 1000; // Ограничение для производительности
+    }
+    
+    /**
+     * Строит граф связей между словами
+     * Ключ - ID слова, значение - список слов, которые могут следовать за ним
+     */
+    private Map<Long, List<Word>> buildWordGraph(List<Word> words) {
+        Map<Long, List<Word>> graph = new HashMap<>();
         
-        if (words.isEmpty()) {
-            return chain;
-        }
-        
-        // Начинаем с первого слова
-        Word firstWord = words.get(0);
-        chain.add(firstWord);
-        used.add(firstWord.getId());
-        
-        String lastLetter = getLastLetter(firstWord.getWord());
-        
-        // Ищем следующие слова
-        while (chain.size() < maxCount && chain.size() < words.size()) {
-            boolean found = false;
+        for (Word word : words) {
+            List<Word> nextWords = new ArrayList<>();
+            String lastLetter = getLastLetter(word.getWord());
             
-            // Ищем слово, которое начинается с последней буквы текущего слова
-            for (Word word : words) {
-                if (used.contains(word.getId())) continue;
+            for (Word nextWord : words) {
+                if (word.getId().equals(nextWord.getId())) continue;
                 
-                String firstLetter = getFirstLetter(word.getWord());
-                if (firstLetter.equals(lastLetter)) {
-                    chain.add(word);
-                    used.add(word.getId());
-                    lastLetter = getLastLetter(word.getWord());
-                    found = true;
-                    break;
+                String firstLetter = getFirstLetter(nextWord.getWord());
+                if (lastLetter.equals(firstLetter)) {
+                    nextWords.add(nextWord);
                 }
             }
             
-            // Если не нашли подходящее слово, прекращаем
-            if (!found) {
-                break;
-            }
+            graph.put(word.getId(), nextWords);
         }
         
-        return chain;
+        return graph;
+    }
+    
+    /**
+     * Рекурсивно находит цепочки слов с оптимизацией
+     */
+    private void findAllChainsOptimized(Word currentWord, List<Word> currentChain, Set<Long> used, 
+                                       int targetLength, Map<Long, List<Word>> graph, 
+                                       ChainSearchResult result) {
+        // Проверка ограничения на количество проверенных цепочек
+        if (result.chainsChecked >= ChainSearchResult.MAX_CHAINS_TO_CHECK) {
+            return;
+        }
+        
+        // Если уже нашли цепочку нужной длины, не продолжаем
+        if (result.foundTargetLength) {
+            return;
+        }
+        
+        // Добавляем текущее слово в цепочку
+        currentChain.add(currentWord);
+        used.add(currentWord.getId());
+        
+        // Если достигли нужной длины, сохраняем цепочку
+        if (currentChain.size() == targetLength) {
+            result.bestChain = new ArrayList<>(currentChain);
+            result.foundTargetLength = true;
+            result.chainsChecked++;
+        } 
+        // Если цепочка короче, продолжаем поиск
+        else if (currentChain.size() < targetLength) {
+            // Обновляем лучшую цепочку, если текущая длиннее
+            if (currentChain.size() > result.bestChain.size()) {
+                result.bestChain = new ArrayList<>(currentChain);
+            }
+            
+            List<Word> possibleNextWords = graph.get(currentWord.getId());
+            
+            if (possibleNextWords != null) {
+                for (Word nextWord : possibleNextWords) {
+                    if (!used.contains(nextWord.getId()) && !result.foundTargetLength) {
+                        findAllChainsOptimized(nextWord, currentChain, used, targetLength, graph, result);
+                    }
+                }
+            }
+            
+            result.chainsChecked++;
+        }
+        
+        // Откатываем изменения (backtracking)
+        currentChain.remove(currentChain.size() - 1);
+        used.remove(currentWord.getId());
     }
     
     /**
