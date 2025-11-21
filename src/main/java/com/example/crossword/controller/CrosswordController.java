@@ -172,5 +172,25 @@ public class CrosswordController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    /**
+     * Генерировать кроссворд из словаря
+     * POST /crosswords/generate
+     */
+    @PostMapping("/generate")
+    public ResponseEntity<CrosswordDetailDto> generateCrossword(
+            @RequestParam Long dictionaryId,
+            @RequestParam int wordCount,
+            @RequestParam String title) {
+        try {
+            logger.info("POST /crosswords/generate - Генерация кроссворда из словаря {}, слов: {}", dictionaryId, wordCount);
+            CrosswordDetailDto crossword = crosswordService.generateCrosswordFromDictionary(dictionaryId, wordCount, title);
+            logger.info("Кроссворд успешно сгенерирован с ID: {}", crossword.getId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(crossword);
+        } catch (RuntimeException e) {
+            logger.error("Ошибка при генерации кроссворда: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
 }
 

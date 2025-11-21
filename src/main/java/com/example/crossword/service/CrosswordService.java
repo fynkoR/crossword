@@ -26,18 +26,21 @@ public class CrosswordService {
     private final GameRepository gameRepository;
     private final CrosswordMapper crosswordMapper;
     private final CrosswordJsonService crosswordJsonService;
+    private final CrosswordGeneratorService crosswordGeneratorService;
 
     @Autowired
     public CrosswordService(CrosswordRepository crosswordRepository,
                            DictionaryRepository dictionaryRepository,
                            GameRepository gameRepository,
                            CrosswordMapper crosswordMapper,
-                           CrosswordJsonService crosswordJsonService) {
+                           CrosswordJsonService crosswordJsonService,
+                           CrosswordGeneratorService crosswordGeneratorService) {
         this.crosswordRepository = crosswordRepository;
         this.dictionaryRepository = dictionaryRepository;
         this.gameRepository = gameRepository;
         this.crosswordMapper = crosswordMapper;
         this.crosswordJsonService = crosswordJsonService;
+        this.crosswordGeneratorService = crosswordGeneratorService;
     }
 
     /**
@@ -262,6 +265,37 @@ public class CrosswordService {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    /**
+     * Генерировать кроссворд из словаря
+     */
+    public CrosswordDetailDto generateCrosswordFromDictionary(Long dictionaryId, int wordCount, String title) {
+        // Проверяем существование словаря
+        Dictionary dictionary = dictionaryRepository.findById(dictionaryId)
+                .orElseThrow(() -> new RuntimeException("Словарь с ID " + dictionaryId + " не найден"));
+
+        // Генерируем кроссворд
+        CrosswordGeneratorService.CrosswordGenerationResult result = 
+                crosswordGeneratorService.generateCrossword(dictionaryId, wordCount);
+
+        // Создаем кроссворд
+        Crossword crossword = new Crossword();
+        crossword.setTitle(title);
+        crossword.setDictionary(dictionary);
+        crossword.setGrid_width(result.getGrid().getSize().getWidth());
+        crossword.setGrid_height(result.getGrid().getSize().getHeight());
+        
+        // Сериализуем данные
+        String gridJson = crosswordJsonService.serializeGridData(result.getGrid());
+        String wordsJson = crosswordJsonService.serializeWordsData(result.getWords());
+        crossword.setGrid_data(gridJson);
+        crossword.setWords_data(wordsJson);
+
+        Crossword savedCrossword = crosswordRepository.save(crossword);
+        
+        // Возвращаем детальную информацию
+        return getCrosswordDetailById(savedCrossword.getId());
     }
 
     /**

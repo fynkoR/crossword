@@ -1,10 +1,12 @@
-// Управление игрой в линейный кроссворд
+// Управление игрой в кроссворд с сеткой
 class GameManager {
     constructor() {
         this.currentGame = null;
+        this.crossword = null;
+        this.grid = null;
         this.words = [];
-        this.currentWordIndex = 0;
-        this.correctWords = [];
+        this.selectedCell = null;
+        this.currentWord = null;
         this.gameSettings = null;
         this.init();
     }
@@ -13,18 +15,6 @@ class GameManager {
         // Кнопка назад
         document.getElementById('back-to-dashboard-from-game').addEventListener('click', () => {
             this.showDashboard();
-        });
-
-        // Обработка ввода слова
-        document.getElementById('word-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.checkWord();
-            }
-        });
-
-        // Кнопка проверки
-        document.getElementById('check-word-btn').addEventListener('click', () => {
-            this.checkWord();
         });
 
         // Кнопки завершения игры
@@ -39,255 +29,374 @@ class GameManager {
 
     async startGame(settings) {
         this.gameSettings = settings;
-        this.currentWordIndex = 0;
-        this.correctWords = [];
         
         try {
-            // Загружаем слова из словаря
-            const words = await ApiService.getWordsFromDictionary(settings.dictionaryId);
+            // Генерируем кроссворд из словаря
+            const title = `Кроссворд из словаря ${settings.dictionaryId}`;
+            this.crossword = await ApiService.generateCrossword(
+                settings.dictionaryId, 
+                settings.wordCount, 
+                title
+            );
             
-            if (words.length < settings.wordCount) {
-                alert(`В словаре недостаточно слов. Нужно минимум ${settings.wordCount} слов.`);
+            if (!this.crossword || !this.crossword.gridData || !this.crossword.wordsData) {
+                alert('Ошибка генерации кроссворда');
                 this.showDashboard();
                 return;
             }
-
-            // Выбираем случайные слова для игры
-            this.words = this.selectRandomWords(words, settings.wordCount);
             
-            // Проверяем, можно ли составить цепочку
-            if (!this.canFormChain(this.words)) {
-                // Если нельзя, пытаемся найти подходящие слова
-                this.words = this.findChainableWords(words, settings.wordCount);
-                
-                if (this.words.length < settings.wordCount) {
-                    alert('Не удалось найти слова, которые можно соединить в цепочку. Попробуйте другой словарь.');
-                    this.showDashboard();
-                    return;
-                }
+            this.grid = this.crossword.gridData;
+            this.words = this.crossword.wordsData.words || [];
+            
+            // Создаем игру на backend
+            const user = authManager.getCurrentUser();
+            if (!user || !user.id) {
+                alert('Пользователь не авторизован');
+                this.showDashboard();
+                return;
             }
-
-            // Перемешиваем слова для игры
-            this.shuffleArray(this.words);
             
-            // Инициализируем игру
-            this.currentWordIndex = 0;
-            this.updateGameDisplay();
+            // Создаем игру
+            const gameResult = await ApiService.startGame(this.crossword.id, user.id);
+            if (gameResult && gameResult.game) {
+                this.currentGame = gameResult.game;
+            }
+            
+            // Отображаем кроссворд
+            this.renderGrid();
+            this.renderWordsList();
             this.updateStats();
         } catch (error) {
             console.error('Ошибка загрузки игры:', error);
-            alert('Ошибка загрузки игры: ' + error.message);
+            alert('Ошибка загрузки игры: ' + (error.message || 'Неизвестная ошибка'));
             this.showDashboard();
         }
     }
 
-    selectRandomWords(words, count) {
-        const shuffled = [...words].sort(() => Math.random() - 0.5);
-        return shuffled.slice(0, count);
-    }
-
-    canFormChain(words) {
-        // Проверяем, можно ли составить цепочку из слов
-        // Для простоты проверяем, есть ли хотя бы одна пара слов, которые можно соединить
-        for (let i = 0; i < words.length; i++) {
-            for (let j = i + 1; j < words.length; j++) {
-                const word1 = words[i].word.toLowerCase();
-                const word2 = words[j].word.toLowerCase();
-                
-                if (word1[word1.length - 1] === word2[0] || word2[word2.length - 1] === word1[0]) {
-                    return true;
-                }
-            }
+    renderGrid() {
+        const gridContainer = document.getElementById('crossword-grid');
+        if (!gridContainer) {
+            console.error('Элемент crossword-grid не найден');
+            return;
         }
-        return false;
-    }
-
-    findChainableWords(allWords, count) {
-        // Находим слова, которые можно соединить в цепочку
-        const words = allWords.map(w => w.word.toLowerCase());
-        const result = [];
-        const used = new Set();
         
-        // Начинаем с первого слова
-        if (words.length === 0) return [];
+        gridContainer.innerHTML = '';
         
-        let currentWord = words[0];
-        result.push(allWords[0]);
-        used.add(0);
+        if (!this.grid || !this.grid.size) {
+            console.error('Данные сетки отсутствуют');
+            return;
+        }
         
-        // Ищем слова, которые можно добавить в цепочку
-        while (result.length < count && result.length < words.length) {
-            const lastLetter = currentWord[currentWord.length - 1];
-            let found = false;
-            
-            for (let i = 0; i < words.length; i++) {
-                if (used.has(i)) continue;
+        const width = this.grid.size.width;
+        const height = this.grid.size.height;
+        
+        // Создаем таблицу для сетки
+        const table = document.createElement('table');
+        table.className = 'crossword-table';
+        
+        // Создаем карту клеток для быстрого доступа
+        const cellMap = new Map();
+        if (this.grid.cells) {
+            this.grid.cells.forEach(cell => {
+                const key = `${cell.x},${cell.y}`;
+                cellMap.set(key, cell);
+            });
+        }
+        
+        // Создаем строки и ячейки
+        for (let y = 0; y < height; y++) {
+            const row = document.createElement('tr');
+            for (let x = 0; x < width; x++) {
+                const cell = document.createElement('td');
+                const key = `${x},${y}`;
+                const cellData = cellMap.get(key);
                 
-                if (words[i][0] === lastLetter) {
-                    result.push(allWords[i]);
-                    used.add(i);
-                    currentWord = words[i];
-                    found = true;
-                    break;
-                }
-            }
-            
-            // Если не нашли подходящее слово, пробуем начать с другого
-            if (!found) {
-                for (let i = 0; i < words.length; i++) {
-                    if (used.has(i)) continue;
+                if (cellData && cellData.isBlack) {
+                    // Черная клетка (препятствие)
+                    cell.className = 'grid-cell black';
+                    cell.textContent = '';
+                } else if (cellData) {
+                    // Обычная клетка
+                    cell.className = 'grid-cell';
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
                     
-                    // Пробуем найти слово, которое начинается с последней буквы любого слова в цепочке
-                    for (const word of result) {
-                        const wordLower = word.word.toLowerCase();
-                        const lastLetter = wordLower[wordLower.length - 1];
-                        
-                        if (words[i][0] === lastLetter) {
-                            result.push(allWords[i]);
-                            used.add(i);
-                            currentWord = words[i];
-                            found = true;
-                            break;
-                        }
+                    // Номер слова
+                    if (cellData.number) {
+                        const numberSpan = document.createElement('span');
+                        numberSpan.className = 'cell-number';
+                        numberSpan.textContent = cellData.number;
+                        cell.appendChild(numberSpan);
                     }
                     
-                    if (found) break;
+                    // Буква (если есть)
+                    const letterInput = document.createElement('input');
+                    letterInput.type = 'text';
+                    letterInput.maxLength = 1;
+                    letterInput.className = 'cell-input';
+                    letterInput.dataset.x = x;
+                    letterInput.dataset.y = y;
+                    
+                    if (cellData.letter) {
+                        letterInput.value = cellData.letter;
+                        letterInput.disabled = true;
+                        cell.classList.add('solved');
+                    }
+                    
+                    // Обработчики событий
+                    letterInput.addEventListener('input', (e) => {
+                        this.handleCellInput(e.target, x, y);
+                    });
+                    
+                    letterInput.addEventListener('keydown', (e) => {
+                        this.handleCellKeydown(e, x, y);
+                    });
+                    
+                    letterInput.addEventListener('focus', (e) => {
+                        this.selectCell(x, y);
+                    });
+                    
+                    cell.appendChild(letterInput);
+                } else {
+                    // Пустая клетка (вне сетки)
+                    cell.className = 'grid-cell empty';
                 }
+                
+                row.appendChild(cell);
             }
-            
-            if (!found) break;
+            table.appendChild(row);
         }
         
-        return result;
+        gridContainer.appendChild(table);
     }
 
-    shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-    }
-
-    updateGameDisplay() {
-        const word = this.words[this.currentWordIndex];
-        const definition = word.definition || 'Нет определения';
+    renderWordsList() {
+        const wordsList = document.getElementById('words-list');
+        if (!wordsList) return;
         
-        document.getElementById('word-definition').textContent = definition;
-        document.getElementById('word-input').value = '';
-        document.getElementById('word-input').className = 'word-input';
-        document.getElementById('word-feedback').classList.remove('show');
+        wordsList.innerHTML = '';
         
-        // Обновляем цепочку слов
-        this.updateWordsChain();
-    }
-
-    updateWordsChain() {
-        const container = document.getElementById('words-chain');
-        container.innerHTML = '';
-        
-        this.correctWords.forEach((wordData, index) => {
-            const wordDiv = document.createElement('div');
-            wordDiv.className = 'word-in-chain correct';
-            wordDiv.textContent = wordData.word;
-            container.appendChild(wordDiv);
+        this.words.forEach((word, index) => {
+            const wordItem = document.createElement('div');
+            wordItem.className = `word-item ${word.isSolved ? 'solved' : ''}`;
+            wordItem.dataset.wordId = word.wordId;
+            wordItem.dataset.wordNumber = word.number;
             
-            // Добавляем стрелку между словами
-            if (index < this.correctWords.length - 1) {
-                const connector = document.createElement('span');
-                connector.className = 'word-connector';
-                connector.textContent = ' → ';
-                container.appendChild(connector);
-            }
+            const numberSpan = document.createElement('span');
+            numberSpan.className = 'word-number';
+            numberSpan.textContent = word.number + '.';
+            
+            const definitionSpan = document.createElement('span');
+            definitionSpan.className = 'word-definition';
+            definitionSpan.textContent = word.definition || 'Нет определения';
+            
+            wordItem.appendChild(numberSpan);
+            wordItem.appendChild(definitionSpan);
+            
+            wordItem.addEventListener('click', () => {
+                this.selectWord(word);
+            });
+            
+            wordsList.appendChild(wordItem);
         });
     }
 
-    checkWord() {
-        const input = document.getElementById('word-input');
-        const userWord = input.value.trim().toLowerCase();
-        const currentWord = this.words[this.currentWordIndex];
-        const correctWord = currentWord.word.toLowerCase();
-        const feedbackDiv = document.getElementById('word-feedback');
+    selectCell(x, y) {
+        this.selectedCell = { x, y };
         
-        // Проверяем правильность слова
-        if (userWord === correctWord) {
-            // Проверяем, можно ли добавить это слово в цепочку
-            if (this.correctWords.length === 0) {
-                // Первое слово - всегда можно добавить
-                this.correctWords.push({
-                    word: currentWord.word,
-                    definition: currentWord.definition
-                });
-                input.className = 'word-input correct';
-                feedbackDiv.className = 'word-feedback success show';
-                feedbackDiv.textContent = '✓ Правильно!';
-                
-                this.currentWordIndex++;
-                this.updateStats();
-                
-                // Проверяем, завершена ли игра
-                if (this.currentWordIndex >= this.words.length) {
-                    setTimeout(() => this.completeGame(), 1000);
-                } else {
-                    setTimeout(() => this.updateGameDisplay(), 1500);
+        // Находим слово, которое содержит эту клетку
+        const word = this.findWordByCell(x, y);
+        if (word) {
+            this.currentWord = word;
+            this.highlightWord(word);
+        }
+    }
+
+    findWordByCell(x, y) {
+        return this.words.find(word => {
+            if (!word.positions || word.positions.length < 2) return false;
+            
+            for (let i = 0; i < word.positions.length; i += 2) {
+                if (word.positions[i] === x && word.positions[i + 1] === y) {
+                    return true;
                 }
-            } else {
-                // Проверяем связь с предыдущим словом
-                const lastWord = this.correctWords[this.correctWords.length - 1].word.toLowerCase();
-                const lastLetter = lastWord[lastWord.length - 1];
-                const firstLetter = correctWord[0];
-                
-                if (lastLetter === firstLetter) {
-                    // Правильно! Слово можно добавить
-                    this.correctWords.push({
-                        word: currentWord.word,
-                        definition: currentWord.definition
-                    });
-                    input.className = 'word-input correct';
-                    feedbackDiv.className = 'word-feedback success show';
-                    feedbackDiv.textContent = '✓ Правильно! Слово добавлено в цепочку.';
-                    
-                    this.currentWordIndex++;
-                    this.updateStats();
-                    
-                    // Обновляем цепочку
-                    this.updateWordsChain();
-                    
-                    // Проверяем, завершена ли игра
-                    if (this.currentWordIndex >= this.words.length) {
-                        setTimeout(() => this.completeGame(), 1000);
-                    } else {
-                        setTimeout(() => this.updateGameDisplay(), 1500);
+            }
+            return false;
+        });
+    }
+
+    highlightWord(word) {
+        // Убираем предыдущее выделение
+        document.querySelectorAll('.grid-cell.highlighted').forEach(cell => {
+            cell.classList.remove('highlighted');
+        });
+        
+        // Выделяем клетки слова
+        if (word.positions) {
+            for (let i = 0; i < word.positions.length; i += 2) {
+                const x = word.positions[i];
+                const y = word.positions[i + 1];
+                const cell = document.querySelector(`.cell-input[data-x="${x}"][data-y="${y}"]`);
+                if (cell) {
+                    cell.closest('.grid-cell').classList.add('highlighted');
+                }
+            }
+        }
+        
+        // Выделяем слово в списке
+        document.querySelectorAll('.word-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        const wordItem = document.querySelector(`.word-item[data-word-number="${word.number}"]`);
+        if (wordItem) {
+            wordItem.classList.add('active');
+        }
+    }
+
+    handleCellInput(input, x, y) {
+        const value = input.value.toUpperCase().replace(/[^А-ЯA-Z]/g, '');
+        input.value = value;
+        
+        if (value) {
+            // Переходим к следующей клетке слова
+            this.moveToNextCell(x, y);
+        }
+        
+        // Проверяем слово
+        this.checkWord();
+    }
+
+    handleCellKeydown(e, x, y) {
+        if (e.key === 'Backspace' && !e.target.value) {
+            // Переходим к предыдущей клетке
+            this.moveToPreviousCell(x, y);
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            this.moveToPreviousCell(x, y);
+        } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            this.moveToNextCell(x, y);
+        } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            // Можно добавить переход по вертикали
+        }
+    }
+
+    moveToNextCell(x, y) {
+        const word = this.findWordByCell(x, y);
+        if (!word || !word.positions) return;
+        
+        for (let i = 0; i < word.positions.length; i += 2) {
+            if (word.positions[i] === x && word.positions[i + 1] === y) {
+                if (i + 2 < word.positions.length) {
+                    const nextX = word.positions[i + 2];
+                    const nextY = word.positions[i + 3];
+                    const nextInput = document.querySelector(`.cell-input[data-x="${nextX}"][data-y="${nextY}"]`);
+                    if (nextInput) {
+                        nextInput.focus();
+                        nextInput.select();
                     }
-                } else {
-                    // Слово правильное, но не подходит для цепочки
-                    input.className = 'word-input incorrect';
-                    feedbackDiv.className = 'word-feedback error show';
-                    feedbackDiv.textContent = `Слово правильное, но последняя буква предыдущего слова "${lastLetter.toUpperCase()}" не совпадает с первой буквой этого слова "${firstLetter.toUpperCase()}". Попробуйте другое слово.`;
-                    
-                    // Пропускаем это слово и переходим к следующему
-                    this.currentWordIndex++;
-                    if (this.currentWordIndex >= this.words.length) {
-                        setTimeout(() => this.completeGame(), 2000);
-                    } else {
-                        setTimeout(() => this.updateGameDisplay(), 2000);
+                }
+                break;
+            }
+        }
+    }
+
+    moveToPreviousCell(x, y) {
+        const word = this.findWordByCell(x, y);
+        if (!word || !word.positions) return;
+        
+        for (let i = 0; i < word.positions.length; i += 2) {
+            if (word.positions[i] === x && word.positions[i + 1] === y) {
+                if (i >= 2) {
+                    const prevX = word.positions[i - 2];
+                    const prevY = word.positions[i - 1];
+                    const prevInput = document.querySelector(`.cell-input[data-x="${prevX}"][data-y="${prevY}"]`);
+                    if (prevInput) {
+                        prevInput.focus();
+                        prevInput.select();
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+    selectWord(word) {
+        this.currentWord = word;
+        this.highlightWord(word);
+        
+        // Фокусируемся на первой клетке слова
+        if (word.positions && word.positions.length >= 2) {
+            const firstX = word.positions[0];
+            const firstY = word.positions[1];
+            const firstInput = document.querySelector(`.cell-input[data-x="${firstX}"][data-y="${firstY}"]`);
+            if (firstInput) {
+                firstInput.focus();
+                firstInput.select();
+            }
+        }
+    }
+
+    async checkWord() {
+        if (!this.currentWord) return;
+        
+        // Собираем буквы из клеток слова
+        let userWord = '';
+        if (this.currentWord.positions) {
+            for (let i = 0; i < this.currentWord.positions.length; i += 2) {
+                const x = this.currentWord.positions[i];
+                const y = this.currentWord.positions[i + 1];
+                const input = document.querySelector(`.cell-input[data-x="${x}"][data-y="${y}"]`);
+                if (input) {
+                    userWord += input.value.toUpperCase() || ' ';
+                }
+            }
+        }
+        
+        userWord = userWord.trim();
+        const correctWord = this.currentWord.text.toUpperCase();
+        
+        if (userWord.length === correctWord.length && userWord === correctWord) {
+            // Правильно! Блокируем клетки
+            if (this.currentWord.positions) {
+                for (let i = 0; i < this.currentWord.positions.length; i += 2) {
+                    const x = this.currentWord.positions[i];
+                    const y = this.currentWord.positions[i + 1];
+                    const input = document.querySelector(`.cell-input[data-x="${x}"][data-y="${y}"]`);
+                    const cell = input?.closest('.grid-cell');
+                    if (input && cell) {
+                        input.disabled = true;
+                        cell.classList.add('solved');
                     }
                 }
             }
-        } else {
-            // Неправильное слово
-            input.className = 'word-input incorrect';
-            feedbackDiv.className = 'word-feedback error show';
-            feedbackDiv.textContent = '✗ Неправильно. Попробуйте ещё раз.';
+            
+            this.currentWord.isSolved = true;
+            this.renderWordsList();
+            this.updateStats();
+            
+            // Проверяем, завершена ли игра
+            const allSolved = this.words.every(w => w.isSolved);
+            if (allSolved) {
+                setTimeout(() => this.completeGame(), 1000);
+            }
         }
     }
 
     updateStats() {
-        document.getElementById('words-count').textContent = this.words.length;
-        document.getElementById('correct-count').textContent = this.correctWords.length;
+        const totalWords = this.words.length;
+        const solvedWords = this.words.filter(w => w.isSolved).length;
+        
+        const wordsCountEl = document.getElementById('words-count');
+        const correctCountEl = document.getElementById('correct-count');
+        
+        if (wordsCountEl) wordsCountEl.textContent = totalWords;
+        if (correctCountEl) correctCountEl.textContent = solvedWords;
     }
 
     completeGame() {
-        document.getElementById('final-words-count').textContent = this.correctWords.length;
+        document.getElementById('final-words-count').textContent = this.words.filter(w => w.isSolved).length;
         document.getElementById('game-complete-modal').classList.add('active');
     }
 
@@ -307,4 +416,3 @@ class GameManager {
 
 // Глобальный экземпляр
 const gameManager = new GameManager();
-

@@ -217,8 +217,8 @@
         <div class="game-container">
             <div class="game-header">
                 <div class="game-info">
-                    <h2>Линейный кроссворд</h2>
-                    <p>Последняя буква предыдущего слова должна быть первой буквой следующего</p>
+                    <h2>Кроссворд</h2>
+                    <p>Введите буквы в клетки. Слова пересекаются: последняя буква первого слова = первая буква второго</p>
                 </div>
                 <div class="game-stats">
                     <div class="stat">
@@ -233,23 +233,17 @@
             </div>
             
             <div class="game-area">
-                <div id="words-chain" class="words-chain">
-                    <!-- Цепочка слов будет отображаться здесь -->
-                </div>
-                
-                <div class="current-word-section">
-                    <div class="word-hint">
-                        <p><strong>Подсказка:</strong></p>
-                        <p id="word-definition">Загрузка...</p>
+                <div class="crossword-container">
+                    <div id="crossword-grid" class="crossword-grid">
+                        <!-- Сетка кроссворда будет отображаться здесь -->
                     </div>
                     
-                    <div class="word-input-section">
-                        <label for="word-input">Введите слово:</label>
-                        <input type="text" id="word-input" class="word-input" autocomplete="off">
-                        <button id="check-word-btn" class="btn btn-primary">Проверить</button>
+                    <div class="words-panel">
+                        <h3>Слова кроссворда</h3>
+                        <div id="words-list" class="words-list">
+                            <!-- Список слов будет отображаться здесь -->
+                        </div>
                     </div>
-                    
-                    <div id="word-feedback" class="word-feedback"></div>
                 </div>
             </div>
             

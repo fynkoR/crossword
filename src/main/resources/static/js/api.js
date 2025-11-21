@@ -188,6 +188,16 @@ class ApiService {
         return this.request(`/crosswords/${id}`);
     }
 
+    static async getCrosswordDetail(id) {
+        return this.request(`/crosswords/${id}/detail`);
+    }
+
+    static async generateCrossword(dictionaryId, wordCount, title) {
+        return this.request(`/crosswords/generate?dictionaryId=${dictionaryId}&wordCount=${wordCount}&title=${encodeURIComponent(title)}`, {
+            method: 'POST',
+        });
+    }
+
     // Игры
     static async startGame(crosswordId, userId) {
         return this.request('/games', {
@@ -202,6 +212,17 @@ class ApiService {
 
     static async getGame(id) {
         return this.request(`/games/${id}`);
+    }
+
+    static async checkAnswer(gameId, wordId, answer) {
+        return this.request(`/games/${gameId}/action`, {
+            method: 'POST',
+            body: {
+                action: 'check',
+                wordId,
+                answer
+            },
+        });
     }
 }
 
