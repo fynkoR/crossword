@@ -9,7 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * REST контроллер для работы с пользователями
@@ -30,7 +32,7 @@ public class UserController {
      * POST /users/register
      */
     @PostMapping("/register")
-    public ResponseEntity<UserDto> register(@RequestBody UserRegAuthDto userRegAuthDto) {
+    public ResponseEntity<?> register(@RequestBody UserRegAuthDto userRegAuthDto) {
         try {
             logger.info("POST /users/register - Регистрация пользователя: {}", userRegAuthDto.getLogin());
             UserDto registeredUser = userService.registerUser(userRegAuthDto);
@@ -38,7 +40,10 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.CREATED).body(registeredUser);
         } catch (RuntimeException e) {
             logger.error("Ошибка при регистрации пользователя: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
     }
 

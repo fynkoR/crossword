@@ -21,18 +21,45 @@ class ApiService {
         try {
             const response = await fetch(url, config);
             
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || `HTTP error! status: ${response.status}`);
-            }
-
-            // Если ответ пустой, возвращаем null
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
+            // Проверяем успешные статусы (200-299)
+            if (response.status >= 200 && response.status < 300) {
+                // Если ответ пустой (например, 204 No Content), возвращаем null
+                if (response.status === 204 || response.headers.get('content-length') === '0') {
+                    return null;
+                }
+                
+                // Пытаемся прочитать как JSON
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    const text = await response.text();
+                    return text ? JSON.parse(text) : null;
+                }
+                
+                // Если не JSON, возвращаем null
                 return null;
             }
 
-            return await response.json();
+            // Обработка ошибок (статусы 400+)
+            let errorMessage = `HTTP error! status: ${response.status}`;
+            try {
+                const errorText = await response.text();
+                if (errorText) {
+                    // Пытаемся распарсить как JSON
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        errorMessage = errorJson.message || errorJson.error || errorText;
+                    } catch {
+                        errorMessage = errorText;
+                    }
+                }
+            } catch (e) {
+                // Если не удалось прочитать текст ошибки, используем стандартное сообщение
+                errorMessage = `HTTP error! status: ${response.status}`;
+            }
+            
+            const error = new Error(errorMessage);
+            error.status = response.status;
+            throw error;
         } catch (error) {
             console.error('API Error:', error);
             throw error;

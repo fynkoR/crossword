@@ -73,14 +73,51 @@ class AuthManager {
 
         try {
             errorDiv.classList.remove('show');
-            const user = await ApiService.register(login, password);
+            
+            // Валидация полей
+            if (!login || !login.trim()) {
+                errorDiv.textContent = 'Введите логин';
+                errorDiv.classList.add('show');
+                return;
+            }
+            
+            if (!password || !password.trim()) {
+                errorDiv.textContent = 'Введите пароль';
+                errorDiv.classList.add('show');
+                return;
+            }
+            
+            const user = await ApiService.register(login.trim(), password);
+            
+            if (!user) {
+                errorDiv.textContent = 'Ошибка регистрации. Сервер не вернул данные пользователя.';
+                errorDiv.classList.add('show');
+                return;
+            }
             
             this.currentUser = user;
             localStorage.setItem('currentUser', JSON.stringify(user));
             
             this.showDashboard();
         } catch (error) {
-            errorDiv.textContent = 'Ошибка регистрации. Возможно, пользователь с таким логином уже существует.';
+            console.error('Registration error:', error);
+            
+            // Определяем сообщение об ошибке
+            let errorMessage = 'Ошибка регистрации';
+            
+            if (error.message) {
+                if (error.message.includes('уже существует') || error.message.includes('exists')) {
+                    errorMessage = 'Пользователь с таким логином уже существует';
+                } else if (error.status === 400) {
+                    errorMessage = error.message || 'Ошибка регистрации. Проверьте введенные данные.';
+                } else if (error.status === 500) {
+                    errorMessage = 'Ошибка сервера. Попробуйте позже.';
+                } else {
+                    errorMessage = error.message;
+                }
+            }
+            
+            errorDiv.textContent = errorMessage;
             errorDiv.classList.add('show');
         }
     }
