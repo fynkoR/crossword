@@ -1,8 +1,10 @@
 package com.example.crossword.service;
 
 import com.example.crossword.dto.dtoDictionary.DictionaryDto;
+import com.example.crossword.dto.dtoDictionary.DictionaryImportResultDto;
 import com.example.crossword.dto.dtoWord.WordDto;
 import com.example.crossword.enitity.Dictionary;
+import com.example.crossword.enitity.Word;
 import com.example.crossword.mapper.DictionaryMapper;
 import com.example.crossword.mapper.WordMapper;
 import com.example.crossword.repository.CrosswordRepository;
@@ -11,7 +13,11 @@ import com.example.crossword.repository.WordRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -156,6 +162,145 @@ public class DictionaryService {
         stats.setCrosswordsCount(crosswordsCount);
 
         return stats;
+    }
+
+    /**
+     * Импорт словаря из текстового файла
+     * Формат файла: каждая строка содержит слово и определение, разделённые символом '|'
+     * Пример: слово|определение
+     * 
+     * @param file загруженный файл
+     * @param dictionaryId ID словаря, в который импортировать слова
+     * @param skipDuplicates если true, дубликаты будут пропущены, иначе будет ошибка
+     * @return результат импорта
+     */
+    public DictionaryImportResultDto importDictionaryFromFile(MultipartFile file, Long dictionaryId, boolean skipDuplicates) {
+        // Проверяем существование словаря
+        Dictionary dictionary = dictionaryRepository.findById(dictionaryId)
+                .orElseThrow(() -> new RuntimeException("Словарь с ID " + dictionaryId + " не найден"));
+
+        DictionaryImportResultDto result = new DictionaryImportResultDto();
+        result.setDictionaryId(dictionaryId);
+        result.setDictionaryTitle(dictionary.getTitle());
+
+        int totalLines = 0;
+        int successfullyImported = 0;
+        int skipped = 0;
+        int failed = 0;
+
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+            
+            String line;
+            int lineNumber = 0;
+            
+            while ((line = reader.readLine()) != null) {
+                lineNumber++;
+                line = line.trim();
+                
+                // Пропускаем пустые строки
+                if (line.isEmpty()) {
+                    continue;
+                }
+                
+                totalLines++;
+                
+                // Парсим строку
+                String[] parts = line.split("\\|", 2);
+                
+                if (parts.length < 1) {
+                    failed++;
+                    continue;
+                }
+                
+                String wordText = parts[0].trim();
+                String definition = parts.length > 1 ? parts[1].trim() : "";
+                
+                if (wordText.isEmpty()) {
+                    failed++;
+                    continue;
+                }
+                
+                // Проверяем на дубликаты
+                if (wordRepository.existsByWordAndDictionaryId(wordText, dictionaryId)) {
+                    if (skipDuplicates) {
+                        skipped++;
+                        continue;
+                    } else {
+                        throw new RuntimeException("Слово '" + wordText + "' уже существует в словаре (строка " + lineNumber + ")");
+                    }
+                }
+                
+                // Создаём и сохраняем слово
+                try {
+                    Word word = new Word();
+                    word.setWord(wordText);
+                    word.setDefinition(definition);
+                    word.setDictionary(dictionary);
+                    wordRepository.save(word);
+                    successfullyImported++;
+                } catch (Exception e) {
+                    failed++;
+                }
+            }
+            
+            result.setTotalLines(totalLines);
+            result.setSuccessfullyImported(successfullyImported);
+            result.setSkipped(skipped);
+            result.setFailed(failed);
+            result.setMessage("Импорт завершён успешно");
+            
+        } catch (IOException e) {
+            throw new RuntimeException("Ошибка при чтении файла: " + e.getMessage());
+        }
+        
+        return result;
+    }
+
+    /**
+     * Экспорт словаря в текстовый файл
+     * Формат: слово|определение (каждая пара на новой строке)
+     * 
+     * @param dictionaryId ID словаря для экспорта
+     * @return содержимое файла в виде строки
+     */
+    @Transactional(readOnly = true)
+    public String exportDictionaryToFile(Long dictionaryId) {
+        // Проверяем существование словаря
+        if (!dictionaryRepository.existsById(dictionaryId)) {
+            throw new RuntimeException("Словарь с ID " + dictionaryId + " не найден");
+        }
+
+        // Получаем все слова из словаря
+        List<Word> words = wordRepository.findByDictionaryId(dictionaryId);
+        
+        if (words.isEmpty()) {
+            throw new RuntimeException("Словарь пустой, нечего экспортировать");
+        }
+
+        StringBuilder sb = new StringBuilder();
+        
+        for (Word word : words) {
+            sb.append(word.getWord());
+            if (word.getDefinition() != null && !word.getDefinition().isEmpty()) {
+                sb.append("|").append(word.getDefinition());
+            }
+            sb.append("\n");
+        }
+        
+        return sb.toString();
+    }
+
+    /**
+     * Экспорт словаря в байты для скачивания файла
+     * 
+     * @param dictionaryId ID словаря для экспорта
+     * @return байты файла в кодировке UTF-8
+     */
+    @Transactional(readOnly = true)
+    public byte[] exportDictionaryToBytes(Long dictionaryId) {
+        String content = exportDictionaryToFile(dictionaryId);
+        return content.getBytes(StandardCharsets.UTF_8);
     }
 
     /**

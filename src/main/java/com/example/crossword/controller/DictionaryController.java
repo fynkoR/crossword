@@ -1,11 +1,15 @@
 package com.example.crossword.controller;
 
 import com.example.crossword.dto.dtoDictionary.DictionaryDto;
+import com.example.crossword.dto.dtoDictionary.DictionaryImportResultDto;
 import com.example.crossword.dto.dtoWord.WordDto;
 import com.example.crossword.service.DictionaryService;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -122,6 +126,77 @@ public class DictionaryController {
         try {
             DictionaryService.DictionaryStatisticsDto statistics = dictionaryService.getDictionaryStatistics(id);
             return ResponseEntity.ok(statistics);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
+     * Импортировать слова в словарь из текстового файла
+     * POST /dictionaries/{id}/import
+     * 
+     * Формат файла: каждая строка содержит слово и определение, разделённые символом '|'
+     * Пример содержимого файла:
+     * кот|домашнее животное семейства кошачьих
+     * собака|домашнее животное, друг человека
+     * 
+     * @param id ID словаря
+     * @param file загружаемый .txt файл
+     * @param skipDuplicates если true, дубликаты будут пропущены (по умолчанию true)
+     * @return результат импорта со статистикой
+     */
+    @PostMapping("/{id}/import")
+    public ResponseEntity<DictionaryImportResultDto> importDictionary(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "skipDuplicates", defaultValue = "true") boolean skipDuplicates) {
+        try {
+            // Проверка файла
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            // Проверка расширения файла
+            String filename = file.getOriginalFilename();
+            if (filename == null || !filename.toLowerCase().endsWith(".txt")) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            DictionaryImportResultDto result = dictionaryService.importDictionaryFromFile(file, id, skipDuplicates);
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
+    /**
+     * Экспортировать словарь в текстовый файл
+     * GET /dictionaries/{id}/export
+     * 
+     * Формат файла: каждая строка содержит слово и определение, разделённые символом '|'
+     * 
+     * @param id ID словаря
+     * @return файл .txt для скачивания
+     */
+    @GetMapping("/{id}/export")
+    public ResponseEntity<byte[]> exportDictionary(@PathVariable Long id) {
+        try {
+            // Получаем данные словаря для имени файла
+            DictionaryDto dictionary = dictionaryService.getDictionaryById(id);
+            
+            // Экспортируем содержимое
+            byte[] content = dictionaryService.exportDictionaryToBytes(id);
+            
+            // Формируем имя файла
+            String filename = dictionary.getTitle().replaceAll("[^a-zA-Zа-яА-Я0-9_-]", "_") + ".txt";
+            
+            // Настраиваем заголовки для скачивания файла
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.TEXT_PLAIN);
+            headers.setContentDispositionFormData("attachment", filename);
+            headers.setContentLength(content.length);
+            
+            return new ResponseEntity<>(content, headers, HttpStatus.OK);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
