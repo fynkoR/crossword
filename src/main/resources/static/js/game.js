@@ -258,12 +258,47 @@ class GameManager {
         input.value = value;
         
         if (value) {
+            // Проверяем правильность буквы
+            this.checkLetter(input, x, y, value);
+            
             // Переходим к следующей клетке слова
             this.moveToNextCell(x, y);
+        } else {
+            // Если буква удалена, убираем подсветку
+            input.classList.remove('correct-letter', 'incorrect-letter');
         }
         
         // Проверяем слово
         this.checkWord();
+    }
+    
+    checkLetter(input, x, y, userLetter) {
+        // Находим слово, содержащее эту клетку
+        const word = this.findWordByCell(x, y);
+        if (!word || !word.positions) return;
+        
+        // Находим позицию буквы в слове
+        let letterIndex = -1;
+        for (let i = 0; i < word.positions.length; i += 2) {
+            if (word.positions[i] === x && word.positions[i + 1] === y) {
+                letterIndex = i / 2;
+                break;
+            }
+        }
+        
+        if (letterIndex === -1) return;
+        
+        // Получаем правильную букву
+        const correctLetter = word.text.charAt(letterIndex).toUpperCase();
+        
+        // Сравниваем
+        if (userLetter === correctLetter) {
+            input.classList.remove('incorrect-letter');
+            input.classList.add('correct-letter');
+        } else {
+            input.classList.remove('correct-letter');
+            input.classList.add('incorrect-letter');
+        }
     }
 
     handleCellKeydown(e, x, y) {

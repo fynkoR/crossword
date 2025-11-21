@@ -139,6 +139,7 @@
     margin: 0;
     outline: none;
     cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .cell-input:focus {
@@ -153,6 +154,24 @@
 
 .cell-input::placeholder {
     color: #cbd5e1;
+}
+
+/* Подсветка правильных/неправильных букв */
+.cell-input.correct-letter {
+    background: #d1fae5 !important;
+    color: var(--success-color) !important;
+}
+
+.cell-input.incorrect-letter {
+    background: #fee2e2 !important;
+    color: var(--error-color) !important;
+    animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
 }
 
 /* Панель со словами */

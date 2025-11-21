@@ -54,10 +54,40 @@ public class CrosswordGeneratorService {
     private List<Word> findWordChain(List<Word> allWords, int count) {
         // Преобразуем в список для удобства
         List<Word> words = new ArrayList<>(allWords);
-        Collections.shuffle(words); // Перемешиваем для разнообразия
         
+        // Пробуем найти цепочку, начиная с разных слов
+        List<Word> bestChain = new ArrayList<>();
+        
+        // Пробуем несколько раз с разными начальными словами
+        for (int attempt = 0; attempt < Math.min(words.size(), 20); attempt++) {
+            Collections.shuffle(words); // Перемешиваем для разнообразия
+            
+            List<Word> chain = buildChain(words, count);
+            
+            // Если нашли достаточно длинную цепочку, возвращаем
+            if (chain.size() >= count) {
+                return chain;
+            }
+            
+            // Сохраняем лучший результат
+            if (chain.size() > bestChain.size()) {
+                bestChain = chain;
+            }
+        }
+        
+        return bestChain;
+    }
+    
+    /**
+     * Строит цепочку слов начиная с первого слова в списке
+     */
+    private List<Word> buildChain(List<Word> words, int maxCount) {
         List<Word> chain = new ArrayList<>();
         Set<Long> used = new HashSet<>();
+        
+        if (words.isEmpty()) {
+            return chain;
+        }
         
         // Начинаем с первого слова
         Word firstWord = words.get(0);
@@ -67,9 +97,10 @@ public class CrosswordGeneratorService {
         String lastLetter = getLastLetter(firstWord.getWord());
         
         // Ищем следующие слова
-        while (chain.size() < count && chain.size() < words.size()) {
+        while (chain.size() < maxCount && chain.size() < words.size()) {
             boolean found = false;
             
+            // Ищем слово, которое начинается с последней буквы текущего слова
             for (Word word : words) {
                 if (used.contains(word.getId())) continue;
                 
@@ -83,28 +114,10 @@ public class CrosswordGeneratorService {
                 }
             }
             
-            // Если не нашли подходящее слово, пробуем начать с другого
+            // Если не нашли подходящее слово, прекращаем
             if (!found) {
-                for (Word word : words) {
-                    if (used.contains(word.getId())) continue;
-                    
-                    // Проверяем, можно ли добавить это слово к любому слову в цепочке
-                    String wordFirst = getFirstLetter(word.getWord());
-                    for (Word chainWord : chain) {
-                        String chainLast = getLastLetter(chainWord.getWord());
-                        if (wordFirst.equals(chainLast)) {
-                            chain.add(word);
-                            used.add(word.getId());
-                            lastLetter = getLastLetter(word.getWord());
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (found) break;
-                }
+                break;
             }
-            
-            if (!found) break;
         }
         
         return chain;
