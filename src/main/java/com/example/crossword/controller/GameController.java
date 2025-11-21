@@ -36,7 +36,7 @@ public class GameController {
             logger.info("POST /games - Начало новой игры, crosswordId: {}, userId: {}", 
                 action.getCrosswordId(), action.getUserId());
             GameResultDto result = gameService.startGame(action);
-            logger.info("Игра успешно создана с ID: {}", result.getGameId());
+            logger.info("Игра успешно создана");
             return ResponseEntity.status(HttpStatus.CREATED).body(result);
         } catch (RuntimeException e) {
             logger.error("Ошибка при создании игры: {}", e.getMessage());
