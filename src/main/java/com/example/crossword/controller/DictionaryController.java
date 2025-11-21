@@ -148,13 +148,13 @@ public class DictionaryController {
      * @param skipDuplicates если true, дубликаты будут пропущены (по умолчанию true)
      * @return результат импорта со статистикой
      */
-    @PostMapping("/{id}/import")
+    @PostMapping(value = "/{id}/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<DictionaryImportResultDto> importDictionary(
             @PathVariable Long id,
-            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "file", required = true) MultipartFile file,
             @RequestParam(value = "skipDuplicates", defaultValue = "true") boolean skipDuplicates) {
         try {
-            logger.info("Начало импорта словаря ID: {}, файл: {}", id, file.getOriginalFilename());
+            logger.info("Начало импорта словаря ID: {}, файл: {}", id, file != null ? file.getOriginalFilename() : "null");
             
             // Проверка файла
             if (file == null || file.isEmpty()) {
