@@ -174,6 +174,7 @@ public class DictionaryService {
      * @param skipDuplicates если true, дубликаты будут пропущены, иначе будет ошибка
      * @return результат импорта
      */
+    @Transactional
     public DictionaryImportResultDto importDictionaryFromFile(MultipartFile file, Long dictionaryId, boolean skipDuplicates) {
         // Проверяем существование словаря
         Dictionary dictionary = dictionaryRepository.findById(dictionaryId)

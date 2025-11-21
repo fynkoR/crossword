@@ -4,6 +4,8 @@ import com.example.crossword.dto.dtoDictionary.DictionaryDto;
 import com.example.crossword.dto.dtoDictionary.DictionaryImportResultDto;
 import com.example.crossword.dto.dtoWord.WordDto;
 import com.example.crossword.service.DictionaryService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -20,6 +22,7 @@ import java.util.List;
 @RequestMapping("/dictionaries")
 public class DictionaryController {
 
+    private static final Logger logger = LoggerFactory.getLogger(DictionaryController.class);
     private final DictionaryService dictionaryService;
 
     public DictionaryController(DictionaryService dictionaryService) {
@@ -151,21 +154,31 @@ public class DictionaryController {
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "skipDuplicates", defaultValue = "true") boolean skipDuplicates) {
         try {
+            logger.info("Начало импорта словаря ID: {}, файл: {}", id, file.getOriginalFilename());
+            
             // Проверка файла
-            if (file.isEmpty()) {
+            if (file == null || file.isEmpty()) {
+                logger.warn("Файл пустой или не предоставлен");
                 return ResponseEntity.badRequest().build();
             }
 
             // Проверка расширения файла
             String filename = file.getOriginalFilename();
             if (filename == null || !filename.toLowerCase().endsWith(".txt")) {
+                logger.warn("Неверный формат файла: {}", filename);
                 return ResponseEntity.badRequest().build();
             }
 
             DictionaryImportResultDto result = dictionaryService.importDictionaryFromFile(file, id, skipDuplicates);
+            logger.info("Импорт завершён: успешно={}, пропущено={}, ошибок={}", 
+                result.getSuccessfullyImported(), result.getSkipped(), result.getFailed());
             return ResponseEntity.ok(result);
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            logger.error("Ошибка при импорте словаря ID: " + id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (Exception e) {
+            logger.error("Непредвиденная ошибка при импорте словаря ID: " + id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
