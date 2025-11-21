@@ -133,11 +133,6 @@ class DashboardManager {
             // Проверяем только один вариант для заданного количества слов
             const variants = await ApiService.checkCrosswordVariants(dictionaryId, wordCount, wordCount);
             
-            console.log('Результат проверки вариантов:', variants);
-            console.log('Проверяем для количества слов:', wordCount, 'Тип:', typeof wordCount);
-            console.log('Значение variants[wordCount]:', variants[wordCount]);
-            console.log('Значение variants[String(wordCount)]:', variants[String(wordCount)]);
-            
             // API возвращает ключи как строки, поэтому используем String(wordCount)
             const isAvailable = variants[String(wordCount)] === true;
             

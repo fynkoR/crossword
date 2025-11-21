@@ -241,8 +241,14 @@ public class CrosswordGeneratorService {
                 .max()
                 .orElse(10);
         
-        // Размер сетки: ширина = сумма длин слов + отступы, высота = максимальная длина + отступы
-        int gridWidth = Math.max(20, maxWordLength * 2);
+        // Рассчитываем общую длину цепочки слов с учетом пересечений
+        // Длина = сумма длин всех слов - количество пересечений (каждое пересечение экономит 1 клетку)
+        int totalLength = words.stream().mapToInt(w -> w.getWord().length()).sum();
+        int intersections = words.size() - 1; // количество пересечений
+        int chainLength = totalLength - intersections;
+        
+        // Размер сетки: ширина = длина цепочки + отступы с обеих сторон
+        int gridWidth = Math.max(20, chainLength + 10); // +10 для отступов
         int gridHeight = Math.max(20, maxWordLength * 2);
         
         // Создаем сетку (пока пустую)

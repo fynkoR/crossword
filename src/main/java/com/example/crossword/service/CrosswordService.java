@@ -311,18 +311,14 @@ public class CrosswordService {
         
         for (int wordCount = minWords; wordCount <= maxWords; wordCount++) {
             try {
-                System.out.println("Проверка варианта для " + wordCount + " слов...");
                 // Пробуем сгенерировать кроссворд
                 crosswordGeneratorService.generateCrossword(dictionaryId, wordCount);
-                System.out.println("✓ Вариант для " + wordCount + " слов УСПЕШНО сгенерирован");
                 variants.put(wordCount, true);
             } catch (RuntimeException e) {
-                System.out.println("✗ Вариант для " + wordCount + " слов НЕ НАЙДЕН: " + e.getMessage());
                 variants.put(wordCount, false);
             }
         }
         
-        System.out.println("Результат проверки вариантов: " + variants);
         return variants;
     }
 
