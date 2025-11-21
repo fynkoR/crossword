@@ -36,9 +36,12 @@ public class DictionaryController {
     @PostMapping
     public ResponseEntity<DictionaryDto> createDictionary(@RequestBody DictionaryDto dictionaryDto) {
         try {
+            logger.info("POST /dictionaries - Создание словаря: {}", dictionaryDto.getTitle());
             DictionaryDto createdDictionary = dictionaryService.createDictionary(dictionaryDto);
+            logger.info("Словарь успешно создан с ID: {}", createdDictionary.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(createdDictionary);
         } catch (RuntimeException e) {
+            logger.error("Ошибка при создании словаря: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
@@ -50,9 +53,11 @@ public class DictionaryController {
     @GetMapping("/{id}")
     public ResponseEntity<DictionaryDto> getDictionaryById(@PathVariable Long id) {
         try {
+            logger.info("GET /dictionaries/{} - Получение словаря по ID", id);
             DictionaryDto dictionary = dictionaryService.getDictionaryById(id);
             return ResponseEntity.ok(dictionary);
         } catch (RuntimeException e) {
+            logger.warn("Словарь с ID {} не найден", id);
             return ResponseEntity.notFound().build();
         }
     }
@@ -63,7 +68,9 @@ public class DictionaryController {
      */
     @GetMapping
     public ResponseEntity<List<DictionaryDto>> getAllDictionaries() {
+        logger.info("GET /dictionaries - Получение всех словарей");
         List<DictionaryDto> dictionaries = dictionaryService.getAllDictionaries();
+        logger.info("Найдено словарей: {}", dictionaries.size());
         return ResponseEntity.ok(dictionaries);
     }
 
@@ -85,9 +92,12 @@ public class DictionaryController {
     public ResponseEntity<DictionaryDto> updateDictionary(@PathVariable Long id,
                                                           @RequestBody DictionaryDto dictionaryDto) {
         try {
+            logger.info("PUT /dictionaries/{} - Обновление словаря", id);
             DictionaryDto updatedDictionary = dictionaryService.updateDictionary(id, dictionaryDto);
+            logger.info("Словарь с ID {} успешно обновлён", id);
             return ResponseEntity.ok(updatedDictionary);
         } catch (RuntimeException e) {
+            logger.error("Ошибка при обновлении словаря ID {}: {}", id, e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }
@@ -99,9 +109,12 @@ public class DictionaryController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteDictionary(@PathVariable Long id) {
         try {
+            logger.info("DELETE /dictionaries/{} - Удаление словаря", id);
             dictionaryService.deleteDictionary(id);
+            logger.info("Словарь с ID {} успешно удалён", id);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
+            logger.error("Ошибка при удалении словаря ID {}: {}", id, e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }

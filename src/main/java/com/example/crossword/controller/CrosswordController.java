@@ -5,6 +5,8 @@ import com.example.crossword.dto.dtoCrossword.CrosswordDetailDto;
 import com.example.crossword.dto.dtoCrossword.CrosswordDto;
 import com.example.crossword.dto.dtoCrossword.CrosswordUpdateDto;
 import com.example.crossword.service.CrosswordService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +20,7 @@ import java.util.List;
 @RequestMapping("/crosswords")
 public class CrosswordController {
 
+    private static final Logger logger = LoggerFactory.getLogger(CrosswordController.class);
     private final CrosswordService crosswordService;
 
     public CrosswordController(CrosswordService crosswordService) {
@@ -31,9 +34,12 @@ public class CrosswordController {
     @PostMapping
     public ResponseEntity<CrosswordDto> createCrossword(@RequestBody CrosswordCreateDto crosswordCreateDto) {
         try {
+            logger.info("POST /crosswords - Создание кроссворда: {}", crosswordCreateDto.getTitle());
             CrosswordDto createdCrossword = crosswordService.createCrossword(crosswordCreateDto);
+            logger.info("Кроссворд успешно создан с ID: {}", createdCrossword.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(createdCrossword);
         } catch (RuntimeException e) {
+            logger.error("Ошибка при создании кроссворда: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
@@ -45,9 +51,11 @@ public class CrosswordController {
     @GetMapping("/{id}")
     public ResponseEntity<CrosswordDto> getCrosswordById(@PathVariable Long id) {
         try {
+            logger.info("GET /crosswords/{} - Получение кроссворда по ID", id);
             CrosswordDto crossword = crosswordService.getCrosswordById(id);
             return ResponseEntity.ok(crossword);
         } catch (RuntimeException e) {
+            logger.warn("Кроссворд с ID {} не найден", id);
             return ResponseEntity.notFound().build();
         }
     }
@@ -72,7 +80,9 @@ public class CrosswordController {
      */
     @GetMapping
     public ResponseEntity<List<CrosswordDto>> getAllCrosswords() {
+        logger.info("GET /crosswords - Получение всех кроссвордов");
         List<CrosswordDto> crosswords = crosswordService.getAllCrosswords();
+        logger.info("Найдено кроссвордов: {}", crosswords.size());
         return ResponseEntity.ok(crosswords);
     }
 
@@ -108,9 +118,12 @@ public class CrosswordController {
     public ResponseEntity<CrosswordDto> updateCrossword(@PathVariable Long id,
                                                         @RequestBody CrosswordUpdateDto crosswordUpdateDto) {
         try {
+            logger.info("PUT /crosswords/{} - Обновление кроссворда", id);
             CrosswordDto updatedCrossword = crosswordService.updateCrossword(id, crosswordUpdateDto);
+            logger.info("Кроссворд с ID {} успешно обновлён", id);
             return ResponseEntity.ok(updatedCrossword);
         } catch (RuntimeException e) {
+            logger.error("Ошибка при обновлении кроссворда ID {}: {}", id, e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }
@@ -122,9 +135,12 @@ public class CrosswordController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCrossword(@PathVariable Long id) {
         try {
+            logger.info("DELETE /crosswords/{} - Удаление кроссворда", id);
             crosswordService.deleteCrossword(id);
+            logger.info("Кроссворд с ID {} успешно удалён", id);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
+            logger.error("Ошибка при удалении кроссворда ID {}: {}", id, e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
