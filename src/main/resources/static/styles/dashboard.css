@@ -81,30 +81,44 @@
     margin-top: 8px;
 }
 
-/* Статус генерации */
-.generation-status {
+/* Статус проверки вариантов */
+.variants-status {
     margin: 16px 0;
     padding: 12px;
     border-radius: 8px;
     font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-.generation-status p {
-    margin: 0;
+.variants-status .status-icon {
+    font-size: 18px;
 }
 
-.generation-status .checking {
-    color: #3b82f6;
-    background: #dbeafe;
+.variants-status .status-icon.success {
+    color: var(--success-color);
 }
 
-.generation-status .success {
+.variants-status .status-icon.error {
+    color: var(--error-color);
+}
+
+.variants-status .status-text {
+    flex: 1;
+}
+
+.variants-status .status-text.success {
     color: var(--success-color);
     background: #d1fae5;
+    padding: 8px 12px;
+    border-radius: 6px;
 }
 
-.generation-status .error {
+.variants-status .status-text.error {
     color: var(--error-color);
     background: #fee2e2;
+    padding: 8px 12px;
+    border-radius: 6px;
 }
 

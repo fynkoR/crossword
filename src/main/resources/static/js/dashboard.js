@@ -52,16 +52,16 @@ class DashboardManager {
             });
             
             // Добавляем обработчик изменения словаря
-            select.addEventListener('change', (e) => {
+            select.removeEventListener('change', this.handleDictionaryChange);
+            this.handleDictionaryChange = (e) => {
                 const dictionaryId = e.target.value;
                 if (dictionaryId) {
-                    this.checkAvailableVariants(parseInt(dictionaryId));
+                    this.onDictionarySelected(parseInt(dictionaryId));
                 } else {
-                    document.getElementById('generation-status').innerHTML = '';
-                    document.getElementById('word-count').disabled = true;
-                    document.getElementById('start-game-btn').disabled = true;
+                    this.resetWordCountSelect();
                 }
-            });
+            };
+            select.addEventListener('change', this.handleDictionaryChange);
         } catch (error) {
             console.error('Ошибка загрузки словарей:', error);
             document.getElementById('dictionary-select').innerHTML = 
@@ -78,51 +78,72 @@ class DashboardManager {
         }
     }
 
-    async checkAvailableVariants(dictionaryId) {
-        const statusDiv = document.getElementById('generation-status');
-        const wordCountSelect = document.getElementById('word-count');
+    onDictionarySelected(dictionaryId) {
+        const wordCountSelect = document.getElementById('word-count-select');
+        const statusDiv = document.getElementById('variants-status');
         
-        if (!dictionaryId) {
-            statusDiv.innerHTML = '';
-            return;
+        // Активируем селект количества слов
+        wordCountSelect.disabled = false;
+        wordCountSelect.innerHTML = '';
+        
+        // Заполняем опции от 3 до 10 слов
+        for (let count = 3; count <= 10; count++) {
+            const option = document.createElement('option');
+            option.value = count;
+            option.textContent = `${count} ${this.getWordForm(count)}`;
+            wordCountSelect.appendChild(option);
         }
         
-        statusDiv.innerHTML = '<p class="checking">Проверка доступных вариантов...</p>';
+        // Очищаем статус
+        statusDiv.innerHTML = '';
+        document.getElementById('start-game-btn').disabled = true;
+        
+        // Сохраняем ID словаря
+        this.selectedDictionaryId = dictionaryId;
+        
+        // Добавляем обработчик изменения количества слов
+        wordCountSelect.removeEventListener('change', this.handleWordCountChange);
+        this.handleWordCountChange = (e) => {
+            const wordCount = parseInt(e.target.value);
+            if (wordCount) {
+                this.checkVariantForWordCount(this.selectedDictionaryId, wordCount);
+            }
+        };
+        wordCountSelect.addEventListener('change', this.handleWordCountChange);
+    }
+
+    resetWordCountSelect() {
+        const wordCountSelect = document.getElementById('word-count-select');
+        const statusDiv = document.getElementById('variants-status');
+        
+        wordCountSelect.disabled = true;
+        wordCountSelect.innerHTML = '<option value="">Сначала выберите словарь</option>';
+        statusDiv.innerHTML = '';
+        document.getElementById('start-game-btn').disabled = true;
+    }
+
+    async checkVariantForWordCount(dictionaryId, wordCount) {
+        const statusDiv = document.getElementById('variants-status');
+        const startBtn = document.getElementById('start-game-btn');
+        
+        statusDiv.innerHTML = '<span class="status-icon">⏳</span><span class="status-text">Проверка возможности генерации...</span>';
+        startBtn.disabled = true;
         
         try {
-            const variants = await ApiService.checkCrosswordVariants(dictionaryId, 3, 10);
+            // Проверяем только один вариант для заданного количества слов
+            const variants = await ApiService.checkCrosswordVariants(dictionaryId, wordCount, wordCount);
             
-            // Обновляем опции в селекте
-            const availableOptions = [];
-            for (let count = 3; count <= 10; count++) {
-                if (variants[count]) {
-                    availableOptions.push(count);
-                }
+            if (variants[wordCount]) {
+                statusDiv.innerHTML = '<span class="status-icon success">✓</span><span class="status-text success">Вариант доступен для генерации</span>';
+                startBtn.disabled = false;
+            } else {
+                statusDiv.innerHTML = '<span class="status-icon error">⚠</span><span class="status-text error">Невозможно создать кроссворд с таким количеством слов</span>';
+                startBtn.disabled = true;
             }
-            
-            if (availableOptions.length === 0) {
-                statusDiv.innerHTML = '<p class="error">⚠ В этом словаре недостаточно слов для создания кроссворда</p>';
-                wordCountSelect.disabled = true;
-                document.getElementById('start-game-btn').disabled = true;
-                return;
-            }
-            
-            // Обновляем селект
-            wordCountSelect.innerHTML = '';
-            availableOptions.forEach(count => {
-                const option = document.createElement('option');
-                option.value = count;
-                option.textContent = `${count} ${this.getWordForm(count)}`;
-                wordCountSelect.appendChild(option);
-            });
-            
-            wordCountSelect.disabled = false;
-            document.getElementById('start-game-btn').disabled = false;
-            
-            statusDiv.innerHTML = `<p class="success">✓ Доступно вариантов: ${availableOptions.length}</p>`;
         } catch (error) {
-            console.error('Ошибка проверки вариантов:', error);
-            statusDiv.innerHTML = '<p class="error">Ошибка при проверке вариантов</p>';
+            console.error('Ошибка проверки варианта:', error);
+            statusDiv.innerHTML = '<span class="status-icon error">⚠</span><span class="status-text error">Ошибка при проверке варианта</span>';
+            startBtn.disabled = true;
         }
     }
 
@@ -147,10 +168,15 @@ class DashboardManager {
 
     async startGame() {
         const dictionaryId = document.getElementById('dictionary-select').value;
-        const wordCount = parseInt(document.getElementById('word-count').value);
+        const wordCount = parseInt(document.getElementById('word-count-select').value);
 
         if (!dictionaryId) {
             alert('Пожалуйста, выберите словарь');
+            return;
+        }
+
+        if (!wordCount) {
+            alert('Пожалуйста, выберите количество слов');
             return;
         }
 

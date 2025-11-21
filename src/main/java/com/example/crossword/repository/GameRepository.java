@@ -37,4 +37,9 @@ public interface GameRepository extends JpaRepository<Game, Long> {
      */
     @Query("SELECT COUNT(g) FROM Game g WHERE g.crossword.id = :crosswordId AND g.gameOver = true")
     Long countByCrosswordIdAndGame_overTrue(@Param("crosswordId") Long crosswordId);
+    
+    /**
+     * Удалить все игры по ID кроссворда
+     */
+    void deleteByCrosswordId(Long crosswordId);
 }

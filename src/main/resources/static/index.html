@@ -101,20 +101,13 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="word-count">Количество слов в кроссворде:</label>
-                    <select id="word-count" class="form-control">
-                        <option value="3">3 слова</option>
-                        <option value="4">4 слова</option>
-                        <option value="5" selected>5 слов</option>
-                        <option value="6">6 слов</option>
-                        <option value="7">7 слов</option>
-                        <option value="8">8 слов</option>
-                        <option value="9">9 слов</option>
-                        <option value="10">10 слов</option>
+                    <label for="word-count-select">Количество слов:</label>
+                    <select id="word-count-select" class="form-control" disabled>
+                        <option value="">Сначала выберите словарь</option>
                     </select>
                 </div>
-                <div id="generation-status" class="generation-status"></div>
-                <button id="start-game-btn" class="btn btn-primary">Начать игру</button>
+                <div id="variants-status" class="variants-status"></div>
+                <button id="start-game-btn" class="btn btn-primary" disabled>Начать игру</button>
             </div>
         </div>
     </div>

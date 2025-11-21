@@ -31,6 +31,7 @@ public class DictionaryService {
     private final DictionaryRepository dictionaryRepository;
     private final WordRepository wordRepository;
     private final CrosswordRepository crosswordRepository;
+    private final com.example.crossword.repository.GameRepository gameRepository;
     private final DictionaryMapper dictionaryMapper;
     private final WordMapper wordMapper;
 
@@ -38,11 +39,13 @@ public class DictionaryService {
     public DictionaryService(DictionaryRepository dictionaryRepository,
                            WordRepository wordRepository,
                            CrosswordRepository crosswordRepository,
+                           com.example.crossword.repository.GameRepository gameRepository,
                            DictionaryMapper dictionaryMapper,
                            WordMapper wordMapper) {
         this.dictionaryRepository = dictionaryRepository;
         this.wordRepository = wordRepository;
         this.crosswordRepository = crosswordRepository;
+        this.gameRepository = gameRepository;
         this.dictionaryMapper = dictionaryMapper;
         this.wordMapper = wordMapper;
     }
@@ -113,20 +116,31 @@ public class DictionaryService {
 
     /**
      * Удалить словарь
-     * При удалении словаря также удаляются все связанные слова и кроссворды
+     * При удалении словаря также удаляются все связанные слова и кроссворды (каскадное удаление)
      */
     public void deleteDictionary(Long id) {
         if (!dictionaryRepository.existsById(id)) {
             throw new RuntimeException("Словарь с ID " + id + " не найден");
         }
 
-        // Проверяем, есть ли связанные кроссворды
+        // Получаем количество связанных кроссвордов для информации
         long crosswordCount = crosswordRepository.countByDictionaryId(id);
+        
         if (crosswordCount > 0) {
-            throw new RuntimeException("Невозможно удалить словарь: существует " + crosswordCount + 
-                    " связанных кроссвордов. Удалите сначала все кроссворды.");
+            // Удаляем все связанные кроссворды
+            List<com.example.crossword.enitity.Crossword> crosswords = crosswordRepository.findByDictionaryId(id);
+            
+            for (com.example.crossword.enitity.Crossword crossword : crosswords) {
+                // Сначала удаляем все игры, связанные с этим кроссвордом
+                gameRepository.deleteByCrosswordId(crossword.getId());
+                // Затем удаляем сам кроссворд
+                crosswordRepository.deleteById(crossword.getId());
+            }
+            
+            System.out.println("Удалено кроссвордов: " + crosswordCount);
         }
 
+        // Удаляем словарь (слова удалятся автоматически через каскад)
         dictionaryRepository.deleteById(id);
     }
 
