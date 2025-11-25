@@ -58,13 +58,11 @@ class DictionaryManager {
             this.showAddWordModal();
         });
 
-        // Обработчик изменения сортировки
+        // Обработчик изменения сортировки через делегирование событий
         document.addEventListener('change', (e) => {
             if (e.target && e.target.id === 'sort-select') {
-                this.currentSortBy = e.target.value || null;
-                if (this.currentDictionaryId) {
-                    this.loadWords(this.currentDictionaryId);
-                }
+                console.log('Sort select changed via delegation:', e.target.value);
+                this.handleSortChange(e.target.value);
             }
         });
     }
@@ -147,6 +145,15 @@ class DictionaryManager {
             const sortSelect = document.getElementById('sort-select');
             if (sortSelect) {
                 sortSelect.value = '';
+                // Удаляем старый обработчик, если есть
+                const newSortSelect = sortSelect.cloneNode(true);
+                sortSelect.parentNode.replaceChild(newSortSelect, sortSelect);
+                
+                // Добавляем прямой обработчик
+                newSortSelect.addEventListener('change', (e) => {
+                    console.log('Sort select changed via direct handler:', e.target.value);
+                    this.handleSortChange(e.target.value);
+                });
             }
             
             // Загружаем слова
@@ -159,13 +166,30 @@ class DictionaryManager {
         }
     }
 
+    handleSortChange(sortValue) {
+        console.log('handleSortChange called with:', sortValue);
+        this.currentSortBy = sortValue || null;
+        console.log('Current sortBy:', this.currentSortBy);
+        console.log('Current dictionaryId:', this.currentDictionaryId);
+        
+        if (this.currentDictionaryId) {
+            console.log('Loading words with sort:', this.currentSortBy);
+            this.loadWords(this.currentDictionaryId);
+        } else {
+            console.warn('No dictionary ID, cannot load words');
+        }
+    }
+
     async loadWords(dictionaryId) {
         try {
+            console.log('loadWords called with dictionaryId:', dictionaryId, 'sortBy:', this.currentSortBy);
             // Загружаем слова с учетом текущей сортировки
             this.currentWords = await ApiService.getWordsFromDictionary(dictionaryId, this.currentSortBy);
+            console.log('Words loaded:', this.currentWords.length, 'words');
             this.displayWords();
         } catch (error) {
             console.error('Ошибка загрузки слов:', error);
+            alert('Ошибка загрузки слов: ' + error.message);
         }
     }
 

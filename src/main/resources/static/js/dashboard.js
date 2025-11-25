@@ -89,7 +89,8 @@ class DashboardManager {
         // Добавляем пустую опцию по умолчанию
         const defaultOption = document.createElement('option');
         defaultOption.value = '';
-        defaultOption.textContent = 'Выберите количество слов...';
+        defaultOption.textContent = 'Выберите количество слов';
+        defaultOption.selected = true;
         wordCountSelect.appendChild(defaultOption);
         
         // Заполняем опции от 3 до 10 слов
