@@ -57,20 +57,6 @@ class DictionaryManager {
         document.getElementById('add-word-btn').addEventListener('click', () => {
             this.showAddWordModal();
         });
-
-        // Сортировка слов
-        document.getElementById('sort-select').addEventListener('change', (e) => {
-            this.currentSortType = e.target.value;
-            // Показываем индикатор загрузки
-            const container = document.getElementById('words-list');
-            container.style.opacity = '0.5';
-            
-            // Небольшая задержка для визуального эффекта
-            setTimeout(() => {
-                this.displayWords();
-                container.style.opacity = '1';
-            }, 100);
-        });
     }
 
     showDashboard() {
@@ -148,7 +134,27 @@ class DictionaryManager {
             
             // Устанавливаем начальную сортировку
             this.currentSortType = 'alphabet-asc';
-            document.getElementById('sort-select').value = 'alphabet-asc';
+            const sortSelect = document.getElementById('sort-select');
+            sortSelect.value = 'alphabet-asc';
+            
+            // Удаляем старый обработчик и добавляем новый для сортировки
+            const newSortSelect = sortSelect.cloneNode(true);
+            sortSelect.parentNode.replaceChild(newSortSelect, sortSelect);
+            
+            newSortSelect.addEventListener('change', (e) => {
+                this.currentSortType = e.target.value;
+                console.log('Сортировка изменена на:', this.currentSortType);
+                
+                // Показываем индикатор загрузки
+                const container = document.getElementById('words-list');
+                container.style.opacity = '0.5';
+                
+                // Небольшая задержка для визуального эффекта
+                setTimeout(() => {
+                    this.displayWords();
+                    container.style.opacity = '1';
+                }, 100);
+            });
             
             // Загружаем слова
             await this.loadWords(id);
