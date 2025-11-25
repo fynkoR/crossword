@@ -124,12 +124,17 @@ public class DictionaryController {
 
     /**
      * Получить все слова из словаря
-     * GET /dictionaries/{id}/words
+     * GET /dictionaries/{id}/words?sortBy=alphabet-asc
+     * 
+     * @param id ID словаря
+     * @param sortBy тип сортировки: "alphabet-asc", "alphabet-desc", "length-asc", "length-desc" (опционально)
      */
     @GetMapping("/{id}/words")
-    public ResponseEntity<List<WordDto>> getWordsFromDictionary(@PathVariable Long id) {
+    public ResponseEntity<List<WordDto>> getWordsFromDictionary(
+            @PathVariable Long id,
+            @RequestParam(required = false) String sortBy) {
         try {
-            List<WordDto> words = dictionaryService.getWordsFromDictionary(id);
+            List<WordDto> words = dictionaryService.getWordsFromDictionary(id, sortBy);
             return ResponseEntity.ok(words);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();

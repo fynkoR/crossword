@@ -114,8 +114,12 @@ class ApiService {
         });
     }
 
-    static async getWordsFromDictionary(dictionaryId) {
-        return this.request(`/dictionaries/${dictionaryId}/words`);
+    static async getWordsFromDictionary(dictionaryId, sortBy = null) {
+        let url = `/dictionaries/${dictionaryId}/words`;
+        if (sortBy) {
+            url += `?sortBy=${encodeURIComponent(sortBy)}`;
+        }
+        return this.request(url);
     }
 
     static async importDictionary(dictionaryId, file, skipDuplicates = true) {

@@ -3,7 +3,7 @@ class DictionaryManager {
     constructor() {
         this.currentDictionaryId = null;
         this.currentWords = [];
-        this.currentSortType = 'alphabet-asc';
+        this.currentSortBy = null;
         this.init();
     }
 
@@ -58,20 +58,13 @@ class DictionaryManager {
             this.showAddWordModal();
         });
 
-        // Обработчик изменения сортировки - автоматическое применение при изменении выбора
+        // Обработчик изменения сортировки
         document.addEventListener('change', (e) => {
             if (e.target && e.target.id === 'sort-select') {
-                console.log('Sort select changed (delegated)!');
-                dictionaryManager.applySort();
-            }
-        });
-
-        // Кнопка применения сортировки - используем делегирование событий с сохранением контекста
-        document.addEventListener('click', (e) => {
-            if (e.target && e.target.id === 'apply-sort-btn') {
-                e.preventDefault();
-                console.log('Apply sort button clicked (delegated)!');
-                dictionaryManager.applySort();
+                this.currentSortBy = e.target.value || null;
+                if (this.currentDictionaryId) {
+                    this.loadWords(this.currentDictionaryId);
+                }
             }
         });
     }
@@ -149,15 +142,11 @@ class DictionaryManager {
             // Переключаемся на вкладку слов
             this.switchDictionaryTab('words');
             
-            // Устанавливаем начальную сортировку
-            this.currentSortType = 'alphabet-asc';
+            // Сбрасываем сортировку при открытии словаря
+            this.currentSortBy = null;
             const sortSelect = document.getElementById('sort-select');
             if (sortSelect) {
-                sortSelect.value = 'alphabet-asc';
-                // Добавляем обработчик изменения сортировки (если еще не добавлен через делегирование)
-                sortSelect.addEventListener('change', () => {
-                    this.applySort();
-                });
+                sortSelect.value = '';
             }
             
             // Загружаем слова
@@ -172,69 +161,12 @@ class DictionaryManager {
 
     async loadWords(dictionaryId) {
         try {
-            this.currentWords = await ApiService.getWordsFromDictionary(dictionaryId);
+            // Загружаем слова с учетом текущей сортировки
+            this.currentWords = await ApiService.getWordsFromDictionary(dictionaryId, this.currentSortBy);
             this.displayWords();
         } catch (error) {
             console.error('Ошибка загрузки слов:', error);
         }
-    }
-
-    applySort() {
-        const sortSelect = document.getElementById('sort-select');
-        if (sortSelect) {
-            this.currentSortType = sortSelect.value;
-            console.log('Applying sort:', this.currentSortType);
-            console.log('Current words count:', this.currentWords.length);
-            
-            const container = document.getElementById('words-list');
-            if (container) {
-                // Плавная анимация при изменении сортировки
-                container.style.opacity = '0.5';
-                container.style.transition = 'opacity 0.2s';
-                setTimeout(() => {
-                    console.log('Calling displayWords() from applySort');
-                    this.displayWords();
-                    container.style.opacity = '1';
-                }, 200);
-            } else {
-                console.error('words-list container not found!');
-            }
-        } else {
-            console.error('sort-select not found!');
-        }
-    }
-
-    sortWords(words) {
-        console.log('Sorting words with type:', this.currentSortType);
-        console.log('Words before sort (first 3):', words.slice(0, 3).map(w => w.word));
-        
-        const sorted = [...words];
-        
-        switch (this.currentSortType) {
-            case 'alphabet-asc':
-                sorted.sort((a, b) => a.word.toLowerCase().localeCompare(b.word.toLowerCase(), 'ru'));
-                break;
-            case 'alphabet-desc':
-                sorted.sort((a, b) => b.word.toLowerCase().localeCompare(a.word.toLowerCase(), 'ru'));
-                break;
-            case 'length-asc':
-                sorted.sort((a, b) => {
-                    const lenDiff = a.word.length - b.word.length;
-                    if (lenDiff !== 0) return lenDiff;
-                    return a.word.toLowerCase().localeCompare(b.word.toLowerCase(), 'ru');
-                });
-                break;
-            case 'length-desc':
-                sorted.sort((a, b) => {
-                    const lenDiff = b.word.length - a.word.length;
-                    if (lenDiff !== 0) return lenDiff;
-                    return a.word.toLowerCase().localeCompare(b.word.toLowerCase(), 'ru');
-                });
-                break;
-        }
-        
-        console.log('Words after sort (first 3):', sorted.slice(0, 3).map(w => w.word));
-        return sorted;
     }
 
     displayWords() {
@@ -253,10 +185,7 @@ class DictionaryManager {
             return;
         }
 
-        const sortedWords = this.sortWords(this.currentWords);
-        console.log('Sorted words count:', sortedWords.length);
-
-        sortedWords.forEach((word, index) => {
+        this.currentWords.forEach((word, index) => {
             const item = document.createElement('div');
             item.className = 'word-item';
             item.innerHTML = `

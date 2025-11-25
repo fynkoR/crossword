@@ -17,7 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -146,14 +145,42 @@ public class DictionaryService {
 
     /**
      * Получить все слова из словаря
+     * @param dictionaryId ID словаря
+     * @param sortBy тип сортировки: "alphabet-asc", "alphabet-desc", "length-asc", "length-desc" или null (без сортировки)
      */
     @Transactional(readOnly = true)
-    public List<WordDto> getWordsFromDictionary(Long dictionaryId) {
+    public List<WordDto> getWordsFromDictionary(Long dictionaryId, String sortBy) {
         if (!dictionaryRepository.existsById(dictionaryId)) {
             throw new RuntimeException("Словарь с ID " + dictionaryId + " не найден");
         }
 
-        return wordRepository.findByDictionaryId(dictionaryId).stream()
+        List<Word> words;
+        
+        if (sortBy == null || sortBy.isEmpty()) {
+            // Без сортировки
+            words = wordRepository.findByDictionaryId(dictionaryId);
+        } else {
+            switch (sortBy) {
+                case "alphabet-asc":
+                    words = wordRepository.findByDictionaryIdOrderByWordAsc(dictionaryId);
+                    break;
+                case "alphabet-desc":
+                    words = wordRepository.findByDictionaryIdOrderByWordDesc(dictionaryId);
+                    break;
+                case "length-asc":
+                    words = wordRepository.findByDictionaryIdOrderByLengthAsc(dictionaryId);
+                    break;
+                case "length-desc":
+                    words = wordRepository.findByDictionaryIdOrderByLengthDesc(dictionaryId);
+                    break;
+                default:
+                    // По умолчанию без сортировки
+                    words = wordRepository.findByDictionaryId(dictionaryId);
+                    break;
+            }
+        }
+
+        return words.stream()
                 .map(wordMapper::toDto)
                 .collect(Collectors.toList());
     }
