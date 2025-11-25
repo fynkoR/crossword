@@ -28,6 +28,7 @@ class GameManager {
     }
 
     async startGame(settings) {
+        console.log('GameManager.startGame v2');
         // Сбрасываем настройки и устанавливаем новые
         this.gameSettings = settings || {};
         
