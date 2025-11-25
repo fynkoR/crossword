@@ -11,6 +11,7 @@ public interface GameMapper {
     @Mapping(source = "gameOver", target = "gameOver")
     @Mapping(source = "solved_words_count", target = "solvedWordsCount")
     @Mapping(source = "isPaused", target = "isPaused")
+    @Mapping(source = "grid_state", target = "gridState")
     @Mapping(source = "user.id", target = "userId")
     @Mapping(source = "crossword.id", target = "crosswordId")
     GameDto toDTO(Game game);
@@ -20,6 +21,7 @@ public interface GameMapper {
     @Mapping(target = "user", ignore = true)
     @Mapping(source = "isPaused", target = "isPaused")
     @Mapping(source = "solvedWordsCount", target = "solved_words_count")
+    @Mapping(source = "gridState", target = "grid_state")
     @Mapping(target = "crossword", ignore = true)
     Game toEntity(GameDto gameDto);
 }

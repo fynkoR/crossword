@@ -18,6 +18,8 @@ public class Game {
     private Boolean gameOver;
     private Integer solved_words_count;
     private Boolean isPaused;
+    @Column(columnDefinition = "JSON")
+    private String grid_state; // Состояние сетки: массив {x, y, letter, isLocked}
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

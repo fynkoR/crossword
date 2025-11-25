@@ -11,6 +11,7 @@ public class GameDto {
     private Boolean gameOver;
     private Integer solvedWordsCount;
     private Boolean isPaused;
+    private String gridState;     // Состояние сетки: JSON массив {x, y, letter, isLocked}
     private Long userId;          // только ID вместо целого объекта
     private Long crosswordId;     // только ID вместо целого объекта
 }

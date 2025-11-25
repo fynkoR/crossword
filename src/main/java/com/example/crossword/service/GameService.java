@@ -57,6 +57,8 @@ public class GameService {
                 return restartGame(gameId);
             case "save":
                 return saveGame(gameId);
+            case "saveGridState":
+                return saveGridState(gameId, action);
             default:
                 return createResult(false, "Неизвестное действие: " + action.getAction(), null, false, null);
         }
@@ -319,6 +321,7 @@ public class GameService {
         game.setHints_used(0);
         game.setSolved_words_count(0);
         game.setGameOver(false);
+        game.setGrid_state(null); // Сбрасываем состояние сетки
 
         Game restartedGame = gameRepository.save(game);
 
@@ -337,6 +340,24 @@ public class GameService {
         Game savedGame = gameRepository.save(game); // JPA автоматически сохраняет изменения
 
         return createResult(true, "Прогресс сохранен", null, game.getGameOver(), gameMapper.toDTO(savedGame));
+    }
+
+    /**
+     * Сохранить состояние сетки (отгаданные буквы)
+     */
+    private GameResultDto saveGridState(Long gameId, GameActionDto action) {
+        Game game = gameRepository.findById(gameId)
+                .orElseThrow(() -> new RuntimeException("Игра не найдена"));
+
+        if (game.getGameOver()) {
+            return createResult(false, "Нельзя сохранить состояние завершенной игры", null, true, gameMapper.toDTO(game));
+        }
+
+        // Сохраняем состояние сетки
+        game.setGrid_state(action.getGridState());
+        Game savedGame = gameRepository.save(game);
+
+        return createResult(true, "Состояние сетки сохранено", null, false, gameMapper.toDTO(savedGame));
     }
     private GameResultDto pauseGame(Long gameId) {
         Game game = gameRepository.findById(gameId)

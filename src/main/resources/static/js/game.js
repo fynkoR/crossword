@@ -86,10 +86,20 @@ class GameManager {
                             return;
                         }
                         
-                        // Создаем игру
+                        // Создаем или загружаем игру
                         const gameResult = await ApiService.startGame(this.crossword.id, user.id);
                         if (gameResult && gameResult.game) {
                             this.currentGame = gameResult.game;
+                            
+                            // Восстанавливаем состояние сетки, если оно есть
+                            if (this.currentGame.gridState) {
+                                try {
+                                    const savedState = JSON.parse(this.currentGame.gridState);
+                                    this.restoreGridState(savedState);
+                                } catch (e) {
+                                    console.error('Ошибка восстановления состояния сетки:', e);
+                                }
+                            }
                         }
                         
                         // Отображаем кроссворд
@@ -162,6 +172,16 @@ class GameManager {
             const gameResult = await ApiService.startGame(this.crossword.id, user.id);
             if (gameResult && gameResult.game) {
                 this.currentGame = gameResult.game;
+                
+                // Восстанавливаем состояние сетки, если оно есть
+                if (this.currentGame.gridState) {
+                    try {
+                        const savedState = JSON.parse(this.currentGame.gridState);
+                        this.restoreGridState(savedState);
+                    } catch (e) {
+                        console.error('Ошибка восстановления состояния сетки:', e);
+                    }
+                }
             }
             
             // Отображаем кроссворд
@@ -254,8 +274,14 @@ class GameManager {
                     
                     if (cellData.letter) {
                         letterInput.value = cellData.letter;
-                        letterInput.disabled = true;
-                        cell.classList.add('solved');
+                        if (cellData.isLocked) {
+                            letterInput.disabled = true;
+                            letterInput.classList.add('correct-letter');
+                            cell.classList.add('solved');
+                        } else {
+                            // Буква введена пользователем, но не заблокирована
+                            letterInput.classList.add('correct-letter');
+                        }
                     }
                     
                     // Обработчики событий
@@ -386,12 +412,31 @@ class GameManager {
             // Проверяем правильность буквы
             this.checkLetter(input, x, y, value);
             
+            // Обновляем состояние в grid
+            if (this.grid && this.grid.cells) {
+                const cell = this.grid.cells.find(c => c.x === x && c.y === y);
+                if (cell) {
+                    cell.letter = value;
+                }
+            }
+            
             // Переходим к следующей клетке слова
             this.moveToNextCell(x, y);
         } else {
             // Если буква удалена, убираем подсветку
             input.classList.remove('correct-letter', 'incorrect-letter');
+            
+            // Обновляем состояние в grid
+            if (this.grid && this.grid.cells) {
+                const cell = this.grid.cells.find(c => c.x === x && c.y === y);
+                if (cell && !cell.isLocked) {
+                    cell.letter = null;
+                }
+            }
         }
+        
+        // Сохраняем состояние на сервере
+        this.saveGridState();
         
         // Проверяем слово
         this.checkWord();
@@ -528,6 +573,17 @@ class GameManager {
                     if (input && cell) {
                         input.disabled = true;
                         cell.classList.add('solved');
+                        
+                        // Обновляем состояние в grid
+                        if (this.grid && this.grid.cells) {
+                            const gridCell = this.grid.cells.find(c => c.x === x && c.y === y);
+                            if (gridCell) {
+                                gridCell.isLocked = true;
+                                if (!gridCell.letter) {
+                                    gridCell.letter = input.value.toUpperCase();
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -535,6 +591,9 @@ class GameManager {
             this.currentWord.isSolved = true;
             this.renderWordsList();
             this.updateStats();
+            
+            // Сохраняем состояние после отгадывания слова
+            this.saveGridState();
             
             // Проверяем, завершена ли игра
             const allSolved = this.words.every(w => w.isSolved);
@@ -669,6 +728,9 @@ class GameManager {
                 // Обновляем статистику
                 this.updateStats();
                 
+                // Сохраняем состояние после использования подсказки
+                this.saveGridState();
+                
                 alert(result.message || 'Подсказка использована');
             } else {
                 alert(result.message || 'Не удалось использовать подсказку');
@@ -680,6 +742,94 @@ class GameManager {
             // Обновляем состояние кнопки
             this.updateStats();
         }
+    }
+
+    /**
+     * Получить текущее состояние сетки
+     */
+    getCurrentGridState() {
+        if (!this.grid || !this.grid.cells) {
+            return [];
+        }
+        
+        const state = [];
+        this.grid.cells.forEach(cell => {
+            // Сохраняем только клетки с буквами или заблокированные
+            if (cell.letter || cell.isLocked) {
+                state.push({
+                    x: cell.x,
+                    y: cell.y,
+                    letter: cell.letter || null,
+                    isLocked: cell.isLocked || false
+                });
+            }
+        });
+        
+        return state;
+    }
+
+    /**
+     * Сохранить состояние сетки на сервере
+     */
+    async saveGridState() {
+        if (!this.currentGame || !this.currentGame.id) {
+            return;
+        }
+        
+        try {
+            const gridState = this.getCurrentGridState();
+            const gridStateJson = JSON.stringify(gridState);
+            
+            await ApiService.saveGridState(this.currentGame.id, gridStateJson);
+        } catch (error) {
+            console.error('Ошибка сохранения состояния сетки:', error);
+            // Не показываем ошибку пользователю, так как это фоновое сохранение
+        }
+    }
+
+    /**
+     * Восстановить состояние сетки из сохраненного
+     */
+    restoreGridState(savedState) {
+        if (!savedState || !Array.isArray(savedState)) {
+            return;
+        }
+        
+        if (!this.grid || !this.grid.cells) {
+            return;
+        }
+        
+        // Восстанавливаем состояние клеток
+        savedState.forEach(stateCell => {
+            const cell = this.grid.cells.find(c => c.x === stateCell.x && c.y === stateCell.y);
+            if (cell) {
+                if (stateCell.letter) {
+                    cell.letter = stateCell.letter;
+                }
+                if (stateCell.isLocked) {
+                    cell.isLocked = true;
+                }
+            }
+        });
+        
+        // Проверяем, какие слова полностью отгаданы
+        this.words.forEach(word => {
+            if (word.positions && word.positions.length >= 2) {
+                let allLocked = true;
+                for (let i = 0; i < word.positions.length; i += 2) {
+                    const x = word.positions[i];
+                    const y = word.positions[i + 1];
+                    const cell = this.grid.cells.find(c => c.x === x && c.y === y);
+                    if (!cell || !cell.isLocked) {
+                        allLocked = false;
+                        break;
+                    }
+                }
+                if (allLocked) {
+                    word.isSolved = true;
+                }
+            }
+        });
     }
 
     showDashboard() {

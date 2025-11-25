@@ -280,5 +280,15 @@ class ApiService {
             },
         });
     }
+
+    static async saveGridState(gameId, gridState) {
+        return this.request(`/games/${gameId}/action`, {
+            method: 'POST',
+            body: {
+                action: 'saveGridState',
+                gridState: gridState
+            },
+        });
+    }
 }
 
