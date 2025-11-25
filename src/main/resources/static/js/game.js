@@ -125,7 +125,9 @@ class GameManager {
                 return;
             }
             
-            const title = `Кроссворд из словаря ${this.gameSettings.dictionaryId}`;
+            let baseTitle = `Кроссворд из словаря ${this.gameSettings.dictionaryId}`;
+            // Добавляем режим создания в скобках
+            const title = `${baseTitle} (Автоматический)`;
             this.crossword = await ApiService.generateCrossword(
                 this.gameSettings.dictionaryId, 
                 wordCount, 

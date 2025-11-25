@@ -201,7 +201,17 @@ class ManualCrosswordManager {
         try {
             // Создаем кроссворд из выбранных слов
             const wordIds = this.selectedWords.map(w => w.id);
-            const title = `Ручной кроссворд (${this.selectedWords.length} слов)`;
+            
+            // Получаем название из поля ввода
+            let baseTitle = document.getElementById('manual-crossword-title-input').value.trim();
+            
+            // Если название не указано, используем дефолтное
+            if (!baseTitle) {
+                baseTitle = `Кроссворд (${this.selectedWords.length} слов)`;
+            }
+            
+            // Добавляем режим создания в скобках
+            const title = `${baseTitle} (Ручной)`;
             
             const crossword = await ApiService.createManualCrossword(this.dictionaryId, wordIds, title);
             

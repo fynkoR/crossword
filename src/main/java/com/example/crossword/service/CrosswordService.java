@@ -204,12 +204,8 @@ public class CrosswordService {
             throw new RuntimeException("Кроссворд с ID " + id + " не найден");
         }
 
-        // Проверяем, есть ли связанные игры
-        long gamesCount = gameRepository.countByCrosswordId(id);
-        if (gamesCount > 0) {
-            throw new RuntimeException("Невозможно удалить кроссворд: существует " + gamesCount + 
-                    " связанных игр. Удалите сначала все игры.");
-        }
+        // Удаляем все связанные игры перед удалением кроссворда
+        gameRepository.deleteByCrosswordId(id);
 
         crosswordRepository.deleteById(id);
     }

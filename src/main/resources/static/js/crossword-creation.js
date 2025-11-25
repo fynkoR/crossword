@@ -183,8 +183,15 @@ class CrosswordCreationManager {
     async createCrossword() {
         const dictionaryId = this.selectedDictionaryId;
         const wordCount = parseInt(document.getElementById('creation-word-count-select').value);
-        const title = document.getElementById('creation-title-input').value.trim() || 
-                     `Кроссворд из словаря ${dictionaryId}`;
+        let baseTitle = document.getElementById('creation-title-input').value.trim();
+        
+        // Если название не указано, используем дефолтное
+        if (!baseTitle) {
+            baseTitle = `Кроссворд из словаря ${dictionaryId}`;
+        }
+        
+        // Добавляем режим создания в скобках
+        const title = `${baseTitle} (Автоматический)`;
 
         if (!dictionaryId) {
             alert('Пожалуйста, выберите словарь');
