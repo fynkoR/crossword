@@ -240,10 +240,10 @@ class CrosswordSelectionManager {
             console.log('[CrosswordSelectionManager] Преобразованный ID:', id);
             
             // Проверяем наличие gameManager
-            console.log('[CrosswordSelectionManager] Вызываем window.startGame с ID:', crossword.id);
+            console.log('[CrosswordSelectionManager] Вызываем window.startGame с ID:', id);
             
             if (typeof window.startGame === 'function') {
-                window.startGame({ crosswordId: crossword.id });
+                window.startGame({ crosswordId: id });
                 
                 // Переходим к экрану игры
                 const selectionScreen = document.getElementById('crossword-selection-screen');
