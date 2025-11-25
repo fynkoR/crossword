@@ -197,7 +197,24 @@ class ApiService {
     }
 
     static async generateCrossword(dictionaryId, wordCount, title) {
-        return this.request(`/crosswords/generate?dictionaryId=${dictionaryId}&wordCount=${wordCount}&title=${encodeURIComponent(title)}`, {
+        // Валидация параметров
+        if (!dictionaryId) {
+            throw new Error('Не указан ID словаря');
+        }
+        if (!wordCount || wordCount === 'undefined' || wordCount === undefined) {
+            throw new Error('Не указано количество слов для генерации кроссворда');
+        }
+        if (!title) {
+            throw new Error('Не указано название кроссворда');
+        }
+        
+        // Преобразуем wordCount в число, если это строка
+        const wordCountNum = typeof wordCount === 'string' ? parseInt(wordCount, 10) : wordCount;
+        if (isNaN(wordCountNum) || wordCountNum < 1) {
+            throw new Error('Некорректное количество слов');
+        }
+        
+        return this.request(`/crosswords/generate?dictionaryId=${dictionaryId}&wordCount=${wordCountNum}&title=${encodeURIComponent(title)}`, {
             method: 'POST',
         });
     }

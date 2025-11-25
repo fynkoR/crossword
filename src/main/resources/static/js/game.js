@@ -36,15 +36,24 @@ class GameManager {
                 this.crossword = await ApiService.getCrosswordDetail(settings.crosswordId);
             } else {
                 // Генерируем кроссворд из словаря (автоматический режим)
-                if (!settings.wordCount) {
+                if (!settings.wordCount || settings.wordCount === 'undefined' || settings.wordCount === undefined) {
                     alert('Не указано количество слов для генерации кроссворда');
                     this.showDashboard();
                     return;
                 }
+                
+                // Преобразуем wordCount в число, если это строка
+                const wordCount = typeof settings.wordCount === 'string' ? parseInt(settings.wordCount, 10) : settings.wordCount;
+                if (isNaN(wordCount) || wordCount < 1) {
+                    alert('Некорректное количество слов');
+                    this.showDashboard();
+                    return;
+                }
+                
                 const title = `Кроссворд из словаря ${settings.dictionaryId}`;
                 this.crossword = await ApiService.generateCrossword(
                     settings.dictionaryId, 
-                    settings.wordCount, 
+                    wordCount, 
                     title
                 );
             }

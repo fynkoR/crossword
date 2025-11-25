@@ -17,7 +17,7 @@ class DashboardManager {
 
         // Карточки действий
         document.getElementById('play-card').addEventListener('click', () => {
-            this.showGameSettings();
+            this.showCrosswordSelection();
         });
 
         document.getElementById('dictionary-card').addEventListener('click', () => {
@@ -25,7 +25,7 @@ class DashboardManager {
         });
 
         document.getElementById('settings-card').addEventListener('click', () => {
-            this.showGameSettings();
+            this.showCrosswordSelection();
         });
 
         // Кнопка начала игры
@@ -234,21 +234,22 @@ class DashboardManager {
 
     async startGame() {
         const dictionaryId = document.getElementById('dictionary-select').value;
-        const wordCount = parseInt(document.getElementById('word-count-select').value);
+        const wordCountStr = document.getElementById('word-count-select').value;
+        const wordCount = parseInt(wordCountStr, 10);
 
         if (!dictionaryId) {
             alert('Пожалуйста, выберите словарь');
             return;
         }
 
-        if (!wordCount) {
+        if (!wordCountStr || isNaN(wordCount) || wordCount < 1) {
             alert('Пожалуйста, выберите количество слов');
             return;
         }
 
         this.gameSettings = {
-            dictionaryId: parseInt(dictionaryId),
-            wordCount
+            dictionaryId: parseInt(dictionaryId, 10),
+            wordCount: wordCount
         };
 
         // Переходим к экрану игры
@@ -263,6 +264,15 @@ class DashboardManager {
         document.getElementById('dashboard-screen').classList.remove('active');
         document.getElementById('dictionary-screen').classList.add('active');
         dictionaryManager.loadDictionaries();
+    }
+
+    showCrosswordSelection() {
+        document.getElementById('dashboard-screen').classList.remove('active');
+        document.getElementById('crossword-selection-screen').classList.add('active');
+        
+        if (typeof crosswordSelectionManager !== 'undefined') {
+            crosswordSelectionManager.show();
+        }
     }
 }
 

@@ -205,18 +205,16 @@ class ManualCrosswordManager {
             
             const crossword = await ApiService.createManualCrossword(this.dictionaryId, wordIds, title);
             
-            // Переходим к игре
+            // Переходим к экрану выбора кроссворда
             document.getElementById('manual-crossword-screen').classList.remove('active');
-            document.getElementById('game-screen').classList.add('active');
+            document.getElementById('crossword-selection-screen').classList.add('active');
             
-            // Запускаем игру с уже созданным кроссвордом
-            if (typeof gameManager !== 'undefined') {
-                gameManager.startGame({
-                    dictionaryId: this.dictionaryId,
-                    crosswordId: crossword.id,
-                    isManual: true  // Явно указываем, что это ручной режим
-                });
+            // Обновляем список кроссвордов
+            if (typeof crosswordSelectionManager !== 'undefined') {
+                await crosswordSelectionManager.loadCrosswords();
             }
+            
+            alert(`Кроссворд "${crossword.title}" успешно создан!`);
         } catch (error) {
             console.error('Ошибка создания кроссворда:', error);
             alert('Ошибка создания кроссворда: ' + error.message);
@@ -225,7 +223,7 @@ class ManualCrosswordManager {
 
     goBack() {
         document.getElementById('manual-crossword-screen').classList.remove('active');
-        document.getElementById('dashboard-screen').classList.add('active');
+        document.getElementById('crossword-creation-screen').classList.add('active');
         this.selectedWords = [];
         this.availableWords = [];
     }

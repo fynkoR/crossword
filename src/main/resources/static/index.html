@@ -224,6 +224,94 @@
         </div>
     </div>
 
+    <!-- Экран создания кроссворда -->
+    <div id="crossword-creation-screen" class="screen">
+        <nav class="navbar">
+            <div class="navbar-brand">✏️ Создание кроссворда</div>
+            <button id="back-from-creation" class="btn btn-secondary">← Назад</button>
+        </nav>
+        
+        <div class="crossword-creation-container">
+            <div class="creation-header">
+                <h1>Создать новый кроссворд</h1>
+                <p>Выберите словарь и режим создания</p>
+            </div>
+            
+            <div class="creation-content">
+                <div class="form-section">
+                    <div class="form-group">
+                        <label for="creation-dictionary-select">Выберите словарь:</label>
+                        <select id="creation-dictionary-select" class="form-control">
+                            <option value="">Загрузка...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="creation-mode-select">Режим составления:</label>
+                        <select id="creation-mode-select" class="form-control" disabled>
+                            <option value="">Сначала выберите словарь</option>
+                            <option value="auto">Автоматический</option>
+                            <option value="manual">Ручной</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Автоматический режим -->
+                    <div id="creation-auto-mode-settings" style="display: none;">
+                        <div class="form-group">
+                            <label for="creation-word-count-select">Количество слов:</label>
+                            <select id="creation-word-count-select" class="form-control" disabled>
+                                <option value="">Выберите количество слов</option>
+                            </select>
+                        </div>
+                        <div id="creation-variants-status" class="variants-status"></div>
+                        <div class="form-group">
+                            <label for="creation-title-input">Название кроссворда:</label>
+                            <input type="text" id="creation-title-input" class="form-control" placeholder="Введите название">
+                        </div>
+                        <button id="create-crossword-btn" class="btn btn-primary" disabled>Создать кроссворд</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран выбора кроссворда -->
+    <div id="crossword-selection-screen" class="screen">
+        <nav class="navbar">
+            <div class="navbar-brand">📋 Выбор кроссворда</div>
+            <button id="back-from-selection" class="btn btn-secondary">← Назад</button>
+        </nav>
+        
+        <div class="crossword-selection-container">
+            <div class="selection-header">
+                <h1>Выберите кроссворд для игры</h1>
+                <button id="create-new-crossword-btn" class="btn btn-primary">+ Создать новый кроссворд</button>
+            </div>
+            
+            <div class="selection-filters">
+                <div class="form-group">
+                    <label for="filter-dictionary-select">Фильтр по словарю:</label>
+                    <select id="filter-dictionary-select" class="form-control">
+                        <option value="">Все словари</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="search-crossword-input">Поиск по названию:</label>
+                    <input type="text" id="search-crossword-input" class="form-control" placeholder="Введите название...">
+                </div>
+            </div>
+            
+            <div id="crosswords-list" class="crosswords-grid">
+                <!-- Кроссворды будут загружены динамически -->
+            </div>
+            
+            <div id="no-crosswords-message" class="no-items-message" style="display: none;">
+                <p>Кроссворды не найдены</p>
+                <button id="create-first-crossword-btn" class="btn btn-primary">Создать первый кроссворд</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Экран ручного составления кроссворда -->
     <div id="manual-crossword-screen" class="screen">
         <nav class="navbar">
@@ -329,6 +417,8 @@
     <script src="js/auth.js"></script>
     <script src="js/dashboard.js"></script>
     <script src="js/dictionary.js"></script>
+    <script src="js/crossword-creation.js"></script>
+    <script src="js/crossword-selection.js"></script>
     <script src="js/manual-crossword.js"></script>
     <script src="js/game.js"></script>
     <script src="js/main.js"></script>
