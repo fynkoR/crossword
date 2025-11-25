@@ -86,6 +86,12 @@ class DashboardManager {
         wordCountSelect.disabled = false;
         wordCountSelect.innerHTML = '';
         
+        // Добавляем пустую опцию по умолчанию
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'Выберите количество слов...';
+        wordCountSelect.appendChild(defaultOption);
+        
         // Заполняем опции от 3 до 10 слов
         for (let count = 3; count <= 10; count++) {
             const option = document.createElement('option');
@@ -107,6 +113,10 @@ class DashboardManager {
             const wordCount = parseInt(e.target.value);
             if (wordCount) {
                 this.checkVariantForWordCount(this.selectedDictionaryId, wordCount);
+            } else {
+                // Если выбрана пустая опция, сбрасываем статус
+                statusDiv.innerHTML = '';
+                document.getElementById('start-game-btn').disabled = true;
             }
         };
         wordCountSelect.addEventListener('change', this.handleWordCountChange);

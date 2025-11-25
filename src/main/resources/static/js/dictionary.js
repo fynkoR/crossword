@@ -61,7 +61,15 @@ class DictionaryManager {
         // Сортировка слов
         document.getElementById('sort-select').addEventListener('change', (e) => {
             this.currentSortType = e.target.value;
-            this.displayWords();
+            // Показываем индикатор загрузки
+            const container = document.getElementById('words-list');
+            container.style.opacity = '0.5';
+            
+            // Небольшая задержка для визуального эффекта
+            setTimeout(() => {
+                this.displayWords();
+                container.style.opacity = '1';
+            }, 100);
         });
     }
 
