@@ -70,7 +70,7 @@ class GameManager {
                         } else if (this.crossword.dictionaryId) {
                             this.gameSettings.dictionaryId = this.crossword.dictionaryId;
                             console.log('DictionaryId сохранен напрямую:', this.gameSettings.dictionaryId);
-                        } else {
+            } else {
                             console.warn('DictionaryId не найден в кроссворде');
                         }
                         
@@ -119,7 +119,7 @@ class GameManager {
             // Если дошли сюда, значит crosswordId не передан или невалиден - генерируем новый кроссворд
             console.log('Генерируем новый кроссворд, dictionaryId:', this.gameSettings.dictionaryId);
             
-            // Генерируем кроссворд из словаря (автоматический режим)
+                // Генерируем кроссворд из словаря (автоматический режим)
             if (!this.gameSettings.dictionaryId) {
                 alert('Не указан ID словаря');
                 this.showDashboard();
@@ -275,12 +275,44 @@ class GameManager {
                     if (cellData.letter) {
                         letterInput.value = cellData.letter;
                         if (cellData.isLocked) {
-                            letterInput.disabled = true;
+                        letterInput.disabled = true;
                             letterInput.classList.add('correct-letter');
-                            cell.classList.add('solved');
+                        cell.classList.add('solved');
                         } else {
                             // Буква введена пользователем, но не заблокирована
-                            letterInput.classList.add('correct-letter');
+                            // Применяем правильный класс в зависимости от isCorrect
+                            if (cellData.isCorrect === false) {
+                                letterInput.classList.add('incorrect-letter');
+                            } else if (cellData.isCorrect === true) {
+                                letterInput.classList.add('correct-letter');
+                            } else {
+                                // Если isCorrect не определен, проверяем букву
+                                // Находим слово, содержащее эту клетку
+                                const word = this.findWordByCell(x, y);
+                                if (word && word.positions) {
+                                    // Находим позицию буквы в слове
+                                    let letterIndex = -1;
+                                    for (let i = 0; i < word.positions.length; i += 2) {
+                                        if (word.positions[i] === x && word.positions[i + 1] === y) {
+                                            letterIndex = i / 2;
+                                            break;
+                                        }
+                                    }
+                                    if (letterIndex >= 0) {
+                                        const correctLetter = word.text.charAt(letterIndex).toUpperCase();
+                                        const isCorrect = cellData.letter.toUpperCase() === correctLetter;
+                                        if (isCorrect) {
+                                            letterInput.classList.add('correct-letter');
+                                        } else {
+                                            letterInput.classList.add('incorrect-letter');
+                                        }
+                                        // Сохраняем isCorrect в cellData
+                                        if (cellData) {
+                                            cellData.isCorrect = isCorrect;
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                     
@@ -462,12 +494,21 @@ class GameManager {
         const correctLetter = word.text.charAt(letterIndex).toUpperCase();
         
         // Сравниваем
-        if (userLetter === correctLetter) {
+        const isCorrect = userLetter === correctLetter;
+        if (isCorrect) {
             input.classList.remove('incorrect-letter');
             input.classList.add('correct-letter');
         } else {
             input.classList.remove('correct-letter');
             input.classList.add('incorrect-letter');
+        }
+        
+        // Сохраняем информацию о правильности в grid
+        if (this.grid && this.grid.cells) {
+            const cell = this.grid.cells.find(c => c.x === x && c.y === y);
+            if (cell) {
+                cell.isCorrect = isCorrect;
+            }
         }
     }
 
@@ -760,7 +801,8 @@ class GameManager {
                     x: cell.x,
                     y: cell.y,
                     letter: cell.letter || null,
-                    isLocked: cell.isLocked || false
+                    isLocked: cell.isLocked || false,
+                    isCorrect: cell.isCorrect !== undefined ? cell.isCorrect : null
                 });
             }
         });
@@ -808,6 +850,9 @@ class GameManager {
                 }
                 if (stateCell.isLocked) {
                     cell.isLocked = true;
+                }
+                if (stateCell.isCorrect !== undefined && stateCell.isCorrect !== null) {
+                    cell.isCorrect = stateCell.isCorrect;
                 }
             }
         });
