@@ -892,20 +892,21 @@ class GameManager {
     }
 }
 
-// Глобальный экземпляр
-let gameManager;
-try {
-    gameManager = new GameManager();
-    console.log('[GameManager] Экземпляр gameManager создан успешно');
-    
-    // Также сохраняем в window для доступа из других скриптов
-    if (typeof window !== 'undefined') {
-        window.gameManager = gameManager;
-        console.log('[GameManager] gameManager сохранен в window.gameManager');
+// Глобальный экземпляр - создаем сразу и сохраняем в window
+(function() {
+    try {
+        const manager = new GameManager();
+        console.log('[GameManager] Экземпляр gameManager создан успешно');
+        
+        // Сохраняем в window для доступа из других скриптов
+        if (typeof window !== 'undefined') {
+            window.gameManager = manager;
+            console.log('[GameManager] gameManager сохранен в window.gameManager');
+        }
+    } catch (error) {
+        console.error('[GameManager] Ошибка при создании экземпляра:', error);
+        if (typeof window !== 'undefined') {
+            window.gameManager = null;
+        }
     }
-} catch (error) {
-    console.error('[GameManager] Ошибка при создании экземпляра:', error);
-    if (typeof window !== 'undefined') {
-        window.gameManager = null;
-    }
-}
+})();

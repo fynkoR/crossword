@@ -166,8 +166,12 @@ class CrosswordSelectionManager {
                 console.log('[CrosswordSelectionManager] crossword.id:', crossword.id, 'тип:', typeof crossword.id);
                 console.log('[CrosswordSelectionManager] this:', this);
                 console.log('[CrosswordSelectionManager] Проверка gameManager перед вызовом:');
-                console.log('  - typeof gameManager:', typeof gameManager);
-                console.log('  - gameManager:', gameManager);
+                
+                // Безопасная проверка gameManager через window (избегаем ReferenceError)
+                const windowManager = typeof window !== 'undefined' ? window.gameManager : null;
+                console.log('  - window.gameManager:', windowManager);
+                console.log('  - window.gameManager существует:', windowManager !== null && windowManager !== undefined);
+                console.log('  - window.gameManager тип:', typeof windowManager);
                 
                 if (!crossword.id) {
                     console.error('[CrosswordSelectionManager] Ошибка: у кроссворда отсутствует ID');
@@ -244,16 +248,30 @@ class CrosswordSelectionManager {
             // Получаем gameManager (пробуем разные варианты)
             let manager = null;
             
-            if (typeof gameManager !== 'undefined' && gameManager) {
-                manager = gameManager;
-                console.log('[CrosswordSelectionManager] gameManager найден в глобальной области');
-            } else if (typeof window !== 'undefined' && window.gameManager) {
+            // Сначала пробуем получить из window (самый безопасный способ)
+            if (typeof window !== 'undefined' && window.gameManager) {
                 manager = window.gameManager;
                 console.log('[CrosswordSelectionManager] gameManager найден в window.gameManager');
             } else {
+                // Пробуем глобальную переменную (может вызвать ReferenceError, поэтому в try-catch)
+                try {
+                    if (typeof gameManager !== 'undefined' && gameManager) {
+                        manager = gameManager;
+                        console.log('[CrosswordSelectionManager] gameManager найден в глобальной области');
+                    }
+                } catch (e) {
+                    console.log('[CrosswordSelectionManager] gameManager не доступен в глобальной области (ReferenceError)');
+                }
+            }
+            
+            if (!manager) {
                 console.error('[CrosswordSelectionManager] gameManager не найден нигде');
-                console.error('[CrosswordSelectionManager] typeof gameManager:', typeof gameManager);
-                console.error('[CrosswordSelectionManager] window.gameManager:', window.gameManager);
+                console.error('[CrosswordSelectionManager] window.gameManager:', typeof window !== 'undefined' ? window.gameManager : 'window не определен');
+                try {
+                    console.error('[CrosswordSelectionManager] typeof gameManager:', typeof gameManager);
+                } catch (e) {
+                    console.error('[CrosswordSelectionManager] gameManager не определен (ReferenceError)');
+                }
                 alert('Ошибка: менеджер игры не инициализирован. Перезагрузите страницу.');
                 return;
             }
