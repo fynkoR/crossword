@@ -336,24 +336,26 @@ class CrosswordSelectionManager {
             }
             detailsHTML += '</div>';
 
-            // Статистика игр
+            // Статистика выполнения
             detailsHTML += '<div class="detail-section">';
-            detailsHTML += '<h3>Статистика игр</h3>';
-            if (statistics) {
-                detailsHTML += `<div class="detail-item"><strong>Всего попыток (игр):</strong> ${statistics.gamesCount || 0}</div>`;
-                detailsHTML += `<div class="detail-item"><strong>Завершенных игр:</strong> ${statistics.completedGamesCount || 0}</div>`;
-                const completionRate = statistics.gamesCount > 0 
-                    ? ((statistics.completedGamesCount / statistics.gamesCount) * 100).toFixed(1) 
+            detailsHTML += '<h3>Статистика выполнения</h3>';
+            if (statistics && crossword.gridData && crossword.gridData.cells) {
+                // Подсчитываем общее количество букв в кроссворде (не-черные клетки)
+                const totalLetters = crossword.gridData.cells.filter(cell => !cell.isBlack).length;
+                const guessedLetters = statistics.totalGuessedLetters || 0;
+                
+                detailsHTML += `<div class="detail-item"><strong>Всего букв в кроссворде:</strong> ${totalLetters}</div>`;
+                detailsHTML += `<div class="detail-item"><strong>Отгадано букв:</strong> ${guessedLetters}</div>`;
+                
+                // Процент выполнения
+                const completionPercentage = totalLetters > 0 
+                    ? ((guessedLetters / totalLetters) * 100).toFixed(1)
                     : '0';
-                detailsHTML += `<div class="detail-item"><strong>Процент завершения:</strong> ${completionRate}%</div>`;
-                if (statistics.totalGuessedLetters !== undefined && statistics.totalGuessedLetters !== null) {
-                    detailsHTML += `<div class="detail-item"><strong>Всего отгадано букв:</strong> ${statistics.totalGuessedLetters}</div>`;
-                    // Подсчитываем среднее количество отгаданных букв на игру
-                    const avgLetters = statistics.gamesCount > 0 
-                        ? (statistics.totalGuessedLetters / statistics.gamesCount).toFixed(1)
-                        : '0';
-                    detailsHTML += `<div class="detail-item"><strong>Среднее букв на игру:</strong> ${avgLetters}</div>`;
-                }
+                detailsHTML += `<div class="detail-item"><strong>Процент выполнения:</strong> ${completionPercentage}%</div>`;
+            } else if (statistics && statistics.totalGuessedLetters !== undefined && statistics.totalGuessedLetters !== null) {
+                // Если нет данных о сетке, показываем только отгаданные буквы
+                detailsHTML += `<div class="detail-item"><strong>Отгадано букв:</strong> ${statistics.totalGuessedLetters}</div>`;
+                detailsHTML += '<div class="detail-item">Данные о сетке недоступны для расчета процента</div>';
             } else {
                 detailsHTML += '<div class="detail-item">Статистика недоступна</div>';
             }
