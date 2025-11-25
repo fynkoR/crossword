@@ -200,7 +200,7 @@ class ApiService {
         return this.request(`/crosswords/${id}/statistics`);
     }
 
-    static async generateCrossword(dictionaryId, wordCount, title, maxHints = null) {
+    static async generateCrossword(dictionaryId, wordCount, title, maxHints = null, userId = null) {
         // Валидация параметров
         if (!dictionaryId) {
             throw new Error('Не указан ID словаря');
@@ -222,6 +222,9 @@ class ApiService {
         if (maxHints !== null && maxHints !== undefined) {
             url += `&maxHints=${maxHints}`;
         }
+        if (userId !== null && userId !== undefined) {
+            url += `&userId=${userId}`;
+        }
         
         return this.request(url, {
             method: 'POST',
@@ -232,10 +235,13 @@ class ApiService {
         return this.request(`/crosswords/check-variants?dictionaryId=${dictionaryId}&minWords=${minWords}&maxWords=${maxWords}`);
     }
 
-    static async createManualCrossword(dictionaryId, wordIds, title, maxHints = null) {
+    static async createManualCrossword(dictionaryId, wordIds, title, maxHints = null, userId = null) {
         const body = { dictionaryId, wordIds, title };
         if (maxHints !== null && maxHints !== undefined) {
             body.maxHints = maxHints;
+        }
+        if (userId !== null && userId !== undefined) {
+            body.userId = userId;
         }
         return this.request('/crosswords/create-manual', {
             method: 'POST',

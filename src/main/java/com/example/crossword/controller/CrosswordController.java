@@ -183,10 +183,11 @@ public class CrosswordController {
             @RequestParam Long dictionaryId,
             @RequestParam int wordCount,
             @RequestParam String title,
-            @RequestParam(required = false) Integer maxHints) {
+            @RequestParam(required = false) Integer maxHints,
+            @RequestParam(required = false) Long userId) {
         try {
-            logger.info("POST /crosswords/generate - Генерация кроссворда из словаря {}, слов: {}, подсказок: {}", dictionaryId, wordCount, maxHints);
-            CrosswordDetailDto crossword = crosswordService.generateCrosswordFromDictionary(dictionaryId, wordCount, title, maxHints);
+            logger.info("POST /crosswords/generate - Генерация кроссворда из словаря {}, слов: {}, подсказок: {}, userId: {}", dictionaryId, wordCount, maxHints, userId);
+            CrosswordDetailDto crossword = crosswordService.generateCrosswordFromDictionary(dictionaryId, wordCount, title, maxHints, userId);
             logger.info("Кроссворд успешно сгенерирован с ID: {}", crossword.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(crossword);
         } catch (RuntimeException e) {
@@ -238,8 +239,17 @@ public class CrosswordController {
                 }
             }
             
-            logger.info("POST /crosswords/create-manual - Создание ручного кроссворда из словаря {}, слов: {}, подсказок: {}", dictionaryId, wordIds.size(), maxHints);
-            CrosswordDetailDto crossword = crosswordService.createManualCrossword(dictionaryId, wordIds, title, maxHints);
+            // Получаем userId из запроса, если указан
+            Long userId = null;
+            if (request.containsKey("userId")) {
+                Object userIdObj = request.get("userId");
+                if (userIdObj != null) {
+                    userId = Long.valueOf(userIdObj.toString());
+                }
+            }
+            
+            logger.info("POST /crosswords/create-manual - Создание ручного кроссворда из словаря {}, слов: {}, подсказок: {}, userId: {}", dictionaryId, wordIds.size(), maxHints, userId);
+            CrosswordDetailDto crossword = crosswordService.createManualCrossword(dictionaryId, wordIds, title, maxHints, userId);
             logger.info("Ручной кроссворд успешно создан с ID: {}", crossword.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(crossword);
         } catch (RuntimeException e) {

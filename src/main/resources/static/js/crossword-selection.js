@@ -299,16 +299,35 @@ class CrosswordSelectionManager {
             }
             detailsHTML += '</div>';
 
+            // Информация о создателе
+            detailsHTML += '<div class="detail-section">';
+            detailsHTML += '<h3>Создатель кроссворда</h3>';
+            if (crossword.createdByUserId) {
+                detailsHTML += `<div class="detail-item"><strong>ID создателя:</strong> ${crossword.createdByUserId}</div>`;
+                detailsHTML += `<div class="detail-item"><strong>Логин создателя:</strong> ${crossword.createdByUserLogin || 'N/A'}</div>`;
+            } else {
+                detailsHTML += '<div class="detail-item">Создатель не указан</div>';
+            }
+            detailsHTML += '</div>';
+
             // Статистика игр
             detailsHTML += '<div class="detail-section">';
             detailsHTML += '<h3>Статистика игр</h3>';
             if (statistics) {
-                detailsHTML += `<div class="detail-item"><strong>Всего попыток:</strong> ${statistics.gamesCount || 0}</div>`;
+                detailsHTML += `<div class="detail-item"><strong>Всего попыток (игр):</strong> ${statistics.gamesCount || 0}</div>`;
                 detailsHTML += `<div class="detail-item"><strong>Завершенных игр:</strong> ${statistics.completedGamesCount || 0}</div>`;
                 const completionRate = statistics.gamesCount > 0 
                     ? ((statistics.completedGamesCount / statistics.gamesCount) * 100).toFixed(1) 
                     : '0';
                 detailsHTML += `<div class="detail-item"><strong>Процент завершения:</strong> ${completionRate}%</div>`;
+                if (statistics.totalGuessedLetters !== undefined && statistics.totalGuessedLetters !== null) {
+                    detailsHTML += `<div class="detail-item"><strong>Всего отгадано букв:</strong> ${statistics.totalGuessedLetters}</div>`;
+                    // Подсчитываем среднее количество отгаданных букв на игру
+                    const avgLetters = statistics.gamesCount > 0 
+                        ? (statistics.totalGuessedLetters / statistics.gamesCount).toFixed(1)
+                        : '0';
+                    detailsHTML += `<div class="detail-item"><strong>Среднее букв на игру:</strong> ${avgLetters}</div>`;
+                }
             } else {
                 detailsHTML += '<div class="detail-item">Статистика недоступна</div>';
             }

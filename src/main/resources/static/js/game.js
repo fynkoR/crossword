@@ -144,11 +144,15 @@ class GameManager {
             // Добавляем режим создания в скобках
             const title = `${baseTitle} (Автоматический)`;
             // При генерации из дашборда используем дефолтное количество подсказок (null)
+            const user = authManager.getCurrentUser();
+            const userId = user && user.id ? user.id : null;
+            
             this.crossword = await ApiService.generateCrossword(
                 this.gameSettings.dictionaryId, 
                 wordCount, 
                 title,
-                null
+                null,
+                userId
             );
             
             if (!this.crossword || !this.crossword.gridData || !this.crossword.wordsData) {

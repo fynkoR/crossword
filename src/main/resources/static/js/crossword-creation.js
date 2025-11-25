@@ -214,7 +214,11 @@ class CrosswordCreationManager {
         }
 
         try {
-            const crossword = await ApiService.generateCrossword(dictionaryId, wordCount, title, maxHints);
+            // Получаем текущего пользователя
+            const user = typeof authManager !== 'undefined' ? authManager.getCurrentUser() : null;
+            const userId = user && user.id ? user.id : null;
+            
+            const crossword = await ApiService.generateCrossword(dictionaryId, wordCount, title, maxHints, userId);
             
             // Переходим к экрану выбора кроссворда
             this.showSelectionScreen();

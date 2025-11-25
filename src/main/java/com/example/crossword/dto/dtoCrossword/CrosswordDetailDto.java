@@ -16,4 +16,6 @@ public class CrosswordDetailDto extends CrosswordDtoBase{
     private DictionaryDto dictionary;
     private CrosswordGrid gridData;
     private CrosswordWords wordsData;
+    private Long createdByUserId; // ID пользователя, который создал кроссворд
+    private String createdByUserLogin; // Логин пользователя, который создал кроссворд
 }

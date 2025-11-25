@@ -30,4 +30,7 @@ public class Crossword {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dictionary_id", nullable = false)
     private Dictionary dictionary;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_user_id")
+    private User createdBy; // Пользователь, который создал кроссворд
 }

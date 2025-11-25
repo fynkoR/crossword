@@ -7,7 +7,9 @@ import com.example.crossword.mapper.CrosswordMapper;
 import com.example.crossword.repository.CrosswordRepository;
 import com.example.crossword.repository.DictionaryRepository;
 import com.example.crossword.repository.GameRepository;
+import com.example.crossword.repository.UserRepository;
 import com.example.crossword.repository.WordRepository;
+import com.example.crossword.enitity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,7 @@ public class CrosswordService {
     private final DictionaryRepository dictionaryRepository;
     private final GameRepository gameRepository;
     private final WordRepository wordRepository;
+    private final UserRepository userRepository;
     private final CrosswordMapper crosswordMapper;
     private final CrosswordJsonService crosswordJsonService;
     private final CrosswordGeneratorService crosswordGeneratorService;
@@ -35,6 +38,7 @@ public class CrosswordService {
                            DictionaryRepository dictionaryRepository,
                            GameRepository gameRepository,
                            WordRepository wordRepository,
+                           UserRepository userRepository,
                            CrosswordMapper crosswordMapper,
                            CrosswordJsonService crosswordJsonService,
                            CrosswordGeneratorService crosswordGeneratorService) {
@@ -42,6 +46,7 @@ public class CrosswordService {
         this.dictionaryRepository = dictionaryRepository;
         this.gameRepository = gameRepository;
         this.wordRepository = wordRepository;
+        this.userRepository = userRepository;
         this.crosswordMapper = crosswordMapper;
         this.crosswordJsonService = crosswordJsonService;
         this.crosswordGeneratorService = crosswordGeneratorService;
@@ -115,6 +120,12 @@ public class CrosswordService {
         if (crossword.getWords_data() != null) {
             CrosswordWords wordsData = crosswordJsonService.parseWordsData(crossword.getWords_data());
             detailDto.setWordsData(wordsData);
+        }
+        
+        // Добавляем информацию о создателе
+        if (crossword.getCreatedBy() != null) {
+            detailDto.setCreatedByUserId(crossword.getCreatedBy().getId());
+            detailDto.setCreatedByUserLogin(crossword.getCreatedBy().getLogin());
         }
         
         return detailDto;
@@ -220,8 +231,11 @@ public class CrosswordService {
         }
 
         Crossword crossword = crosswordRepository.findById(crosswordId).get();
-        long gamesCount = gameRepository.countByCrosswordId(crosswordId);
-        long completedGamesCount = gameRepository.countByCrosswordIdAndGame_overTrue(crosswordId);
+        List<com.example.crossword.enitity.Game> allGames = gameRepository.findByCrosswordId(crosswordId);
+        long gamesCount = allGames.size();
+        long completedGamesCount = allGames.stream()
+                .filter(g -> g.getGameOver() != null && g.getGameOver())
+                .count();
 
         CrosswordStatisticsDto stats = new CrosswordStatisticsDto();
         stats.setCrosswordId(crosswordId);
@@ -235,6 +249,33 @@ public class CrosswordService {
         } else {
             stats.setWordsCount(0L);
         }
+
+        // Подсчитываем общее количество отгаданных букв из всех игр
+        long totalGuessedLetters = 0;
+        com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        for (com.example.crossword.enitity.Game game : allGames) {
+            if (game.getGrid_state() != null && !game.getGrid_state().isEmpty()) {
+                try {
+                    // Парсим JSON массив grid_state
+                    // grid_state хранится как JSON массив объектов {x, y, letter, isLocked}
+                    java.util.List<java.util.Map<String, Object>> gridState = objectMapper.readValue(
+                            game.getGrid_state(),
+                            objectMapper.getTypeFactory().constructCollectionType(
+                                    java.util.List.class,
+                                    java.util.Map.class
+                            )
+                    );
+                    // Считаем клетки с буквами (letter не null)
+                    long guessedInGame = gridState.stream()
+                            .filter(cell -> cell.containsKey("letter") && cell.get("letter") != null)
+                            .count();
+                    totalGuessedLetters += guessedInGame;
+                } catch (Exception e) {
+                    // Игнорируем ошибки парсинга
+                }
+            }
+        }
+        stats.setTotalGuessedLetters(totalGuessedLetters);
 
         return stats;
     }
@@ -270,7 +311,7 @@ public class CrosswordService {
     /**
      * Генерировать кроссворд из словаря
      */
-    public CrosswordDetailDto generateCrosswordFromDictionary(Long dictionaryId, int wordCount, String title, Integer maxHints) {
+    public CrosswordDetailDto generateCrosswordFromDictionary(Long dictionaryId, int wordCount, String title, Integer maxHints, Long userId) {
         // Проверяем существование словаря
         Dictionary dictionary = dictionaryRepository.findById(dictionaryId)
                 .orElseThrow(() -> new RuntimeException("Словарь с ID " + dictionaryId + " не найден"));
@@ -285,6 +326,15 @@ public class CrosswordService {
         crossword.setDictionary(dictionary);
         crossword.setGrid_width(result.getGrid().getSize().getWidth());
         crossword.setGrid_height(result.getGrid().getSize().getHeight());
+        
+        // Устанавливаем пользователя, который создал кроссворд
+        if (userId != null) {
+            User creator = userRepository.findById(userId)
+                    .orElse(null);
+            if (creator != null) {
+                crossword.setCreatedBy(creator);
+            }
+        }
         
         // Устанавливаем максимальное количество подсказок (по умолчанию половина от количества слов)
         if (maxHints == null || maxHints < 0) {
@@ -307,7 +357,7 @@ public class CrosswordService {
     /**
      * Создать кроссворд из выбранных слов (ручной режим)
      */
-    public CrosswordDetailDto createManualCrossword(Long dictionaryId, List<Long> wordIds, String title, Integer maxHints) {
+    public CrosswordDetailDto createManualCrossword(Long dictionaryId, List<Long> wordIds, String title, Integer maxHints, Long userId) {
         // Проверяем существование словаря
         Dictionary dictionary = dictionaryRepository.findById(dictionaryId)
                 .orElseThrow(() -> new RuntimeException("Словарь с ID " + dictionaryId + " не найден"));
@@ -333,6 +383,15 @@ public class CrosswordService {
         crossword.setDictionary(dictionary);
         crossword.setGrid_width(result.getGrid().getSize().getWidth());
         crossword.setGrid_height(result.getGrid().getSize().getHeight());
+        
+        // Устанавливаем пользователя, который создал кроссворд
+        if (userId != null) {
+            User creator = userRepository.findById(userId)
+                    .orElse(null);
+            if (creator != null) {
+                crossword.setCreatedBy(creator);
+            }
+        }
         
         // Устанавливаем максимальное количество подсказок (по умолчанию половина от количества слов)
         if (maxHints == null || maxHints < 0) {
@@ -410,6 +469,7 @@ public class CrosswordService {
         private Long gamesCount;
         private Long completedGamesCount;
         private Long wordsCount;
+        private Long totalGuessedLetters; // Общее количество отгаданных букв во всех играх
 
         public Long getCrosswordId() {
             return crosswordId;
@@ -441,6 +501,14 @@ public class CrosswordService {
 
         public void setWordsCount(Long wordsCount) {
             this.wordsCount = wordsCount;
+        }
+
+        public Long getTotalGuessedLetters() {
+            return totalGuessedLetters;
+        }
+
+        public void setTotalGuessedLetters(Long totalGuessedLetters) {
+            this.totalGuessedLetters = totalGuessedLetters;
         }
     }
 }
