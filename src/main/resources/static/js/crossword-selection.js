@@ -161,11 +161,21 @@ class CrosswordSelectionManager {
             playBtn.className = 'btn btn-primary';
             playBtn.textContent = 'Играть';
             playBtn.addEventListener('click', () => {
-                console.log('Клик на кнопку Играть, crossword.id:', crossword.id, 'тип:', typeof crossword.id);
+                console.log('[CrosswordSelectionManager] ===== КНОПКА ИГРАТЬ НАЖАТА =====');
+                console.log('[CrosswordSelectionManager] crossword объект:', crossword);
+                console.log('[CrosswordSelectionManager] crossword.id:', crossword.id, 'тип:', typeof crossword.id);
+                console.log('[CrosswordSelectionManager] this:', this);
+                console.log('[CrosswordSelectionManager] Проверка gameManager перед вызовом:');
+                console.log('  - typeof gameManager:', typeof gameManager);
+                console.log('  - gameManager:', gameManager);
+                
                 if (!crossword.id) {
+                    console.error('[CrosswordSelectionManager] Ошибка: у кроссворда отсутствует ID');
                     alert('Ошибка: у кроссворда отсутствует ID');
                     return;
                 }
+                
+                console.log('[CrosswordSelectionManager] Вызываем this.startGame с ID:', crossword.id);
                 this.startGame(crossword.id);
             });
             
@@ -205,9 +215,12 @@ class CrosswordSelectionManager {
     }
 
     async startGame(crosswordId) {
+        console.log('[CrosswordSelectionManager] startGame вызван с crosswordId:', crosswordId, 'тип:', typeof crosswordId);
+        
         try {
             // Проверяем, что crosswordId передан
             if (!crosswordId) {
+                console.error('[CrosswordSelectionManager] Ошибка: не указан ID кроссворда');
                 alert('Ошибка: не указан ID кроссворда');
                 return;
             }
@@ -215,25 +228,70 @@ class CrosswordSelectionManager {
             // Преобразуем в число, если это строка
             const id = typeof crosswordId === 'string' ? parseInt(crosswordId, 10) : crosswordId;
             if (isNaN(id)) {
+                console.error('[CrosswordSelectionManager] Ошибка: некорректный ID кроссворда:', crosswordId);
                 alert('Ошибка: некорректный ID кроссворда');
                 return;
             }
             
+            console.log('[CrosswordSelectionManager] Преобразованный ID:', id);
+            
+            // Проверяем наличие gameManager
+            console.log('[CrosswordSelectionManager] Проверка gameManager:');
+            console.log('  - typeof gameManager:', typeof gameManager);
+            console.log('  - gameManager !== undefined:', typeof gameManager !== 'undefined');
+            console.log('  - window.gameManager:', window.gameManager);
+            
+            // Получаем gameManager (пробуем разные варианты)
+            let manager = null;
+            
+            if (typeof gameManager !== 'undefined' && gameManager) {
+                manager = gameManager;
+                console.log('[CrosswordSelectionManager] gameManager найден в глобальной области');
+            } else if (typeof window !== 'undefined' && window.gameManager) {
+                manager = window.gameManager;
+                console.log('[CrosswordSelectionManager] gameManager найден в window.gameManager');
+            } else {
+                console.error('[CrosswordSelectionManager] gameManager не найден нигде');
+                console.error('[CrosswordSelectionManager] typeof gameManager:', typeof gameManager);
+                console.error('[CrosswordSelectionManager] window.gameManager:', window.gameManager);
+                alert('Ошибка: менеджер игры не инициализирован. Перезагрузите страницу.');
+                return;
+            }
+            
+            if (!manager || typeof manager.startGame !== 'function') {
+                console.error('[CrosswordSelectionManager] gameManager найден, но метод startGame отсутствует');
+                console.error('[CrosswordSelectionManager] manager:', manager);
+                alert('Ошибка: менеджер игры не инициализирован корректно. Перезагрузите страницу.');
+                return;
+            }
+            
+            console.log('[CrosswordSelectionManager] gameManager найден и валиден, переходим к экрану игры');
+            
             // Переходим к экрану игры
-            document.getElementById('crossword-selection-screen').classList.remove('active');
-            document.getElementById('game-screen').classList.add('active');
+            const selectionScreen = document.getElementById('crossword-selection-screen');
+            const gameScreen = document.getElementById('game-screen');
+            
+            if (!selectionScreen || !gameScreen) {
+                console.error('[CrosswordSelectionManager] Экраны не найдены');
+                alert('Ошибка: экраны игры не найдены');
+                return;
+            }
+            
+            console.log('[CrosswordSelectionManager] Скрываем экран выбора, показываем экран игры');
+            selectionScreen.classList.remove('active');
+            gameScreen.classList.add('active');
+            
+            console.log('[CrosswordSelectionManager] Вызываем manager.startGame с параметрами:', { crosswordId: id });
             
             // Запускаем игру с выбранным кроссвордом
-            if (typeof gameManager !== 'undefined') {
-                console.log('Передаем в gameManager.startGame:', { crosswordId: id });
-                await gameManager.startGame({
-                    crosswordId: id
-                });
-            } else {
-                alert('Ошибка: менеджер игры не инициализирован');
-            }
+            await manager.startGame({
+                crosswordId: id
+            });
+            
+            console.log('[CrosswordSelectionManager] Игра успешно запущена');
         } catch (error) {
-            console.error('Ошибка запуска игры:', error);
+            console.error('[CrosswordSelectionManager] Ошибка запуска игры:', error);
+            console.error('[CrosswordSelectionManager] Stack trace:', error.stack);
             alert('Ошибка запуска игры: ' + (error.message || 'Неизвестная ошибка'));
         }
     }

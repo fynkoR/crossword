@@ -33,12 +33,16 @@ class GameManager {
     }
 
     async startGame(settings) {
-        console.log('GameManager.startGame v2');
+        console.log('[GameManager] ===== STARTGAME ВЫЗВАН =====');
+        console.log('[GameManager] Версия: v3');
+        console.log('[GameManager] settings параметр:', settings);
+        console.log('[GameManager] this:', this);
+        console.log('[GameManager] this.gameSettings до обновления:', this.gameSettings);
+        
         // Сбрасываем настройки и устанавливаем новые
         this.gameSettings = settings || {};
         
-        console.log('GameManager.startGame вызван с настройками:', this.gameSettings);
-        console.log('settings параметр:', settings);
+        console.log('[GameManager] this.gameSettings после обновления:', this.gameSettings);
         
         try {
             // Если кроссворд уже создан, загружаем его
@@ -889,4 +893,19 @@ class GameManager {
 }
 
 // Глобальный экземпляр
-const gameManager = new GameManager();
+let gameManager;
+try {
+    gameManager = new GameManager();
+    console.log('[GameManager] Экземпляр gameManager создан успешно');
+    
+    // Также сохраняем в window для доступа из других скриптов
+    if (typeof window !== 'undefined') {
+        window.gameManager = gameManager;
+        console.log('[GameManager] gameManager сохранен в window.gameManager');
+    }
+} catch (error) {
+    console.error('[GameManager] Ошибка при создании экземпляра:', error);
+    if (typeof window !== 'undefined') {
+        window.gameManager = null;
+    }
+}
