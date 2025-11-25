@@ -28,42 +28,66 @@ class GameManager {
     }
 
     async startGame(settings) {
-        this.gameSettings = settings;
+        // Инициализируем gameSettings, если его нет
+        if (!this.gameSettings) {
+            this.gameSettings = {};
+        }
+        
+        // Копируем настройки
+        if (settings) {
+            this.gameSettings = { ...this.gameSettings, ...settings };
+        }
         
         try {
             // Если кроссворд уже создан, загружаем его
-            if (settings && settings.crosswordId) {
-                this.crossword = await ApiService.getCrosswordDetail(settings.crosswordId);
-                
-                // Сохраняем dictionaryId из загруженного кроссворда для возможного рестарта
-                if (this.crossword && this.crossword.dictionary) {
-                    this.gameSettings.dictionaryId = this.crossword.dictionary.id;
+            if (this.gameSettings.crosswordId) {
+                try {
+                    this.crossword = await ApiService.getCrosswordDetail(this.gameSettings.crosswordId);
+                    
+                    if (!this.crossword) {
+                        alert('Кроссворд не найден');
+                        this.showDashboard();
+                        return;
+                    }
+                    
+                    // Сохраняем dictionaryId из загруженного кроссворда для возможного рестарта
+                    if (this.crossword.dictionary && this.crossword.dictionary.id) {
+                        this.gameSettings.dictionaryId = this.crossword.dictionary.id;
+                    } else if (this.crossword.dictionaryId) {
+                        // Если dictionary не загружен, но есть dictionaryId напрямую
+                        this.gameSettings.dictionaryId = this.crossword.dictionaryId;
+                    }
+                } catch (error) {
+                    console.error('Ошибка загрузки кроссворда:', error);
+                    alert('Ошибка загрузки кроссворда: ' + (error.message || 'Неизвестная ошибка'));
+                    this.showDashboard();
+                    return;
                 }
             } else {
                 // Генерируем кроссворд из словаря (автоматический режим)
-                if (!settings.dictionaryId) {
+                if (!this.gameSettings.dictionaryId) {
                     alert('Не указан ID словаря');
                     this.showDashboard();
                     return;
                 }
                 
-                if (!settings.wordCount || settings.wordCount === 'undefined' || settings.wordCount === undefined) {
+                if (!this.gameSettings.wordCount || this.gameSettings.wordCount === 'undefined' || this.gameSettings.wordCount === undefined) {
                     alert('Не указано количество слов для генерации кроссворда');
                     this.showDashboard();
                     return;
                 }
                 
                 // Преобразуем wordCount в число, если это строка
-                const wordCount = typeof settings.wordCount === 'string' ? parseInt(settings.wordCount, 10) : settings.wordCount;
+                const wordCount = typeof this.gameSettings.wordCount === 'string' ? parseInt(this.gameSettings.wordCount, 10) : this.gameSettings.wordCount;
                 if (isNaN(wordCount) || wordCount < 1) {
                     alert('Некорректное количество слов');
                     this.showDashboard();
                     return;
                 }
                 
-                const title = `Кроссворд из словаря ${settings.dictionaryId}`;
+                const title = `Кроссворд из словаря ${this.gameSettings.dictionaryId}`;
                 this.crossword = await ApiService.generateCrossword(
-                    settings.dictionaryId, 
+                    this.gameSettings.dictionaryId, 
                     wordCount, 
                     title
                 );
@@ -484,8 +508,14 @@ class GameManager {
             return;
         }
         
+        // Если есть crosswordId, но нет wordCount - это готовый кроссворд, возвращаемся на экран выбора
+        if (this.gameSettings && this.gameSettings.crosswordId && !this.gameSettings.wordCount) {
+            this.showDashboard();
+            return;
+        }
+        
         // Для автоматического режима создаем новый кроссворд с теми же настройками
-        if (this.gameSettings && this.gameSettings.wordCount) {
+        if (this.gameSettings && this.gameSettings.wordCount && this.gameSettings.dictionaryId) {
             // Убираем старый crosswordId, чтобы создать новый
             const newSettings = {
                 dictionaryId: this.gameSettings.dictionaryId,
