@@ -58,20 +58,33 @@ class DictionaryManager {
             this.showAddWordModal();
         });
 
-        // Кнопка применения сортировки
-        document.getElementById('apply-sort-btn').addEventListener('click', () => {
-            const sortSelect = document.getElementById('sort-select');
-            this.currentSortType = sortSelect.value;
-            console.log('Applying sort:', this.currentSortType);
-            
-            // Показываем индикатор загрузки
-            const container = document.getElementById('words-list');
-            container.style.opacity = '0.5';
-            
-            setTimeout(() => {
-                this.displayWords();
-                container.style.opacity = '1';
-            }, 200);
+        // Кнопка применения сортировки - используем делегирование событий с сохранением контекста
+        document.addEventListener('click', (e) => {
+            if (e.target && e.target.id === 'apply-sort-btn') {
+                e.preventDefault();
+                console.log('Apply sort button clicked (delegated)!');
+                // Используем dictionaryManager для доступа к методам
+                const sortSelect = document.getElementById('sort-select');
+                if (sortSelect) {
+                    dictionaryManager.currentSortType = sortSelect.value;
+                    console.log('Applying sort:', dictionaryManager.currentSortType);
+                    console.log('Current words count:', dictionaryManager.currentWords.length);
+                    
+                    const container = document.getElementById('words-list');
+                    if (container) {
+                        container.style.opacity = '0.5';
+                        setTimeout(() => {
+                            console.log('Calling displayWords() from delegated handler');
+                            dictionaryManager.displayWords();
+                            container.style.opacity = '1';
+                        }, 200);
+                    } else {
+                        console.error('words-list container not found!');
+                    }
+                } else {
+                    console.error('sort-select not found!');
+                }
+            }
         });
     }
 
@@ -155,6 +168,35 @@ class DictionaryManager {
             // Загружаем слова
             await this.loadWords(id);
             
+            // Привязываем обработчик кнопки сортировки (на случай, если делегирование не сработало)
+            const applySortBtn = document.getElementById('apply-sort-btn');
+            if (applySortBtn) {
+                // Удаляем старый обработчик, если есть
+                const newBtn = applySortBtn.cloneNode(true);
+                applySortBtn.parentNode.replaceChild(newBtn, applySortBtn);
+                
+                newBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    console.log('Apply sort button clicked (direct handler)!');
+                    const sortSelect = document.getElementById('sort-select');
+                    if (sortSelect) {
+                        this.currentSortType = sortSelect.value;
+                        console.log('Applying sort:', this.currentSortType);
+                        console.log('Current words count:', this.currentWords.length);
+                        
+                        const container = document.getElementById('words-list');
+                        if (container) {
+                            container.style.opacity = '0.5';
+                            setTimeout(() => {
+                                console.log('Calling displayWords() from direct handler');
+                                this.displayWords();
+                                container.style.opacity = '1';
+                            }, 200);
+                        }
+                    }
+                });
+            }
+            
             // Показываем модальное окно
             document.getElementById('dictionary-detail-modal').classList.add('active');
         } catch (error) {
@@ -205,7 +247,14 @@ class DictionaryManager {
     }
 
     displayWords() {
+        console.log('displayWords() called');
         const container = document.getElementById('words-list');
+        if (!container) {
+            console.error('words-list container not found in displayWords!');
+            return;
+        }
+        
+        console.log('Container found, current words:', this.currentWords.length);
         container.innerHTML = '';
 
         if (this.currentWords.length === 0) {
@@ -214,8 +263,9 @@ class DictionaryManager {
         }
 
         const sortedWords = this.sortWords(this.currentWords);
+        console.log('Sorted words count:', sortedWords.length);
 
-        sortedWords.forEach(word => {
+        sortedWords.forEach((word, index) => {
             const item = document.createElement('div');
             item.className = 'word-item';
             item.innerHTML = `
@@ -228,7 +278,11 @@ class DictionaryManager {
                 </div>
             `;
             container.appendChild(item);
+            if (index < 3) {
+                console.log(`Added word ${index + 1}:`, word.word);
+            }
         });
+        console.log('displayWords() completed, total items:', container.children.length);
     }
 
     async deleteWord(wordId) {
