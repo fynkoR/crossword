@@ -339,6 +339,22 @@
                 
                 <div class="word-selection-section">
                     <h3 id="word-selection-title">Выберите первое слово</h3>
+                    <div class="word-selection-controls">
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="manual-search-input">Поиск слова:</label>
+                            <input type="text" id="manual-search-input" class="form-control" placeholder="Введите слово для поиска...">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="manual-sort-select">Сортировка:</label>
+                            <select id="manual-sort-select" class="form-control">
+                                <option value="">Без сортировки</option>
+                                <option value="alphabet-asc">По алфавиту (А-Я)</option>
+                                <option value="alphabet-desc">По алфавиту (Я-А)</option>
+                                <option value="length-asc">По длине (короткие)</option>
+                                <option value="length-desc">По длине (длинные)</option>
+                            </select>
+                        </div>
+                    </div>
                     <div id="available-words-list" class="available-words-list">
                         <!-- Слова будут загружены динамически -->
                     </div>
@@ -417,15 +433,15 @@
         </div>
     </div>
 
-    <script src="js/api.js?v=2"></script>
-    <script src="js/auth.js?v=2"></script>
-    <script src="js/dashboard.js?v=2"></script>
-    <script src="js/dictionary.js?v=2"></script>
-    <script src="js/crossword-creation.js?v=2"></script>
-    <script src="js/crossword-selection.js?v=2"></script>
-    <script src="js/manual-crossword.js?v=2"></script>
-    <script src="js/game.js?v=2"></script>
-    <script src="js/main.js?v=2"></script>
+    <script src="js/api.js?v=3"></script>
+    <script src="js/auth.js?v=3"></script>
+    <script src="js/dashboard.js?v=3"></script>
+    <script src="js/dictionary.js?v=3"></script>
+    <script src="js/crossword-creation.js?v=3"></script>
+    <script src="js/crossword-selection.js?v=3"></script>
+    <script src="js/manual-crossword.js?v=3"></script>
+    <script src="js/game.js?v=3"></script>
+    <script src="js/main.js?v=3"></script>
 </body>
 </html>
 

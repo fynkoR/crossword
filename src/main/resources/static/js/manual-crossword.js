@@ -5,6 +5,9 @@ class ManualCrosswordManager {
         this.allWords = [];
         this.selectedWords = [];
         this.availableWords = [];
+        this.filteredWords = [];
+        this.currentSortBy = null;
+        this.searchQuery = '';
         this.init();
     }
 
@@ -28,12 +31,39 @@ class ManualCrosswordManager {
         document.getElementById('remove-last-word-btn').addEventListener('click', () => {
             this.removeLastWord();
         });
+
+        // Обработчик поиска
+        const searchInput = document.getElementById('manual-search-input');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                this.searchQuery = e.target.value.toLowerCase().trim();
+                this.applyFiltersAndSort();
+            });
+        }
+
+        // Обработчик сортировки
+        const sortSelect = document.getElementById('manual-sort-select');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', (e) => {
+                this.currentSortBy = e.target.value || null;
+                this.applyFiltersAndSort();
+            });
+        }
     }
 
     async start(dictionaryId) {
         this.dictionaryId = dictionaryId;
         this.selectedWords = [];
         this.availableWords = [];
+        this.filteredWords = [];
+        this.currentSortBy = null;
+        this.searchQuery = '';
+
+        // Сбрасываем поля поиска и сортировки
+        const searchInput = document.getElementById('manual-search-input');
+        const sortSelect = document.getElementById('manual-sort-select');
+        if (searchInput) searchInput.value = '';
+        if (sortSelect) sortSelect.value = '';
 
         try {
             // Загружаем все слова из словаря
@@ -64,6 +94,43 @@ class ManualCrosswordManager {
                 return word.word.toLowerCase().startsWith(lastLetter);
             });
         }
+        // Применяем фильтры и сортировку
+        this.applyFiltersAndSort();
+    }
+
+    applyFiltersAndSort() {
+        // Начинаем с доступных слов
+        this.filteredWords = [...this.availableWords];
+
+        // Применяем поиск
+        if (this.searchQuery) {
+            this.filteredWords = this.filteredWords.filter(word => {
+                const wordText = word.word.toLowerCase();
+                const definition = (word.definition || '').toLowerCase();
+                return wordText.includes(this.searchQuery) || definition.includes(this.searchQuery);
+            });
+        }
+
+        // Применяем сортировку
+        if (this.currentSortBy) {
+            this.filteredWords.sort((a, b) => {
+                switch (this.currentSortBy) {
+                    case 'alphabet-asc':
+                        return a.word.localeCompare(b.word, 'ru');
+                    case 'alphabet-desc':
+                        return b.word.localeCompare(a.word, 'ru');
+                    case 'length-asc':
+                        return a.word.length - b.word.length;
+                    case 'length-desc':
+                        return b.word.length - a.word.length;
+                    default:
+                        return 0;
+                }
+            });
+        }
+
+        // Обновляем отображение
+        this.updateAvailableWordsList();
     }
 
     selectWord(word) {
@@ -130,15 +197,26 @@ class ManualCrosswordManager {
             title.textContent = `Выберите слово, начинающееся с буквы "${lastLetter}"`;
         }
 
-        if (this.availableWords.length === 0) {
+        // Используем отфильтрованные слова вместо доступных
+        const wordsToDisplay = this.filteredWords.length > 0 ? this.filteredWords : this.availableWords;
+
+        if (wordsToDisplay.length === 0) {
             wordsList.style.display = 'none';
             noWordsMessage.style.display = 'block';
+            // Обновляем сообщение в зависимости от того, есть ли фильтры
+            if (this.searchQuery) {
+                noWordsMessage.querySelector('p').textContent = 'Нет слов, соответствующих поисковому запросу';
+            } else if (this.availableWords.length === 0) {
+                noWordsMessage.querySelector('p').textContent = 'Нет доступных слов для продолжения цепочки';
+            } else {
+                noWordsMessage.querySelector('p').textContent = 'Нет доступных слов для продолжения цепочки';
+            }
         } else {
             wordsList.style.display = 'grid';
             noWordsMessage.style.display = 'none';
             wordsList.innerHTML = '';
 
-            this.availableWords.forEach((word, index) => {
+            wordsToDisplay.forEach((word) => {
                 const wordItem = document.createElement('div');
                 wordItem.className = 'available-word-item';
                 wordItem.innerHTML = `
@@ -146,7 +224,7 @@ class ManualCrosswordManager {
                         <div class="word-text">${word.word}</div>
                         <div class="word-definition">${word.definition || 'Нет определения'}</div>
                     </div>
-                    <button class="btn btn-primary btn-sm" data-word-index="${index}">Выбрать</button>
+                    <button class="btn btn-primary btn-sm">Выбрать</button>
                 `;
                 const button = wordItem.querySelector('button');
                 button.addEventListener('click', () => {
