@@ -61,22 +61,30 @@ class DictionaryManager {
         // Сортировка слов
         const sortSelect = document.getElementById('sort-select');
         if (sortSelect) {
+            console.log('Sort select element found, attaching listener');
             sortSelect.addEventListener('change', (e) => {
+                console.log('Sort event triggered');
                 this.currentSortType = e.target.value;
-                console.log('Sort changed to:', this.currentSortType);
-                this.updateWordsListWithAnimation();
+                console.log('New sort type selected:', this.currentSortType);
+                console.log('Current words count:', this.currentWords.length);
+                
+                // Показываем индикатор загрузки
+                const container = document.getElementById('words-list');
+                container.style.opacity = '0.5';
+                
+                setTimeout(() => {
+                    console.log('Executing displayWords inside timeout');
+                    this.displayWords();
+                    container.style.opacity = '1';
+                }, 100);
             });
+        } else {
+            console.error('Sort select element NOT found in init()');
         }
     }
 
     updateWordsListWithAnimation() {
-        const container = document.getElementById('words-list');
-        container.style.opacity = '0.5';
-        
-        setTimeout(() => {
-            this.displayWords();
-            container.style.opacity = '1';
-        }, 200);
+        // Метод больше не используется, логика перенесена в event listener для отладки
     }
 
     showDashboard() {
@@ -176,6 +184,9 @@ class DictionaryManager {
     }
 
     sortWords(words) {
+        console.log('Sorting words with type:', this.currentSortType);
+        console.log('Words before sort (first 3):', words.slice(0, 3).map(w => w.word));
+        
         const sorted = [...words];
         
         switch (this.currentSortType) {
@@ -186,13 +197,22 @@ class DictionaryManager {
                 sorted.sort((a, b) => b.word.toLowerCase().localeCompare(a.word.toLowerCase(), 'ru'));
                 break;
             case 'length-asc':
-                sorted.sort((a, b) => a.word.length - b.word.length || a.word.toLowerCase().localeCompare(b.word.toLowerCase(), 'ru'));
+                sorted.sort((a, b) => {
+                    const lenDiff = a.word.length - b.word.length;
+                    if (lenDiff !== 0) return lenDiff;
+                    return a.word.toLowerCase().localeCompare(b.word.toLowerCase(), 'ru');
+                });
                 break;
             case 'length-desc':
-                sorted.sort((a, b) => b.word.length - a.word.length || a.word.toLowerCase().localeCompare(b.word.toLowerCase(), 'ru'));
+                sorted.sort((a, b) => {
+                    const lenDiff = b.word.length - a.word.length;
+                    if (lenDiff !== 0) return lenDiff;
+                    return a.word.toLowerCase().localeCompare(b.word.toLowerCase(), 'ru');
+                });
                 break;
         }
         
+        console.log('Words after sort (first 3):', sorted.slice(0, 3).map(w => w.word));
         return sorted;
     }
 
