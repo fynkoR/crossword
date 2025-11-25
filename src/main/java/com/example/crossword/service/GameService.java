@@ -1,5 +1,6 @@
 package com.example.crossword.service;
 
+import com.example.crossword.dto.dtoCrossword.CrosswordGrid;
 import com.example.crossword.dto.dtoCrossword.CrosswordWords;
 import com.example.crossword.dto.dtoGame.GameActionDto;
 import com.example.crossword.dto.dtoGame.GameDto;
@@ -160,16 +161,29 @@ public class GameService {
             return createResult(false, "Игра уже завершена", null, true, gameMapper.toDTO(game));
         }
 
+        // Проверяем, есть ли еще подсказки
+        int remainingHints = calculateRemainingHints(game);
+        if (remainingHints <= 0) {
+            return createResult(false, "Подсказки закончились", null, false, gameMapper.toDTO(game));
+        }
+
         CrosswordWords words = crosswordJsonService.parseWordsData(game.getCrossword().getWords_data());
-        String hint = getNextHint(words, game);
+        CrosswordGrid grid = crosswordJsonService.parseGridData(game.getCrossword().getGrid_data());
+        
+        // Получаем случайную букву для подсказки
+        String hintData = getRandomHintLetter(words, grid);
+        
+        if (hintData == null || hintData.isEmpty()) {
+            return createResult(false, "Нет доступных букв для подсказки", null, false, gameMapper.toDTO(game));
+        }
 
         game.setHints_used(game.getHints_used() + 1);
         gameRepository.save(game);
 
-        int remainingHints = calculateRemainingHints(game);
+        remainingHints = calculateRemainingHints(game);
         String message = "Подсказка использована. Осталось: " + remainingHints;
 
-        return createResult(true, message, hint, false, gameMapper.toDTO(game));
+        return createResult(true, message, hintData, false, gameMapper.toDTO(game));
     }
 
     /**
@@ -188,17 +202,72 @@ public class GameService {
     /**
      * Вспомогательные методы
      */
-    private String getNextHint(CrosswordWords words, Game game) {
-        if (!words.getWords().isEmpty()) {
-            return String.valueOf(words.getWords().get(0).getText().charAt(0));
+    private String getRandomHintLetter(CrosswordWords words, CrosswordGrid grid) {
+        // Собираем все незаполненные клетки (где letter == null)
+        List<HintCell> availableCells = new java.util.ArrayList<>();
+        
+        for (CrosswordWords.CrosswordWord word : words.getWords()) {
+            if (word.getPositions() != null && word.getPositions().size() >= 2) {
+                String wordText = word.getText();
+                for (int i = 0; i < word.getPositions().size(); i += 2) {
+                    int x = word.getPositions().get(i);
+                    int y = word.getPositions().get(i + 1);
+                    
+                    // Находим соответствующую клетку в сетке
+                    CrosswordGrid.GridCell cell = findCell(grid, x, y);
+                    if (cell != null && cell.getLetter() == null && !cell.getIsBlack()) {
+                        // Клетка пустая, можно использовать для подсказки
+                        int letterIndex = i / 2;
+                        if (letterIndex < wordText.length()) {
+                            char letter = wordText.charAt(letterIndex);
+                            availableCells.add(new HintCell(x, y, letter));
+                        }
+                    }
+                }
+            }
         }
-        return "Нет доступных подсказок";
+        
+        if (availableCells.isEmpty()) {
+            return null;
+        }
+        
+        // Выбираем случайную клетку
+        java.util.Random random = new java.util.Random();
+        HintCell hintCell = availableCells.get(random.nextInt(availableCells.size()));
+        
+        // Возвращаем JSON с координатами и буквой: {"x":1,"y":2,"letter":"А"}
+        return String.format("{\"x\":%d,\"y\":%d,\"letter\":\"%s\"}", 
+                hintCell.x, hintCell.y, hintCell.letter);
+    }
+    
+    private CrosswordGrid.GridCell findCell(CrosswordGrid grid, int x, int y) {
+        if (grid.getCells() == null) {
+            return null;
+        }
+        for (CrosswordGrid.GridCell cell : grid.getCells()) {
+            if (cell.getX() != null && cell.getY() != null && 
+                cell.getX().equals(x) && cell.getY().equals(y)) {
+                return cell;
+            }
+        }
+        return null;
+    }
+    
+    private static class HintCell {
+        int x, y;
+        char letter;
+        HintCell(int x, int y, char letter) {
+            this.x = x;
+            this.y = y;
+            this.letter = letter;
+        }
     }
 
     private int calculateRemainingHints(Game game) {
-        CrosswordWords words = crosswordJsonService.parseWordsData(game.getCrossword().getWords_data());
-        int maxHints = words.getWords().size() / 2;
-        return Math.max(0, maxHints - game.getHints_used());
+        Crossword crossword = game.getCrossword();
+        int maxHints = crossword.getMax_hints() != null ? crossword.getMax_hints() : 0;
+        int usedHints = game.getHints_used() != null ? game.getHints_used() : 0;
+        return Math.max(0, maxHints - usedHints);
     }
 
     private boolean checkIfGameComplete(Game game, CrosswordWords words) {

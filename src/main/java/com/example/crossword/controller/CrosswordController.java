@@ -182,10 +182,11 @@ public class CrosswordController {
     public ResponseEntity<CrosswordDetailDto> generateCrossword(
             @RequestParam Long dictionaryId,
             @RequestParam int wordCount,
-            @RequestParam String title) {
+            @RequestParam String title,
+            @RequestParam(required = false) Integer maxHints) {
         try {
-            logger.info("POST /crosswords/generate - Генерация кроссворда из словаря {}, слов: {}", dictionaryId, wordCount);
-            CrosswordDetailDto crossword = crosswordService.generateCrosswordFromDictionary(dictionaryId, wordCount, title);
+            logger.info("POST /crosswords/generate - Генерация кроссворда из словаря {}, слов: {}, подсказок: {}", dictionaryId, wordCount, maxHints);
+            CrosswordDetailDto crossword = crosswordService.generateCrosswordFromDictionary(dictionaryId, wordCount, title, maxHints);
             logger.info("Кроссворд успешно сгенерирован с ID: {}", crossword.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(crossword);
         } catch (RuntimeException e) {
@@ -228,8 +229,17 @@ public class CrosswordController {
                     .collect(java.util.stream.Collectors.toList());
             String title = request.get("title").toString();
             
-            logger.info("POST /crosswords/create-manual - Создание ручного кроссворда из словаря {}, слов: {}", dictionaryId, wordIds.size());
-            CrosswordDetailDto crossword = crosswordService.createManualCrossword(dictionaryId, wordIds, title);
+            // Получаем maxHints из запроса, если указан
+            Integer maxHints = null;
+            if (request.containsKey("maxHints")) {
+                Object maxHintsObj = request.get("maxHints");
+                if (maxHintsObj != null) {
+                    maxHints = Integer.valueOf(maxHintsObj.toString());
+                }
+            }
+            
+            logger.info("POST /crosswords/create-manual - Создание ручного кроссворда из словаря {}, слов: {}, подсказок: {}", dictionaryId, wordIds.size(), maxHints);
+            CrosswordDetailDto crossword = crosswordService.createManualCrossword(dictionaryId, wordIds, title, maxHints);
             logger.info("Ручной кроссворд успешно создан с ID: {}", crossword.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(crossword);
         } catch (RuntimeException e) {

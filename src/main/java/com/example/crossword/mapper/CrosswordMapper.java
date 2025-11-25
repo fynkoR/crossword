@@ -20,6 +20,7 @@ public interface CrosswordMapper {
      */
     @Mapping(source = "grid_width", target = "gridWidth")
     @Mapping(source = "grid_height", target = "gridHeight")
+    @Mapping(source = "max_hints", target = "maxHints")
     @Mapping(source = "dictionary", target = "dictionary")
     CrosswordDto toDto(Crossword crossword);
 
@@ -30,6 +31,7 @@ public interface CrosswordMapper {
      */
     @Mapping(source = "grid_width", target = "gridWidth")
     @Mapping(source = "grid_height", target = "gridHeight")
+    @Mapping(source = "max_hints", target = "maxHints")
     @Mapping(source = "dictionary", target = "dictionary")
     @Mapping(target = "gridData", ignore = true)
     @Mapping(target = "wordsData", ignore = true)
@@ -45,6 +47,7 @@ public interface CrosswordMapper {
     @Mapping(target = "dictionary", ignore = true)
     @Mapping(source = "gridWidth", target = "grid_width")
     @Mapping(source = "gridHeight", target = "grid_height")
+    @Mapping(source = "maxHints", target = "max_hints")
     @Mapping(target = "grid_data", ignore = true)
     @Mapping(target = "words_data", ignore = true)
     Crossword toEntity(CrosswordCreateDto crosswordCreateDto);
@@ -57,6 +60,7 @@ public interface CrosswordMapper {
     @Mapping(target = "dictionary", ignore = true)
     @Mapping(source = "gridWidth", target = "grid_width")
     @Mapping(source = "gridHeight", target = "grid_height")
+    @Mapping(source = "maxHints", target = "max_hints")
     @Mapping(target = "grid_data", ignore = true)
     @Mapping(target = "words_data", ignore = true)
     void updateEntity(CrosswordUpdateDto crosswordUpdateDto, @MappingTarget Crossword crossword);

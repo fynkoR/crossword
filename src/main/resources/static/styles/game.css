@@ -38,6 +38,14 @@
     text-align: center;
 }
 
+.game-hints {
+    margin-top: 16px;
+}
+
+.game-hints .btn {
+    width: 100%;
+}
+
 .stat-label {
     display: block;
     font-size: 12px;

@@ -11,4 +11,5 @@ public abstract class CrosswordDtoBase {
     private String title;
     private Integer gridWidth;
     private Integer gridHeight;
+    private Integer maxHints; // максимальное количество подсказок
 }

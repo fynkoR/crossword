@@ -270,7 +270,7 @@ public class CrosswordService {
     /**
      * Генерировать кроссворд из словаря
      */
-    public CrosswordDetailDto generateCrosswordFromDictionary(Long dictionaryId, int wordCount, String title) {
+    public CrosswordDetailDto generateCrosswordFromDictionary(Long dictionaryId, int wordCount, String title, Integer maxHints) {
         // Проверяем существование словаря
         Dictionary dictionary = dictionaryRepository.findById(dictionaryId)
                 .orElseThrow(() -> new RuntimeException("Словарь с ID " + dictionaryId + " не найден"));
@@ -285,6 +285,12 @@ public class CrosswordService {
         crossword.setDictionary(dictionary);
         crossword.setGrid_width(result.getGrid().getSize().getWidth());
         crossword.setGrid_height(result.getGrid().getSize().getHeight());
+        
+        // Устанавливаем максимальное количество подсказок (по умолчанию половина от количества слов)
+        if (maxHints == null || maxHints < 0) {
+            maxHints = Math.max(1, wordCount / 2); // минимум 1 подсказка
+        }
+        crossword.setMax_hints(maxHints);
         
         // Сериализуем данные
         String gridJson = crosswordJsonService.serializeGridData(result.getGrid());
@@ -301,7 +307,7 @@ public class CrosswordService {
     /**
      * Создать кроссворд из выбранных слов (ручной режим)
      */
-    public CrosswordDetailDto createManualCrossword(Long dictionaryId, List<Long> wordIds, String title) {
+    public CrosswordDetailDto createManualCrossword(Long dictionaryId, List<Long> wordIds, String title, Integer maxHints) {
         // Проверяем существование словаря
         Dictionary dictionary = dictionaryRepository.findById(dictionaryId)
                 .orElseThrow(() -> new RuntimeException("Словарь с ID " + dictionaryId + " не найден"));
@@ -327,6 +333,12 @@ public class CrosswordService {
         crossword.setDictionary(dictionary);
         crossword.setGrid_width(result.getGrid().getSize().getWidth());
         crossword.setGrid_height(result.getGrid().getSize().getHeight());
+        
+        // Устанавливаем максимальное количество подсказок (по умолчанию половина от количества слов)
+        if (maxHints == null || maxHints < 0) {
+            maxHints = Math.max(1, wordIds.size() / 2); // минимум 1 подсказка
+        }
+        crossword.setMax_hints(maxHints);
         
         // Сериализуем данные
         String gridJson = crosswordJsonService.serializeGridData(result.getGrid());

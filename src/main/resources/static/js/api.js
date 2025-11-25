@@ -196,7 +196,7 @@ class ApiService {
         return this.request(`/crosswords/${id}/detail`);
     }
 
-    static async generateCrossword(dictionaryId, wordCount, title) {
+    static async generateCrossword(dictionaryId, wordCount, title, maxHints = null) {
         // Валидация параметров
         if (!dictionaryId) {
             throw new Error('Не указан ID словаря');
@@ -214,7 +214,12 @@ class ApiService {
             throw new Error('Некорректное количество слов');
         }
         
-        return this.request(`/crosswords/generate?dictionaryId=${dictionaryId}&wordCount=${wordCountNum}&title=${encodeURIComponent(title)}`, {
+        let url = `/crosswords/generate?dictionaryId=${dictionaryId}&wordCount=${wordCountNum}&title=${encodeURIComponent(title)}`;
+        if (maxHints !== null && maxHints !== undefined) {
+            url += `&maxHints=${maxHints}`;
+        }
+        
+        return this.request(url, {
             method: 'POST',
         });
     }
@@ -223,10 +228,14 @@ class ApiService {
         return this.request(`/crosswords/check-variants?dictionaryId=${dictionaryId}&minWords=${minWords}&maxWords=${maxWords}`);
     }
 
-    static async createManualCrossword(dictionaryId, wordIds, title) {
+    static async createManualCrossword(dictionaryId, wordIds, title, maxHints = null) {
+        const body = { dictionaryId, wordIds, title };
+        if (maxHints !== null && maxHints !== undefined) {
+            body.maxHints = maxHints;
+        }
         return this.request('/crosswords/create-manual', {
             method: 'POST',
-            body: { dictionaryId, wordIds, title },
+            body: body,
         });
     }
 
@@ -259,6 +268,15 @@ class ApiService {
                 action: 'check',
                 wordId,
                 answer
+            },
+        });
+    }
+
+    static async useHint(gameId) {
+        return this.request(`/games/${gameId}/action`, {
+            method: 'POST',
+            body: {
+                action: 'hint'
             },
         });
     }

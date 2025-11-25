@@ -20,6 +20,7 @@ public class Crossword {
     private String title;
     private Integer grid_width;
     private Integer grid_height;
+    private Integer max_hints; // максимальное количество подсказок для кроссворда
     @OneToMany(mappedBy = "crossword", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Game> games;
     @Column(columnDefinition = "JSON")

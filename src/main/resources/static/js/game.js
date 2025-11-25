@@ -25,6 +25,11 @@ class GameManager {
         document.getElementById('back-to-menu-btn').addEventListener('click', () => {
             this.showDashboard();
         });
+
+        // Кнопка использования подсказки
+        document.getElementById('use-hint-btn').addEventListener('click', () => {
+            this.useHint();
+        });
     }
 
     async startGame(settings) {
@@ -128,10 +133,12 @@ class GameManager {
             let baseTitle = `Кроссворд из словаря ${this.gameSettings.dictionaryId}`;
             // Добавляем режим создания в скобках
             const title = `${baseTitle} (Автоматический)`;
+            // При генерации из дашборда используем дефолтное количество подсказок (null)
             this.crossword = await ApiService.generateCrossword(
                 this.gameSettings.dictionaryId, 
                 wordCount, 
-                title
+                title,
+                null
             );
             
             if (!this.crossword || !this.crossword.gridData || !this.crossword.wordsData) {
@@ -543,9 +550,29 @@ class GameManager {
         
         const wordsCountEl = document.getElementById('words-count');
         const correctCountEl = document.getElementById('correct-count');
+        const hintsRemainingEl = document.getElementById('hints-remaining');
         
         if (wordsCountEl) wordsCountEl.textContent = totalWords;
         if (correctCountEl) correctCountEl.textContent = solvedWords;
+        
+        // Обновляем количество оставшихся подсказок
+        if (hintsRemainingEl && this.crossword && this.currentGame) {
+            const maxHints = this.crossword.maxHints || 0;
+            const usedHints = this.currentGame.hintsUsed || 0;
+            const remaining = Math.max(0, maxHints - usedHints);
+            hintsRemainingEl.textContent = remaining;
+            
+            // Обновляем состояние кнопки подсказки
+            const useHintBtn = document.getElementById('use-hint-btn');
+            if (useHintBtn) {
+                useHintBtn.disabled = remaining <= 0;
+                if (remaining <= 0) {
+                    useHintBtn.textContent = '💡 Подсказки закончились';
+                } else {
+                    useHintBtn.textContent = `💡 Использовать подсказку (осталось: ${remaining})`;
+                }
+            }
+        }
     }
 
     completeGame() {
@@ -579,6 +606,79 @@ class GameManager {
         } else {
             // Если настроек нет или они некорректны, возвращаемся на дашборд
             this.showDashboard();
+        }
+    }
+
+    async useHint() {
+        if (!this.currentGame || !this.currentGame.id) {
+            alert('Игра не запущена');
+            return;
+        }
+
+        const useHintBtn = document.getElementById('use-hint-btn');
+        if (useHintBtn) {
+            useHintBtn.disabled = true;
+            useHintBtn.textContent = '⏳ Загрузка...';
+        }
+
+        try {
+            const result = await ApiService.useHint(this.currentGame.id);
+            
+            if (result && result.success) {
+                // Парсим данные подсказки (JSON строка с координатами и буквой)
+                if (result.data) {
+                    try {
+                        const hintData = JSON.parse(result.data);
+                        const { x, y, letter } = hintData;
+                        
+                        // Находим соответствующую клетку и открываем букву
+                        const cellInput = document.querySelector(`.cell-input[data-x="${x}"][data-y="${y}"]`);
+                        if (cellInput) {
+                            cellInput.value = letter.toUpperCase();
+                            cellInput.disabled = true;
+                            cellInput.classList.add('correct-letter');
+                            cellInput.closest('.grid-cell').classList.add('solved');
+                            
+                            // Обновляем данные в grid
+                            if (this.grid && this.grid.cells) {
+                                const cell = this.grid.cells.find(c => c.x === x && c.y === y);
+                                if (cell) {
+                                    cell.letter = letter.toUpperCase();
+                                    cell.isLocked = true;
+                                }
+                            }
+                            
+                            // Находим слово, содержащее эту клетку, и проверяем, не решено ли оно
+                            const word = this.findWordByCell(x, y);
+                            if (word) {
+                                this.currentWord = word;
+                                // Проверяем, не решено ли слово полностью
+                                this.checkWord();
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Ошибка парсинга данных подсказки:', e);
+                    }
+                }
+                
+                // Обновляем информацию об игре
+                if (result.game) {
+                    this.currentGame = result.game;
+                }
+                
+                // Обновляем статистику
+                this.updateStats();
+                
+                alert(result.message || 'Подсказка использована');
+            } else {
+                alert(result.message || 'Не удалось использовать подсказку');
+            }
+        } catch (error) {
+            console.error('Ошибка использования подсказки:', error);
+            alert('Ошибка использования подсказки: ' + (error.message || 'Неизвестная ошибка'));
+        } finally {
+            // Обновляем состояние кнопки
+            this.updateStats();
         }
     }
 

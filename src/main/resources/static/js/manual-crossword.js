@@ -283,6 +283,16 @@ class ManualCrosswordManager {
             // Получаем название из поля ввода
             let baseTitle = document.getElementById('manual-crossword-title-input').value.trim();
             
+            // Получаем количество подсказок
+            const maxHintsInput = document.getElementById('manual-crossword-max-hints-input');
+            let maxHints = null;
+            if (maxHintsInput && maxHintsInput.value.trim() !== '') {
+                const parsed = parseInt(maxHintsInput.value.trim(), 10);
+                if (!isNaN(parsed) && parsed >= 0) {
+                    maxHints = parsed;
+                }
+            }
+            
             // Если название не указано, используем дефолтное
             if (!baseTitle) {
                 baseTitle = `Кроссворд (${this.selectedWords.length} слов)`;
@@ -291,7 +301,7 @@ class ManualCrosswordManager {
             // Добавляем режим создания в скобках
             const title = `${baseTitle} (Ручной)`;
             
-            const crossword = await ApiService.createManualCrossword(this.dictionaryId, wordIds, title);
+            const crossword = await ApiService.createManualCrossword(this.dictionaryId, wordIds, title, maxHints);
             
             // Переходим к экрану выбора кроссворда
             document.getElementById('manual-crossword-screen').classList.remove('active');
