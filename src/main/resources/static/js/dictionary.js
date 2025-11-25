@@ -2,6 +2,8 @@
 class DictionaryManager {
     constructor() {
         this.currentDictionaryId = null;
+        this.currentWords = [];
+        this.currentSortType = 'alphabet-asc';
         this.init();
     }
 
@@ -54,6 +56,12 @@ class DictionaryManager {
         // Добавление слова
         document.getElementById('add-word-btn').addEventListener('click', () => {
             this.showAddWordModal();
+        });
+
+        // Сортировка слов
+        document.getElementById('sort-select').addEventListener('change', (e) => {
+            this.currentSortType = e.target.value;
+            this.displayWords();
         });
     }
 
@@ -142,33 +150,59 @@ class DictionaryManager {
 
     async loadWords(dictionaryId) {
         try {
-            const words = await ApiService.getWordsFromDictionary(dictionaryId);
-            const container = document.getElementById('words-list');
-            
-            container.innerHTML = '';
-
-            if (words.length === 0) {
-                container.innerHTML = '<p style="text-align: center; padding: 20px; color: var(--text-secondary);">Слова не найдены. Добавьте слова или импортируйте из файла.</p>';
-                return;
-            }
-
-            words.forEach(word => {
-                const item = document.createElement('div');
-                item.className = 'word-item';
-                item.innerHTML = `
-                    <div>
-                        <div class="word-text">${word.word}</div>
-                        <div class="word-definition">${word.definition || 'Нет определения'}</div>
-                    </div>
-                    <div class="word-item-actions">
-                        <button class="btn btn-secondary" onclick="dictionaryManager.deleteWord(${word.id})">Удалить</button>
-                    </div>
-                `;
-                container.appendChild(item);
-            });
+            this.currentWords = await ApiService.getWordsFromDictionary(dictionaryId);
+            this.displayWords();
         } catch (error) {
             console.error('Ошибка загрузки слов:', error);
         }
+    }
+
+    sortWords(words) {
+        const sorted = [...words];
+        
+        switch (this.currentSortType) {
+            case 'alphabet-asc':
+                sorted.sort((a, b) => a.word.toLowerCase().localeCompare(b.word.toLowerCase(), 'ru'));
+                break;
+            case 'alphabet-desc':
+                sorted.sort((a, b) => b.word.toLowerCase().localeCompare(a.word.toLowerCase(), 'ru'));
+                break;
+            case 'length-asc':
+                sorted.sort((a, b) => a.word.length - b.word.length || a.word.toLowerCase().localeCompare(b.word.toLowerCase(), 'ru'));
+                break;
+            case 'length-desc':
+                sorted.sort((a, b) => b.word.length - a.word.length || a.word.toLowerCase().localeCompare(b.word.toLowerCase(), 'ru'));
+                break;
+        }
+        
+        return sorted;
+    }
+
+    displayWords() {
+        const container = document.getElementById('words-list');
+        container.innerHTML = '';
+
+        if (this.currentWords.length === 0) {
+            container.innerHTML = '<p style="text-align: center; padding: 20px; color: var(--text-secondary);">Слова не найдены. Добавьте слова или импортируйте из файла.</p>';
+            return;
+        }
+
+        const sortedWords = this.sortWords(this.currentWords);
+
+        sortedWords.forEach(word => {
+            const item = document.createElement('div');
+            item.className = 'word-item';
+            item.innerHTML = `
+                <div>
+                    <div class="word-text">${word.word}</div>
+                    <div class="word-definition">${word.definition || 'Нет определения'}</div>
+                </div>
+                <div class="word-item-actions">
+                    <button class="btn btn-secondary" onclick="dictionaryManager.deleteWord(${word.id})">Удалить</button>
+                </div>
+            `;
+            container.appendChild(item);
+        });
     }
 
     async deleteWord(wordId) {

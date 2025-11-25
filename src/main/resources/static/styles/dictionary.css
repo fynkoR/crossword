@@ -85,6 +85,26 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 24px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.sort-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sort-controls label {
+    font-size: 14px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.sort-controls select {
+    min-width: 200px;
+    padding: 8px 12px;
+    font-size: 14px;
 }
 
 .words-list {
