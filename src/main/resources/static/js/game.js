@@ -1,3 +1,5 @@
+console.log('[Game.js] Скрипт загружается...');
+
 // Управление игрой в кроссворд с сеткой
 class GameManager {
     constructor() {
@@ -894,6 +896,13 @@ class GameManager {
 
 // Глобальный экземпляр - создаем сразу и сохраняем в window
 (function() {
+    console.log('[Game.js] Инициализация...');
+    
+    // Экспортируем класс глобально
+    if (typeof window !== 'undefined') {
+        window.GameManager = GameManager;
+    }
+
     try {
         const manager = new GameManager();
         console.log('[GameManager] Экземпляр gameManager создан успешно');

@@ -241,26 +241,40 @@ class CrosswordSelectionManager {
             
             // Проверяем наличие gameManager
             console.log('[CrosswordSelectionManager] Проверка gameManager:');
-            console.log('  - typeof gameManager:', typeof gameManager);
-            console.log('  - gameManager !== undefined:', typeof gameManager !== 'undefined');
-            console.log('  - window.gameManager:', window.gameManager);
             
-            // Получаем gameManager (пробуем разные варианты)
+            // Получаем gameManager (используем window.gameManager)
             let manager = null;
             
-            // Сначала пробуем получить из window (самый безопасный способ)
             if (typeof window !== 'undefined' && window.gameManager) {
                 manager = window.gameManager;
                 console.log('[CrosswordSelectionManager] gameManager найден в window.gameManager');
             } else {
-                // Пробуем глобальную переменную (может вызвать ReferenceError, поэтому в try-catch)
-                try {
-                    if (typeof gameManager !== 'undefined' && gameManager) {
-                        manager = gameManager;
-                        console.log('[CrosswordSelectionManager] gameManager найден в глобальной области');
+                console.warn('[CrosswordSelectionManager] gameManager не найден в window, пробуем создать новый экземпляр');
+                
+                // Попытка создать экземпляр, если класс доступен
+                if (typeof window !== 'undefined' && window.GameManager) {
+                    try {
+                        console.log('  - Класс GameManager найден (window.GameManager), создаем экземпляр...');
+                        window.gameManager = new window.GameManager();
+                        manager = window.gameManager;
+                        console.log('  - Экземпляр успешно создан и сохранен в window.gameManager');
+                    } catch (e) {
+                        console.error('  - Ошибка при создании экземпляра GameManager:', e);
                     }
-                } catch (e) {
-                    console.log('[CrosswordSelectionManager] gameManager не доступен в глобальной области (ReferenceError)');
+                } else {
+                    // Пробуем найти класс глобально (безопасно)
+                    try {
+                        if (typeof GameManager !== 'undefined') {
+                            console.log('  - Класс GameManager найден (глобально), создаем экземпляр...');
+                            window.gameManager = new GameManager();
+                            manager = window.gameManager;
+                            console.log('  - Экземпляр успешно создан и сохранен в window.gameManager');
+                        } else {
+                            console.error('  - Класс GameManager не найден нигде');
+                        }
+                    } catch (e) {
+                        console.error('  - Ошибка при доступе к классу GameManager:', e);
+                    }
                 }
             }
             
