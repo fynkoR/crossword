@@ -172,8 +172,10 @@ class CrosswordSelectionManager {
             const detailBtn = document.createElement('button');
             detailBtn.className = 'btn btn-secondary';
             detailBtn.textContent = 'Детали';
-            detailBtn.addEventListener('click', () => {
-                this.showCrosswordDetails(crossword.id);
+            detailBtn.dataset.crosswordId = crossword.id;
+            detailBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggleCrosswordDetails(crossword.id, detailBtn, crosswordCard);
             });
             
             const deleteBtn = document.createElement('button');
@@ -187,9 +189,16 @@ class CrosswordSelectionManager {
             actions.appendChild(detailBtn);
             actions.appendChild(deleteBtn);
             
+            // Контейнер для деталей (скрыт по умолчанию)
+            const detailsContainer = document.createElement('div');
+            detailsContainer.className = 'crossword-details-container';
+            detailsContainer.id = `crossword-details-${crossword.id}`;
+            detailsContainer.style.display = 'none';
+            
             crosswordCard.appendChild(title);
             crosswordCard.appendChild(info);
             crosswordCard.appendChild(actions);
+            crosswordCard.appendChild(detailsContainer);
             
             crosswordsList.appendChild(crosswordCard);
         });
@@ -229,35 +238,23 @@ class CrosswordSelectionManager {
         }
     }
 
-    async showCrosswordDetails(crosswordId) {
-        // Сразу открываем модальное окно с индикатором загрузки
-        const modal = document.getElementById('crossword-details-modal');
-        const titleEl = document.getElementById('crossword-details-title');
-        const bodyEl = document.getElementById('crossword-details-body');
-
-        // Показываем модальное окно сразу
-        modal.classList.add('active');
+    async toggleCrosswordDetails(crosswordId, detailBtn, crosswordCard) {
+        const detailsContainer = document.getElementById(`crossword-details-${crosswordId}`);
         
-        // Показываем индикатор загрузки
-        titleEl.textContent = 'Загрузка...';
-        bodyEl.innerHTML = '<div style="text-align: center; padding: 40px;"><div class="loading-spinner" style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div><p style="margin-top: 16px; color: var(--text-secondary);">Загрузка информации о кроссворде...</p></div>';
+        // Если детали уже загружены и контейнер виден, просто скрываем/показываем
+        if (detailsContainer.dataset.loaded === 'true') {
+            const isVisible = detailsContainer.style.display !== 'none';
+            detailsContainer.style.display = isVisible ? 'none' : 'block';
+            detailBtn.textContent = isVisible ? 'Детали' : 'Скрыть';
+            return;
+        }
 
-        // Обработчик закрытия (добавляем сразу)
-        const closeBtn = document.getElementById('close-crossword-details-modal');
-        const closeHandler = () => {
-            modal.classList.remove('active');
-            closeBtn.removeEventListener('click', closeHandler);
-        };
-        closeBtn.addEventListener('click', closeHandler);
-
-        // Закрытие по клику вне модального окна
-        const modalClickHandler = (e) => {
-            if (e.target === modal) {
-                modal.classList.remove('active');
-                modal.removeEventListener('click', modalClickHandler);
-            }
-        };
-        modal.addEventListener('click', modalClickHandler);
+        // Если детали еще не загружены, показываем контейнер с индикатором загрузки
+        detailsContainer.style.display = 'block';
+        detailBtn.textContent = 'Загрузка...';
+        detailBtn.disabled = true;
+        
+        detailsContainer.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="loading-spinner" style="display: inline-block; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div><p style="margin-top: 12px; color: var(--text-secondary); font-size: 14px;">Загрузка информации...</p></div>';
 
         try {
             // Загружаем детали кроссворда и статистику параллельно
@@ -265,9 +262,6 @@ class CrosswordSelectionManager {
                 ApiService.getCrosswordDetail(crosswordId),
                 ApiService.getCrosswordStatistics(crosswordId)
             ]);
-
-            // Обновляем заголовок
-            titleEl.textContent = crossword.title || 'Без названия';
 
             // Формируем HTML с деталями
             let detailsHTML = '<div class="crossword-details">';
@@ -335,19 +329,22 @@ class CrosswordSelectionManager {
 
             detailsHTML += '</div>';
 
-            bodyEl.innerHTML = detailsHTML;
+            detailsContainer.innerHTML = detailsHTML;
+            detailsContainer.dataset.loaded = 'true';
+            detailBtn.textContent = 'Скрыть';
+            detailBtn.disabled = false;
         } catch (error) {
             console.error('Ошибка загрузки деталей кроссворда:', error);
             
-            // Показываем ошибку в модальном окне
-            titleEl.textContent = 'Ошибка загрузки';
-            bodyEl.innerHTML = `
-                <div style="text-align: center; padding: 40px;">
-                    <p style="color: var(--error-color); margin-bottom: 16px;">Не удалось загрузить информацию о кроссворде</p>
-                    <p style="color: var(--text-secondary); font-size: 14px;">${error.message || 'Неизвестная ошибка'}</p>
-                    <button class="btn btn-secondary" style="margin-top: 20px;" onclick="document.getElementById('crossword-details-modal').classList.remove('active')">Закрыть</button>
+            // Показываем ошибку
+            detailsContainer.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <p style="color: var(--error-color); margin-bottom: 12px; font-size: 14px;">Не удалось загрузить информацию о кроссворде</p>
+                    <p style="color: var(--text-secondary); font-size: 12px;">${error.message || 'Неизвестная ошибка'}</p>
                 </div>
             `;
+            detailBtn.textContent = 'Детали';
+            detailBtn.disabled = false;
         }
     }
 

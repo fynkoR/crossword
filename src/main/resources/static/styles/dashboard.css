@@ -239,6 +239,25 @@
     flex: 1;
 }
 
+/* Контейнер для деталей кроссворда */
+.crossword-details-container {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid #e5e7eb;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 2000px;
+    }
+}
+
 .no-items-message {
     text-align: center;
     padding: 60px 20px;
