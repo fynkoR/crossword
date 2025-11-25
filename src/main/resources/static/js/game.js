@@ -1,63 +1,78 @@
 console.log('[Game.js] Скрипт загружается...');
 
-// Управление игрой в кроссворд с сеткой
-class GameManager {
-    constructor() {
-        this.currentGame = null;
-        this.crossword = null;
-        this.grid = null;
-        this.words = [];
-        this.selectedCell = null;
-        this.currentWord = null;
-        this.gameSettings = null;
-        this.init();
-    }
+// Глобальный объект игры (без использования классов и new)
+window.Game = {
+    currentGame: null,
+    crossword: null,
+    grid: null,
+    words: [],
+    selectedCell: null,
+    currentWord: null,
+    gameSettings: null,
 
-    init() {
+    init: function() {
+        console.log('[Game] Инициализация обработчиков событий...');
         // Кнопка назад
-        document.getElementById('back-to-dashboard-from-game').addEventListener('click', () => {
-            this.showDashboard();
-        });
+        const backBtn = document.getElementById('back-to-dashboard-from-game');
+        if (backBtn) {
+            // Удаляем старые обработчики
+            const newBtn = backBtn.cloneNode(true);
+            backBtn.parentNode.replaceChild(newBtn, backBtn);
+            newBtn.addEventListener('click', () => {
+                this.showDashboard();
+            });
+        }
 
         // Кнопки завершения игры
-        document.getElementById('play-again-btn').addEventListener('click', () => {
-            this.restartGame();
-        });
+        const playAgainBtn = document.getElementById('play-again-btn');
+        if (playAgainBtn) {
+            const newBtn = playAgainBtn.cloneNode(true);
+            playAgainBtn.parentNode.replaceChild(newBtn, playAgainBtn);
+            newBtn.addEventListener('click', () => {
+                this.restartGame();
+            });
+        }
 
-        document.getElementById('back-to-menu-btn').addEventListener('click', () => {
-            this.showDashboard();
-        });
+        const backToMenuBtn = document.getElementById('back-to-menu-btn');
+        if (backToMenuBtn) {
+            const newBtn = backToMenuBtn.cloneNode(true);
+            backToMenuBtn.parentNode.replaceChild(newBtn, backToMenuBtn);
+            newBtn.addEventListener('click', () => {
+                this.showDashboard();
+            });
+        }
 
         // Кнопка использования подсказки
-        document.getElementById('use-hint-btn').addEventListener('click', () => {
-            this.useHint();
-        });
-    }
+        const useHintBtn = document.getElementById('use-hint-btn');
+        if (useHintBtn) {
+            const newBtn = useHintBtn.cloneNode(true);
+            useHintBtn.parentNode.replaceChild(newBtn, useHintBtn);
+            newBtn.addEventListener('click', () => {
+                this.useHint();
+            });
+        }
+    },
 
-    async startGame(settings) {
-        console.log('[GameManager] ===== STARTGAME ВЫЗВАН =====');
-        console.log('[GameManager] Версия: v3');
-        console.log('[GameManager] settings параметр:', settings);
-        console.log('[GameManager] this:', this);
-        console.log('[GameManager] this.gameSettings до обновления:', this.gameSettings);
+    startGame: async function(settings) {
+        // Инициализируем обработчики при первом запуске
+        this.init();
+
+        console.log('[Game] ===== STARTGAME ВЫЗВАН =====');
+        console.log('[Game] settings параметр:', settings);
         
         // Сбрасываем настройки и устанавливаем новые
         this.gameSettings = settings || {};
         
-        console.log('[GameManager] this.gameSettings после обновления:', this.gameSettings);
-        
         try {
             // Если кроссворд уже создан, загружаем его
-            // Проверяем crosswordId как число или строку
             const crosswordId = this.gameSettings.crosswordId;
             
             // Ранняя проверка: если есть crosswordId, сразу загружаем кроссворд
             if (crosswordId != null && crosswordId !== '' && crosswordId !== undefined) {
-                // Преобразуем в число
                 const id = typeof crosswordId === 'string' ? parseInt(crosswordId, 10) : crosswordId;
                 
                 if (!isNaN(id) && isFinite(id)) {
-                    console.log('Найден crosswordId, загружаем кроссворд с ID:', id);
+                    console.log('[Game] Найден crosswordId, загружаем кроссворд с ID:', id);
                     try {
                         this.crossword = await ApiService.getCrosswordDetail(id);
                         
@@ -67,20 +82,13 @@ class GameManager {
                             return;
                         }
                         
-                        console.log('Кроссворд загружен:', this.crossword);
-                        
-                        // Сохраняем dictionaryId из загруженного кроссворда для возможного рестарта
+                        // Сохраняем dictionaryId из загруженного кроссворда
                         if (this.crossword.dictionary && this.crossword.dictionary.id) {
                             this.gameSettings.dictionaryId = this.crossword.dictionary.id;
-                            console.log('DictionaryId сохранен из dictionary:', this.gameSettings.dictionaryId);
                         } else if (this.crossword.dictionaryId) {
                             this.gameSettings.dictionaryId = this.crossword.dictionaryId;
-                            console.log('DictionaryId сохранен напрямую:', this.gameSettings.dictionaryId);
-            } else {
-                            console.warn('DictionaryId не найден в кроссворде');
                         }
                         
-                        // Пропускаем остальную логику и переходим к отображению
                         this.grid = this.crossword.gridData;
                         this.words = this.crossword.wordsData.words || [];
                         
@@ -92,12 +100,11 @@ class GameManager {
                             return;
                         }
                         
-                        // Создаем или загружаем игру
                         const gameResult = await ApiService.startGame(this.crossword.id, user.id);
                         if (gameResult && gameResult.game) {
                             this.currentGame = gameResult.game;
                             
-                            // Восстанавливаем состояние сетки, если оно есть
+                            // Восстанавливаем состояние сетки
                             if (this.currentGame.gridState) {
                                 try {
                                     const savedState = JSON.parse(this.currentGame.gridState);
@@ -112,7 +119,7 @@ class GameManager {
                         this.renderGrid();
                         this.renderWordsList();
                         this.updateStats();
-                        return; // Выходим из метода, так как кроссворд загружен
+                        return;
                     } catch (error) {
                         console.error('Ошибка загрузки кроссворда:', error);
                         alert('Ошибка загрузки кроссворда: ' + (error.message || 'Неизвестная ошибка'));
@@ -122,34 +129,25 @@ class GameManager {
                 }
             }
             
-            // Если дошли сюда, значит crosswordId не передан или невалиден - генерируем новый кроссворд
-            console.log('Генерируем новый кроссворд, dictionaryId:', this.gameSettings.dictionaryId);
+            // Генерация нового кроссворда (автоматический режим)
+            console.log('[Game] Генерируем новый кроссворд, dictionaryId:', this.gameSettings.dictionaryId);
             
-                // Генерируем кроссворд из словаря (автоматический режим)
             if (!this.gameSettings.dictionaryId) {
                 alert('Не указан ID словаря');
                 this.showDashboard();
                 return;
             }
             
-            if (!this.gameSettings.wordCount || this.gameSettings.wordCount === 'undefined' || this.gameSettings.wordCount === undefined) {
-                alert('Не указано количество слов для генерации кроссворда');
+            if (!this.gameSettings.wordCount) {
+                alert('Не указано количество слов');
                 this.showDashboard();
                 return;
             }
             
-            // Преобразуем wordCount в число, если это строка
-            const wordCount = typeof this.gameSettings.wordCount === 'string' ? parseInt(this.gameSettings.wordCount, 10) : this.gameSettings.wordCount;
-            if (isNaN(wordCount) || wordCount < 1) {
-                alert('Некорректное количество слов');
-                this.showDashboard();
-                return;
-            }
-            
+            const wordCount = parseInt(this.gameSettings.wordCount, 10);
             let baseTitle = `Кроссворд из словаря ${this.gameSettings.dictionaryId}`;
-            // Добавляем режим создания в скобках
             const title = `${baseTitle} (Автоматический)`;
-            // При генерации из дашборда используем дефолтное количество подсказок (null)
+            
             const user = authManager.getCurrentUser();
             const userId = user && user.id ? user.id : null;
             
@@ -170,20 +168,16 @@ class GameManager {
             this.grid = this.crossword.gridData;
             this.words = this.crossword.wordsData.words || [];
             
-            // Создаем игру на backend
-            const user = authManager.getCurrentUser();
             if (!user || !user.id) {
                 alert('Пользователь не авторизован');
                 this.showDashboard();
                 return;
             }
             
-            // Создаем игру
             const gameResult = await ApiService.startGame(this.crossword.id, user.id);
             if (gameResult && gameResult.game) {
                 this.currentGame = gameResult.game;
                 
-                // Восстанавливаем состояние сетки, если оно есть
                 if (this.currentGame.gridState) {
                     try {
                         const savedState = JSON.parse(this.currentGame.gridState);
@@ -194,52 +188,30 @@ class GameManager {
                 }
             }
             
-            // Отображаем кроссворд
             this.renderGrid();
             this.renderWordsList();
             this.updateStats();
         } catch (error) {
             console.error('Ошибка загрузки игры:', error);
-            console.error('Настройки игры:', this.gameSettings);
-            console.error('Кроссворд:', this.crossword);
-            
-            // Более информативное сообщение об ошибке
-            let errorMessage = 'Ошибка загрузки игры';
-            if (error.message) {
-                errorMessage += ': ' + error.message;
-            } else if (error.toString && error.toString() !== '[object Object]') {
-                errorMessage += ': ' + error.toString();
-            } else {
-                errorMessage += ': Неизвестная ошибка';
-            }
-            
-            alert(errorMessage);
+            alert('Ошибка загрузки игры: ' + (error.message || 'Неизвестная ошибка'));
             this.showDashboard();
         }
-    }
+    },
 
-    renderGrid() {
+    renderGrid: function() {
         const gridContainer = document.getElementById('crossword-grid');
-        if (!gridContainer) {
-            console.error('Элемент crossword-grid не найден');
-            return;
-        }
+        if (!gridContainer) return;
         
         gridContainer.innerHTML = '';
         
-        if (!this.grid || !this.grid.size) {
-            console.error('Данные сетки отсутствуют');
-            return;
-        }
+        if (!this.grid || !this.grid.size) return;
         
         const width = this.grid.size.width;
         const height = this.grid.size.height;
         
-        // Создаем таблицу для сетки
         const table = document.createElement('table');
         table.className = 'crossword-table';
         
-        // Создаем карту клеток для быстрого доступа
         const cellMap = new Map();
         if (this.grid.cells) {
             this.grid.cells.forEach(cell => {
@@ -248,7 +220,6 @@ class GameManager {
             });
         }
         
-        // Создаем строки и ячейки
         for (let y = 0; y < height; y++) {
             const row = document.createElement('tr');
             for (let x = 0; x < width; x++) {
@@ -257,16 +228,13 @@ class GameManager {
                 const cellData = cellMap.get(key);
                 
                 if (cellData && cellData.isBlack) {
-                    // Черная клетка (препятствие)
                     cell.className = 'grid-cell black';
                     cell.textContent = '';
                 } else if (cellData) {
-                    // Обычная клетка
                     cell.className = 'grid-cell';
                     cell.dataset.x = x;
                     cell.dataset.y = y;
                     
-                    // Номер слова
                     if (cellData.number) {
                         const numberSpan = document.createElement('span');
                         numberSpan.className = 'cell-number';
@@ -274,7 +242,6 @@ class GameManager {
                         cell.appendChild(numberSpan);
                     }
                     
-                    // Буква (если есть)
                     const letterInput = document.createElement('input');
                     letterInput.type = 'text';
                     letterInput.maxLength = 1;
@@ -285,22 +252,18 @@ class GameManager {
                     if (cellData.letter) {
                         letterInput.value = cellData.letter;
                         if (cellData.isLocked) {
-                        letterInput.disabled = true;
+                            letterInput.disabled = true;
                             letterInput.classList.add('correct-letter');
-                        cell.classList.add('solved');
+                            cell.classList.add('solved');
                         } else {
-                            // Буква введена пользователем, но не заблокирована
-                            // Применяем правильный класс в зависимости от isCorrect
                             if (cellData.isCorrect === false) {
                                 letterInput.classList.add('incorrect-letter');
                             } else if (cellData.isCorrect === true) {
                                 letterInput.classList.add('correct-letter');
                             } else {
-                                // Если isCorrect не определен, проверяем букву
-                                // Находим слово, содержащее эту клетку
+                                // Проверка "на лету" при рендеринге, если статус неизвестен
                                 const word = this.findWordByCell(x, y);
                                 if (word && word.positions) {
-                                    // Находим позицию буквы в слове
                                     let letterIndex = -1;
                                     for (let i = 0; i < word.positions.length; i += 2) {
                                         if (word.positions[i] === x && word.positions[i + 1] === y) {
@@ -316,17 +279,12 @@ class GameManager {
                                         } else {
                                             letterInput.classList.add('incorrect-letter');
                                         }
-                                        // Сохраняем isCorrect в cellData
-                                        if (cellData) {
-                                            cellData.isCorrect = isCorrect;
-                                        }
                                     }
                                 }
                             }
                         }
                     }
                     
-                    // Обработчики событий
                     letterInput.addEventListener('input', (e) => {
                         this.handleCellInput(e.target, x, y);
                     });
@@ -341,7 +299,6 @@ class GameManager {
                     
                     cell.appendChild(letterInput);
                 } else {
-                    // Пустая клетка (вне сетки)
                     cell.className = 'grid-cell empty';
                 }
                 
@@ -351,9 +308,9 @@ class GameManager {
         }
         
         gridContainer.appendChild(table);
-    }
+    },
 
-    renderWordsList() {
+    renderWordsList: function() {
         const wordsList = document.getElementById('words-list');
         if (!wordsList) return;
         
@@ -382,23 +339,20 @@ class GameManager {
             
             wordsList.appendChild(wordItem);
         });
-    }
+    },
 
-    selectCell(x, y) {
+    selectCell: function(x, y) {
         this.selectedCell = { x, y };
-        
-        // Находим слово, которое содержит эту клетку
         const word = this.findWordByCell(x, y);
         if (word) {
             this.currentWord = word;
             this.highlightWord(word);
         }
-    }
+    },
 
-    findWordByCell(x, y) {
+    findWordByCell: function(x, y) {
         return this.words.find(word => {
             if (!word.positions || word.positions.length < 2) return false;
-            
             for (let i = 0; i < word.positions.length; i += 2) {
                 if (word.positions[i] === x && word.positions[i + 1] === y) {
                     return true;
@@ -406,15 +360,13 @@ class GameManager {
             }
             return false;
         });
-    }
+    },
 
-    highlightWord(word) {
-        // Убираем предыдущее выделение
+    highlightWord: function(word) {
         document.querySelectorAll('.grid-cell.highlighted').forEach(cell => {
             cell.classList.remove('highlighted');
         });
         
-        // Выделяем клетки слова
         if (word.positions) {
             for (let i = 0; i < word.positions.length; i += 2) {
                 const x = word.positions[i];
@@ -426,7 +378,6 @@ class GameManager {
             }
         }
         
-        // Выделяем слово в списке
         document.querySelectorAll('.word-item').forEach(item => {
             item.classList.remove('active');
         });
@@ -435,26 +386,23 @@ class GameManager {
             wordItem.classList.add('active');
         }
         
-        // Обновляем текущую подсказку
         this.updateCurrentHint(word);
-    }
+    },
 
-    updateCurrentHint(word) {
+    updateCurrentHint: function(word) {
         const hintText = document.getElementById('current-hint-text');
         if (hintText && word) {
             hintText.textContent = `${word.number}. ${word.definition || 'Нет описания'}`;
         }
-    }
+    },
 
-    handleCellInput(input, x, y) {
+    handleCellInput: function(input, x, y) {
         const value = input.value.toUpperCase().replace(/[^А-ЯA-Z]/g, '');
         input.value = value;
         
         if (value) {
-            // Проверяем правильность буквы
             this.checkLetter(input, x, y, value);
             
-            // Обновляем состояние в grid
             if (this.grid && this.grid.cells) {
                 const cell = this.grid.cells.find(c => c.x === x && c.y === y);
                 if (cell) {
@@ -462,13 +410,10 @@ class GameManager {
                 }
             }
             
-            // Переходим к следующей клетке слова
             this.moveToNextCell(x, y);
         } else {
-            // Если буква удалена, убираем подсветку
             input.classList.remove('correct-letter', 'incorrect-letter');
             
-            // Обновляем состояние в grid
             if (this.grid && this.grid.cells) {
                 const cell = this.grid.cells.find(c => c.x === x && c.y === y);
                 if (cell && !cell.isLocked) {
@@ -477,19 +422,14 @@ class GameManager {
             }
         }
         
-        // Сохраняем состояние на сервере
         this.saveGridState();
-        
-        // Проверяем слово
         this.checkWord();
-    }
+    },
     
-    checkLetter(input, x, y, userLetter) {
-        // Находим слово, содержащее эту клетку
+    checkLetter: function(input, x, y, userLetter) {
         const word = this.findWordByCell(x, y);
         if (!word || !word.positions) return;
         
-        // Находим позицию буквы в слове
         let letterIndex = -1;
         for (let i = 0; i < word.positions.length; i += 2) {
             if (word.positions[i] === x && word.positions[i + 1] === y) {
@@ -500,11 +440,9 @@ class GameManager {
         
         if (letterIndex === -1) return;
         
-        // Получаем правильную букву
         const correctLetter = word.text.charAt(letterIndex).toUpperCase();
-        
-        // Сравниваем
         const isCorrect = userLetter === correctLetter;
+        
         if (isCorrect) {
             input.classList.remove('incorrect-letter');
             input.classList.add('correct-letter');
@@ -513,18 +451,16 @@ class GameManager {
             input.classList.add('incorrect-letter');
         }
         
-        // Сохраняем информацию о правильности в grid
         if (this.grid && this.grid.cells) {
             const cell = this.grid.cells.find(c => c.x === x && c.y === y);
             if (cell) {
                 cell.isCorrect = isCorrect;
             }
         }
-    }
+    },
 
-    handleCellKeydown(e, x, y) {
+    handleCellKeydown: function(e, x, y) {
         if (e.key === 'Backspace' && !e.target.value) {
-            // Переходим к предыдущей клетке
             this.moveToPreviousCell(x, y);
         } else if (e.key === 'ArrowLeft') {
             e.preventDefault();
@@ -532,13 +468,10 @@ class GameManager {
         } else if (e.key === 'ArrowRight') {
             e.preventDefault();
             this.moveToNextCell(x, y);
-        } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-            e.preventDefault();
-            // Можно добавить переход по вертикали
         }
-    }
+    },
 
-    moveToNextCell(x, y) {
+    moveToNextCell: function(x, y) {
         const word = this.findWordByCell(x, y);
         if (!word || !word.positions) return;
         
@@ -556,9 +489,9 @@ class GameManager {
                 break;
             }
         }
-    }
+    },
 
-    moveToPreviousCell(x, y) {
+    moveToPreviousCell: function(x, y) {
         const word = this.findWordByCell(x, y);
         if (!word || !word.positions) return;
         
@@ -576,13 +509,12 @@ class GameManager {
                 break;
             }
         }
-    }
+    },
 
-    selectWord(word) {
+    selectWord: function(word) {
         this.currentWord = word;
         this.highlightWord(word);
         
-        // Фокусируемся на первой клетке слова
         if (word.positions && word.positions.length >= 2) {
             const firstX = word.positions[0];
             const firstY = word.positions[1];
@@ -592,12 +524,11 @@ class GameManager {
                 firstInput.select();
             }
         }
-    }
+    },
 
-    async checkWord() {
+    checkWord: async function() {
         if (!this.currentWord) return;
         
-        // Собираем буквы из клеток слова
         let userWord = '';
         if (this.currentWord.positions) {
             for (let i = 0; i < this.currentWord.positions.length; i += 2) {
@@ -614,7 +545,6 @@ class GameManager {
         const correctWord = this.currentWord.text.toUpperCase();
         
         if (userWord.length === correctWord.length && userWord === correctWord) {
-            // Правильно! Блокируем клетки
             if (this.currentWord.positions) {
                 for (let i = 0; i < this.currentWord.positions.length; i += 2) {
                     const x = this.currentWord.positions[i];
@@ -625,7 +555,6 @@ class GameManager {
                         input.disabled = true;
                         cell.classList.add('solved');
                         
-                        // Обновляем состояние в grid
                         if (this.grid && this.grid.cells) {
                             const gridCell = this.grid.cells.find(c => c.x === x && c.y === y);
                             if (gridCell) {
@@ -643,18 +572,16 @@ class GameManager {
             this.renderWordsList();
             this.updateStats();
             
-            // Сохраняем состояние после отгадывания слова
             this.saveGridState();
             
-            // Проверяем, завершена ли игра
             const allSolved = this.words.every(w => w.isSolved);
             if (allSolved) {
                 setTimeout(() => this.completeGame(), 1000);
             }
         }
-    }
+    },
 
-    updateStats() {
+    updateStats: function() {
         const totalWords = this.words.length;
         const solvedWords = this.words.filter(w => w.isSolved).length;
         
@@ -665,14 +592,12 @@ class GameManager {
         if (wordsCountEl) wordsCountEl.textContent = totalWords;
         if (correctCountEl) correctCountEl.textContent = solvedWords;
         
-        // Обновляем количество оставшихся подсказок
         if (hintsRemainingEl && this.crossword && this.currentGame) {
             const maxHints = this.crossword.maxHints || 0;
             const usedHints = this.currentGame.hintsUsed || 0;
             const remaining = Math.max(0, maxHints - usedHints);
             hintsRemainingEl.textContent = remaining;
             
-            // Обновляем состояние кнопки подсказки
             const useHintBtn = document.getElementById('use-hint-btn');
             if (useHintBtn) {
                 useHintBtn.disabled = remaining <= 0;
@@ -683,43 +608,38 @@ class GameManager {
                 }
             }
         }
-    }
+    },
 
-    completeGame() {
+    completeGame: function() {
         document.getElementById('final-words-count').textContent = this.words.filter(w => w.isSolved).length;
         document.getElementById('game-complete-modal').classList.add('active');
-    }
+    },
 
-    restartGame() {
+    restartGame: function() {
         document.getElementById('game-complete-modal').classList.remove('active');
         
-        // Если это был ручной кроссворд, возвращаемся на дашборд
         if (this.gameSettings && this.gameSettings.isManual) {
             this.showDashboard();
             return;
         }
         
-        // Если есть crosswordId, но нет wordCount - это готовый кроссворд, возвращаемся на экран выбора
         if (this.gameSettings && this.gameSettings.crosswordId && !this.gameSettings.wordCount) {
             this.showDashboard();
             return;
         }
         
-        // Для автоматического режима создаем новый кроссворд с теми же настройками
         if (this.gameSettings && this.gameSettings.wordCount && this.gameSettings.dictionaryId) {
-            // Убираем старый crosswordId, чтобы создать новый
             const newSettings = {
                 dictionaryId: this.gameSettings.dictionaryId,
                 wordCount: this.gameSettings.wordCount
             };
             this.startGame(newSettings);
         } else {
-            // Если настроек нет или они некорректны, возвращаемся на дашборд
             this.showDashboard();
         }
-    }
+    },
 
-    async useHint() {
+    useHint: async function() {
         if (!this.currentGame || !this.currentGame.id) {
             alert('Игра не запущена');
             return;
@@ -735,13 +655,11 @@ class GameManager {
             const result = await ApiService.useHint(this.currentGame.id);
             
             if (result && result.success) {
-                // Парсим данные подсказки (JSON строка с координатами и буквой)
                 if (result.data) {
                     try {
                         const hintData = JSON.parse(result.data);
                         const { x, y, letter } = hintData;
                         
-                        // Находим соответствующую клетку и открываем букву
                         const cellInput = document.querySelector(`.cell-input[data-x="${x}"][data-y="${y}"]`);
                         if (cellInput) {
                             cellInput.value = letter.toUpperCase();
@@ -749,7 +667,6 @@ class GameManager {
                             cellInput.classList.add('correct-letter');
                             cellInput.closest('.grid-cell').classList.add('solved');
                             
-                            // Обновляем данные в grid
                             if (this.grid && this.grid.cells) {
                                 const cell = this.grid.cells.find(c => c.x === x && c.y === y);
                                 if (cell) {
@@ -758,11 +675,9 @@ class GameManager {
                                 }
                             }
                             
-                            // Находим слово, содержащее эту клетку, и проверяем, не решено ли оно
                             const word = this.findWordByCell(x, y);
                             if (word) {
                                 this.currentWord = word;
-                                // Проверяем, не решено ли слово полностью
                                 this.checkWord();
                             }
                         }
@@ -771,15 +686,11 @@ class GameManager {
                     }
                 }
                 
-                // Обновляем информацию об игре
                 if (result.game) {
                     this.currentGame = result.game;
                 }
                 
-                // Обновляем статистику
                 this.updateStats();
-                
-                // Сохраняем состояние после использования подсказки
                 this.saveGridState();
                 
                 alert(result.message || 'Подсказка использована');
@@ -790,22 +701,17 @@ class GameManager {
             console.error('Ошибка использования подсказки:', error);
             alert('Ошибка использования подсказки: ' + (error.message || 'Неизвестная ошибка'));
         } finally {
-            // Обновляем состояние кнопки
             this.updateStats();
         }
-    }
+    },
 
-    /**
-     * Получить текущее состояние сетки
-     */
-    getCurrentGridState() {
+    getCurrentGridState: function() {
         if (!this.grid || !this.grid.cells) {
             return [];
         }
         
         const state = [];
         this.grid.cells.forEach(cell => {
-            // Сохраняем только клетки с буквами или заблокированные
             if (cell.letter || cell.isLocked) {
                 state.push({
                     x: cell.x,
@@ -818,12 +724,9 @@ class GameManager {
         });
         
         return state;
-    }
+    },
 
-    /**
-     * Сохранить состояние сетки на сервере
-     */
-    async saveGridState() {
+    saveGridState: async function() {
         if (!this.currentGame || !this.currentGame.id) {
             return;
         }
@@ -835,14 +738,10 @@ class GameManager {
             await ApiService.saveGridState(this.currentGame.id, gridStateJson);
         } catch (error) {
             console.error('Ошибка сохранения состояния сетки:', error);
-            // Не показываем ошибку пользователю, так как это фоновое сохранение
         }
-    }
+    },
 
-    /**
-     * Восстановить состояние сетки из сохраненного
-     */
-    restoreGridState(savedState) {
+    restoreGridState: function(savedState) {
         if (!savedState || !Array.isArray(savedState)) {
             return;
         }
@@ -851,7 +750,6 @@ class GameManager {
             return;
         }
         
-        // Восстанавливаем состояние клеток
         savedState.forEach(stateCell => {
             const cell = this.grid.cells.find(c => c.x === stateCell.x && c.y === stateCell.y);
             if (cell) {
@@ -867,7 +765,6 @@ class GameManager {
             }
         });
         
-        // Проверяем, какие слова полностью отгаданы
         this.words.forEach(word => {
             if (word.positions && word.positions.length >= 2) {
                 let allLocked = true;
@@ -885,37 +782,24 @@ class GameManager {
                 }
             }
         });
-    }
+    },
 
-    showDashboard() {
+    showDashboard: function() {
         document.getElementById('game-screen').classList.remove('active');
         document.getElementById('dashboard-screen').classList.add('active');
         document.getElementById('game-complete-modal').classList.remove('active');
     }
-}
+};
 
-// Глобальный экземпляр - создаем сразу и сохраняем в window
-(function() {
-    console.log('[Game.js] Инициализация...');
-    
-    // Экспортируем класс глобально
-    if (typeof window !== 'undefined') {
-        window.GameManager = GameManager;
+// Экспортируем функцию запуска для глобального доступа
+window.startGame = function(settings) {
+    console.log('window.startGame вызван с настройками:', settings);
+    if (window.Game) {
+        window.Game.startGame(settings);
+    } else {
+        console.error('Объект window.Game не инициализирован');
+        alert('Ошибка инициализации игры. Перезагрузите страницу.');
     }
+};
 
-    try {
-        const manager = new GameManager();
-        console.log('[GameManager] Экземпляр gameManager создан успешно');
-        
-        // Сохраняем в window для доступа из других скриптов
-        if (typeof window !== 'undefined') {
-            window.gameManager = manager;
-            console.log('[GameManager] gameManager сохранен в window.gameManager');
-        }
-    } catch (error) {
-        console.error('[GameManager] Ошибка при создании экземпляра:', error);
-        if (typeof window !== 'undefined') {
-            window.gameManager = null;
-        }
-    }
-})();
+console.log('[Game.js] Глобальный объект Game и функция startGame созданы');

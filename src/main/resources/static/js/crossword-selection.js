@@ -240,87 +240,23 @@ class CrosswordSelectionManager {
             console.log('[CrosswordSelectionManager] Преобразованный ID:', id);
             
             // Проверяем наличие gameManager
-            console.log('[CrosswordSelectionManager] Проверка gameManager:');
+            console.log('[CrosswordSelectionManager] Вызываем window.startGame с ID:', crossword.id);
             
-            // Получаем gameManager (используем window.gameManager)
-            let manager = null;
-            
-            if (typeof window !== 'undefined' && window.gameManager) {
-                manager = window.gameManager;
-                console.log('[CrosswordSelectionManager] gameManager найден в window.gameManager');
-            } else {
-                console.warn('[CrosswordSelectionManager] gameManager не найден в window, пробуем создать новый экземпляр');
+            if (typeof window.startGame === 'function') {
+                window.startGame({ crosswordId: crossword.id });
                 
-                // Попытка создать экземпляр, если класс доступен
-                if (typeof window !== 'undefined' && window.GameManager) {
-                    try {
-                        console.log('  - Класс GameManager найден (window.GameManager), создаем экземпляр...');
-                        window.gameManager = new window.GameManager();
-                        manager = window.gameManager;
-                        console.log('  - Экземпляр успешно создан и сохранен в window.gameManager');
-                    } catch (e) {
-                        console.error('  - Ошибка при создании экземпляра GameManager:', e);
-                    }
-                } else {
-                    // Пробуем найти класс глобально (безопасно)
-                    try {
-                        if (typeof GameManager !== 'undefined') {
-                            console.log('  - Класс GameManager найден (глобально), создаем экземпляр...');
-                            window.gameManager = new GameManager();
-                            manager = window.gameManager;
-                            console.log('  - Экземпляр успешно создан и сохранен в window.gameManager');
-                        } else {
-                            console.error('  - Класс GameManager не найден нигде');
-                        }
-                    } catch (e) {
-                        console.error('  - Ошибка при доступе к классу GameManager:', e);
-                    }
+                // Переходим к экрану игры
+                const selectionScreen = document.getElementById('crossword-selection-screen');
+                const gameScreen = document.getElementById('game-screen');
+
+                if (selectionScreen && gameScreen) {
+                    selectionScreen.classList.remove('active');
+                    gameScreen.classList.add('active');
                 }
+            } else {
+                console.error('Функция window.startGame не найдена!');
+                alert('Ошибка: функция запуска игры не найдена. Перезагрузите страницу.');
             }
-            
-            if (!manager) {
-                console.error('[CrosswordSelectionManager] gameManager не найден нигде');
-                console.error('[CrosswordSelectionManager] window.gameManager:', typeof window !== 'undefined' ? window.gameManager : 'window не определен');
-                try {
-                    console.error('[CrosswordSelectionManager] typeof gameManager:', typeof gameManager);
-                } catch (e) {
-                    console.error('[CrosswordSelectionManager] gameManager не определен (ReferenceError)');
-                }
-                alert('Ошибка: менеджер игры не инициализирован. Перезагрузите страницу.');
-                return;
-            }
-            
-            if (!manager || typeof manager.startGame !== 'function') {
-                console.error('[CrosswordSelectionManager] gameManager найден, но метод startGame отсутствует');
-                console.error('[CrosswordSelectionManager] manager:', manager);
-                alert('Ошибка: менеджер игры не инициализирован корректно. Перезагрузите страницу.');
-                return;
-            }
-            
-            console.log('[CrosswordSelectionManager] gameManager найден и валиден, переходим к экрану игры');
-            
-            // Переходим к экрану игры
-            const selectionScreen = document.getElementById('crossword-selection-screen');
-            const gameScreen = document.getElementById('game-screen');
-            
-            if (!selectionScreen || !gameScreen) {
-                console.error('[CrosswordSelectionManager] Экраны не найдены');
-                alert('Ошибка: экраны игры не найдены');
-                return;
-            }
-            
-            console.log('[CrosswordSelectionManager] Скрываем экран выбора, показываем экран игры');
-            selectionScreen.classList.remove('active');
-            gameScreen.classList.add('active');
-            
-            console.log('[CrosswordSelectionManager] Вызываем manager.startGame с параметрами:', { crosswordId: id });
-            
-            // Запускаем игру с выбранным кроссвордом
-            await manager.startGame({
-                crosswordId: id
-            });
-            
-            console.log('[CrosswordSelectionManager] Игра успешно запущена');
         } catch (error) {
             console.error('[CrosswordSelectionManager] Ошибка запуска игры:', error);
             console.error('[CrosswordSelectionManager] Stack trace:', error.stack);
