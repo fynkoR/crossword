@@ -140,6 +140,11 @@ class CrosswordSelectionManager {
             playBtn.className = 'btn btn-primary';
             playBtn.textContent = 'Играть';
             playBtn.addEventListener('click', () => {
+                console.log('Клик на кнопку Играть, crossword.id:', crossword.id, 'тип:', typeof crossword.id);
+                if (!crossword.id) {
+                    alert('Ошибка: у кроссворда отсутствует ID');
+                    return;
+                }
                 this.startGame(crossword.id);
             });
             
@@ -190,6 +195,7 @@ class CrosswordSelectionManager {
             
             // Запускаем игру с выбранным кроссвордом
             if (typeof gameManager !== 'undefined') {
+                console.log('Передаем в gameManager.startGame:', { crosswordId: id });
                 await gameManager.startGame({
                     crosswordId: id
                 });

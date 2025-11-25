@@ -32,84 +32,104 @@ class GameManager {
         this.gameSettings = settings || {};
         
         console.log('GameManager.startGame вызван с настройками:', this.gameSettings);
+        console.log('settings параметр:', settings);
         
         try {
             // Если кроссворд уже создан, загружаем его
             // Проверяем crosswordId как число или строку
             const crosswordId = this.gameSettings.crosswordId;
             
-            // Проверяем наличие crosswordId (0 тоже валидный ID)
-            // Преобразуем в число для проверки
-            let id = null;
-            if (crosswordId !== null && crosswordId !== undefined) {
-                if (typeof crosswordId === 'string' && crosswordId.trim() !== '') {
-                    id = parseInt(crosswordId, 10);
-                } else if (typeof crosswordId === 'number') {
-                    id = crosswordId;
-                }
-            }
-            
-            // Если есть валидный ID (включая 0), загружаем кроссворд
-            if (id !== null && !isNaN(id)) {
-                console.log('Загружаем готовый кроссворд с ID:', id);
-                try {
-                    this.crossword = await ApiService.getCrosswordDetail(id);
-                    
-                    if (!this.crossword) {
-                        alert('Кроссворд не найден');
+            // Ранняя проверка: если есть crosswordId, сразу загружаем кроссворд
+            if (crosswordId != null && crosswordId !== '' && crosswordId !== undefined) {
+                // Преобразуем в число
+                const id = typeof crosswordId === 'string' ? parseInt(crosswordId, 10) : crosswordId;
+                
+                if (!isNaN(id) && isFinite(id)) {
+                    console.log('Найден crosswordId, загружаем кроссворд с ID:', id);
+                    try {
+                        this.crossword = await ApiService.getCrosswordDetail(id);
+                        
+                        if (!this.crossword) {
+                            alert('Кроссворд не найден');
+                            this.showDashboard();
+                            return;
+                        }
+                        
+                        console.log('Кроссворд загружен:', this.crossword);
+                        
+                        // Сохраняем dictionaryId из загруженного кроссворда для возможного рестарта
+                        if (this.crossword.dictionary && this.crossword.dictionary.id) {
+                            this.gameSettings.dictionaryId = this.crossword.dictionary.id;
+                            console.log('DictionaryId сохранен из dictionary:', this.gameSettings.dictionaryId);
+                        } else if (this.crossword.dictionaryId) {
+                            this.gameSettings.dictionaryId = this.crossword.dictionaryId;
+                            console.log('DictionaryId сохранен напрямую:', this.gameSettings.dictionaryId);
+                        } else {
+                            console.warn('DictionaryId не найден в кроссворде');
+                        }
+                        
+                        // Пропускаем остальную логику и переходим к отображению
+                        this.grid = this.crossword.gridData;
+                        this.words = this.crossword.wordsData.words || [];
+                        
+                        // Создаем игру на backend
+                        const user = authManager.getCurrentUser();
+                        if (!user || !user.id) {
+                            alert('Пользователь не авторизован');
+                            this.showDashboard();
+                            return;
+                        }
+                        
+                        // Создаем игру
+                        const gameResult = await ApiService.startGame(this.crossword.id, user.id);
+                        if (gameResult && gameResult.game) {
+                            this.currentGame = gameResult.game;
+                        }
+                        
+                        // Отображаем кроссворд
+                        this.renderGrid();
+                        this.renderWordsList();
+                        this.updateStats();
+                        return; // Выходим из метода, так как кроссворд загружен
+                    } catch (error) {
+                        console.error('Ошибка загрузки кроссворда:', error);
+                        alert('Ошибка загрузки кроссворда: ' + (error.message || 'Неизвестная ошибка'));
                         this.showDashboard();
                         return;
                     }
-                    
-                    console.log('Кроссворд загружен:', this.crossword);
-                    
-                    // Сохраняем dictionaryId из загруженного кроссворда для возможного рестарта
-                    if (this.crossword.dictionary && this.crossword.dictionary.id) {
-                        this.gameSettings.dictionaryId = this.crossword.dictionary.id;
-                        console.log('DictionaryId сохранен из dictionary:', this.gameSettings.dictionaryId);
-                    } else if (this.crossword.dictionaryId) {
-                        // Если dictionary не загружен, но есть dictionaryId напрямую
-                        this.gameSettings.dictionaryId = this.crossword.dictionaryId;
-                        console.log('DictionaryId сохранен напрямую:', this.gameSettings.dictionaryId);
-                    } else {
-                        console.warn('DictionaryId не найден в кроссворде');
-                    }
-                } catch (error) {
-                    console.error('Ошибка загрузки кроссворда:', error);
-                    alert('Ошибка загрузки кроссворда: ' + (error.message || 'Неизвестная ошибка'));
-                    this.showDashboard();
-                    return;
                 }
-            } else {
-                console.log('Генерируем новый кроссворд, dictionaryId:', this.gameSettings.dictionaryId);
-                // Генерируем кроссворд из словаря (автоматический режим)
-                if (!this.gameSettings.dictionaryId) {
-                    alert('Не указан ID словаря');
-                    this.showDashboard();
-                    return;
-                }
-                
-                if (!this.gameSettings.wordCount || this.gameSettings.wordCount === 'undefined' || this.gameSettings.wordCount === undefined) {
-                    alert('Не указано количество слов для генерации кроссворда');
-                    this.showDashboard();
-                    return;
-                }
-                
-                // Преобразуем wordCount в число, если это строка
-                const wordCount = typeof this.gameSettings.wordCount === 'string' ? parseInt(this.gameSettings.wordCount, 10) : this.gameSettings.wordCount;
-                if (isNaN(wordCount) || wordCount < 1) {
-                    alert('Некорректное количество слов');
-                    this.showDashboard();
-                    return;
-                }
-                
-                const title = `Кроссворд из словаря ${this.gameSettings.dictionaryId}`;
-                this.crossword = await ApiService.generateCrossword(
-                    this.gameSettings.dictionaryId, 
-                    wordCount, 
-                    title
-                );
             }
+            
+            // Если дошли сюда, значит crosswordId не передан или невалиден - генерируем новый кроссворд
+            console.log('Генерируем новый кроссворд, dictionaryId:', this.gameSettings.dictionaryId);
+            
+            // Генерируем кроссворд из словаря (автоматический режим)
+            if (!this.gameSettings.dictionaryId) {
+                alert('Не указан ID словаря');
+                this.showDashboard();
+                return;
+            }
+            
+            if (!this.gameSettings.wordCount || this.gameSettings.wordCount === 'undefined' || this.gameSettings.wordCount === undefined) {
+                alert('Не указано количество слов для генерации кроссворда');
+                this.showDashboard();
+                return;
+            }
+            
+            // Преобразуем wordCount в число, если это строка
+            const wordCount = typeof this.gameSettings.wordCount === 'string' ? parseInt(this.gameSettings.wordCount, 10) : this.gameSettings.wordCount;
+            if (isNaN(wordCount) || wordCount < 1) {
+                alert('Некорректное количество слов');
+                this.showDashboard();
+                return;
+            }
+            
+            const title = `Кроссворд из словаря ${this.gameSettings.dictionaryId}`;
+            this.crossword = await ApiService.generateCrossword(
+                this.gameSettings.dictionaryId, 
+                wordCount, 
+                title
+            );
             
             if (!this.crossword || !this.crossword.gridData || !this.crossword.wordsData) {
                 alert('Ошибка загрузки кроссворда');
