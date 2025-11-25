@@ -28,21 +28,32 @@ class GameManager {
     }
 
     async startGame(settings) {
-        // Инициализируем gameSettings, если его нет
-        if (!this.gameSettings) {
-            this.gameSettings = {};
-        }
+        // Сбрасываем настройки и устанавливаем новые
+        this.gameSettings = settings || {};
         
-        // Копируем настройки
-        if (settings) {
-            this.gameSettings = { ...this.gameSettings, ...settings };
-        }
+        console.log('GameManager.startGame вызван с настройками:', this.gameSettings);
         
         try {
             // Если кроссворд уже создан, загружаем его
-            if (this.gameSettings.crosswordId) {
+            // Проверяем crosswordId как число или строку
+            const crosswordId = this.gameSettings.crosswordId;
+            
+            // Проверяем наличие crosswordId (0 тоже валидный ID)
+            // Преобразуем в число для проверки
+            let id = null;
+            if (crosswordId !== null && crosswordId !== undefined) {
+                if (typeof crosswordId === 'string' && crosswordId.trim() !== '') {
+                    id = parseInt(crosswordId, 10);
+                } else if (typeof crosswordId === 'number') {
+                    id = crosswordId;
+                }
+            }
+            
+            // Если есть валидный ID (включая 0), загружаем кроссворд
+            if (id !== null && !isNaN(id)) {
+                console.log('Загружаем готовый кроссворд с ID:', id);
                 try {
-                    this.crossword = await ApiService.getCrosswordDetail(this.gameSettings.crosswordId);
+                    this.crossword = await ApiService.getCrosswordDetail(id);
                     
                     if (!this.crossword) {
                         alert('Кроссворд не найден');
@@ -50,12 +61,18 @@ class GameManager {
                         return;
                     }
                     
+                    console.log('Кроссворд загружен:', this.crossword);
+                    
                     // Сохраняем dictionaryId из загруженного кроссворда для возможного рестарта
                     if (this.crossword.dictionary && this.crossword.dictionary.id) {
                         this.gameSettings.dictionaryId = this.crossword.dictionary.id;
+                        console.log('DictionaryId сохранен из dictionary:', this.gameSettings.dictionaryId);
                     } else if (this.crossword.dictionaryId) {
                         // Если dictionary не загружен, но есть dictionaryId напрямую
                         this.gameSettings.dictionaryId = this.crossword.dictionaryId;
+                        console.log('DictionaryId сохранен напрямую:', this.gameSettings.dictionaryId);
+                    } else {
+                        console.warn('DictionaryId не найден в кроссворде');
                     }
                 } catch (error) {
                     console.error('Ошибка загрузки кроссворда:', error);
@@ -64,6 +81,7 @@ class GameManager {
                     return;
                 }
             } else {
+                console.log('Генерируем новый кроссворд, dictionaryId:', this.gameSettings.dictionaryId);
                 // Генерируем кроссворд из словаря (автоматический режим)
                 if (!this.gameSettings.dictionaryId) {
                     alert('Не указан ID словаря');
@@ -122,7 +140,20 @@ class GameManager {
             this.updateStats();
         } catch (error) {
             console.error('Ошибка загрузки игры:', error);
-            alert('Ошибка загрузки игры: ' + (error.message || 'Неизвестная ошибка'));
+            console.error('Настройки игры:', this.gameSettings);
+            console.error('Кроссворд:', this.crossword);
+            
+            // Более информативное сообщение об ошибке
+            let errorMessage = 'Ошибка загрузки игры';
+            if (error.message) {
+                errorMessage += ': ' + error.message;
+            } else if (error.toString && error.toString() !== '[object Object]') {
+                errorMessage += ': ' + error.toString();
+            } else {
+                errorMessage += ': Неизвестная ошибка';
+            }
+            
+            alert(errorMessage);
             this.showDashboard();
         }
     }

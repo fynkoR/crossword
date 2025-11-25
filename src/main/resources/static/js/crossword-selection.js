@@ -171,6 +171,19 @@ class CrosswordSelectionManager {
 
     async startGame(crosswordId) {
         try {
+            // Проверяем, что crosswordId передан
+            if (!crosswordId) {
+                alert('Ошибка: не указан ID кроссворда');
+                return;
+            }
+            
+            // Преобразуем в число, если это строка
+            const id = typeof crosswordId === 'string' ? parseInt(crosswordId, 10) : crosswordId;
+            if (isNaN(id)) {
+                alert('Ошибка: некорректный ID кроссворда');
+                return;
+            }
+            
             // Переходим к экрану игры
             document.getElementById('crossword-selection-screen').classList.remove('active');
             document.getElementById('game-screen').classList.add('active');
@@ -178,8 +191,10 @@ class CrosswordSelectionManager {
             // Запускаем игру с выбранным кроссвордом
             if (typeof gameManager !== 'undefined') {
                 await gameManager.startGame({
-                    crosswordId: crosswordId
+                    crosswordId: id
                 });
+            } else {
+                alert('Ошибка: менеджер игры не инициализирован');
             }
         } catch (error) {
             console.error('Ошибка запуска игры:', error);
