@@ -300,5 +300,14 @@ class ApiService {
             },
         });
     }
+
+    static async completeGame(gameId) {
+        return this.request(`/games/${gameId}/action`, {
+            method: 'POST',
+            body: {
+                action: 'complete'
+            },
+        });
+    }
 }
 

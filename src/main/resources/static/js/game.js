@@ -545,6 +545,11 @@ window.Game = {
         const correctWord = this.currentWord.text.toUpperCase();
         
         if (userWord.length === correctWord.length && userWord === correctWord) {
+            // Проверяем, не отгадано ли уже это слово
+            if (this.currentWord.isSolved) {
+                return;
+            }
+            
             if (this.currentWord.positions) {
                 for (let i = 0; i < this.currentWord.positions.length; i += 2) {
                     const x = this.currentWord.positions[i];
@@ -572,8 +577,31 @@ window.Game = {
             this.renderWordsList();
             this.updateStats();
             
+            // Вызываем API для проверки ответа и обновления статистики на бэкенде
+            if (this.currentGame && this.currentGame.id && this.currentWord.wordId) {
+                try {
+                    const result = await ApiService.checkAnswer(
+                        this.currentGame.id,
+                        this.currentWord.wordId,
+                        userWord
+                    );
+                    
+                    if (result && result.game) {
+                        this.currentGame = result.game;
+                    }
+                    
+                    // Если игра завершена на бэкенде, вызываем completeGame
+                    if (result && result.gameComplete) {
+                        setTimeout(() => this.completeGame(), 1000);
+                    }
+                } catch (error) {
+                    console.error('Ошибка при проверке ответа:', error);
+                }
+            }
+            
             this.saveGridState();
             
+            // Проверяем локально, все ли слова отгаданы (резервная проверка)
             const allSolved = this.words.every(w => w.isSolved);
             if (allSolved) {
                 setTimeout(() => this.completeGame(), 1000);
@@ -610,7 +638,19 @@ window.Game = {
         }
     },
 
-    completeGame: function() {
+    completeGame: async function() {
+        // Вызываем API для завершения игры на бэкенде
+        if (this.currentGame && this.currentGame.id) {
+            try {
+                const result = await ApiService.completeGame(this.currentGame.id);
+                if (result && result.game) {
+                    this.currentGame = result.game;
+                }
+            } catch (error) {
+                console.error('Ошибка при завершении игры:', error);
+            }
+        }
+        
         document.getElementById('final-words-count').textContent = this.words.filter(w => w.isSolved).length;
         document.getElementById('game-complete-modal').classList.add('active');
     },
