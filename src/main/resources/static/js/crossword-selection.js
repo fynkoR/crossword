@@ -150,8 +150,16 @@ class CrosswordSelectionManager {
                 this.showCrosswordDetails(crossword.id);
             });
             
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn btn-danger';
+            deleteBtn.textContent = 'Удалить';
+            deleteBtn.addEventListener('click', () => {
+                this.deleteCrossword(crossword.id, crossword.title);
+            });
+            
             actions.appendChild(playBtn);
             actions.appendChild(detailBtn);
+            actions.appendChild(deleteBtn);
             
             crosswordCard.appendChild(title);
             crosswordCard.appendChild(info);
@@ -186,6 +194,22 @@ class CrosswordSelectionManager {
         } catch (error) {
             console.error('Ошибка загрузки деталей кроссворда:', error);
             alert('Ошибка загрузки деталей кроссворда');
+        }
+    }
+
+    async deleteCrossword(crosswordId, crosswordTitle) {
+        if (!confirm(`Вы уверены, что хотите удалить кроссворд "${crosswordTitle}"?`)) {
+            return;
+        }
+
+        try {
+            await ApiService.deleteCrossword(crosswordId);
+            alert('Кроссворд успешно удален');
+            // Обновляем список кроссвордов
+            await this.loadCrosswords();
+        } catch (error) {
+            console.error('Ошибка удаления кроссворда:', error);
+            alert('Ошибка удаления кроссворда: ' + (error.message || 'Неизвестная ошибка'));
         }
     }
 

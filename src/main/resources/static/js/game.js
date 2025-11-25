@@ -31,11 +31,22 @@ class GameManager {
         this.gameSettings = settings;
         
         try {
-            // Если кроссворд уже создан (ручной режим), загружаем его
-            if (settings.crosswordId) {
+            // Если кроссворд уже создан, загружаем его
+            if (settings && settings.crosswordId) {
                 this.crossword = await ApiService.getCrosswordDetail(settings.crosswordId);
+                
+                // Сохраняем dictionaryId из загруженного кроссворда для возможного рестарта
+                if (this.crossword && this.crossword.dictionary) {
+                    this.gameSettings.dictionaryId = this.crossword.dictionary.id;
+                }
             } else {
                 // Генерируем кроссворд из словаря (автоматический режим)
+                if (!settings.dictionaryId) {
+                    alert('Не указан ID словаря');
+                    this.showDashboard();
+                    return;
+                }
+                
                 if (!settings.wordCount || settings.wordCount === 'undefined' || settings.wordCount === undefined) {
                     alert('Не указано количество слов для генерации кроссворда');
                     this.showDashboard();

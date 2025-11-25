@@ -20,7 +20,7 @@ class ManualCrosswordManager {
         });
 
         // Кнопка создания кроссворда
-        document.getElementById('create-crossword-btn').addEventListener('click', () => {
+        document.getElementById('create-manual-crossword-btn').addEventListener('click', () => {
             this.createCrossword();
         });
 
@@ -160,7 +160,7 @@ class ManualCrosswordManager {
     updateStatus() {
         const countElement = document.getElementById('selected-words-count');
         const statusElement = document.getElementById('chain-status');
-        const createBtn = document.getElementById('create-crossword-btn');
+        const createBtn = document.getElementById('create-manual-crossword-btn');
 
         countElement.textContent = this.selectedWords.length;
 

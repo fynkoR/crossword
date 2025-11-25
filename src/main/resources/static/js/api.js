@@ -230,6 +230,12 @@ class ApiService {
         });
     }
 
+    static async deleteCrossword(id) {
+        return this.request(`/crosswords/${id}`, {
+            method: 'DELETE',
+        });
+    }
+
     // Игры
     static async startGame(crosswordId, userId) {
         return this.request('/games', {

@@ -70,6 +70,17 @@ body {
     color: white;
 }
 
+.btn-danger {
+    background: var(--error-color);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
 /* Навбар */
 .navbar {
     background: white;
