@@ -138,6 +138,10 @@ class DictionaryManager {
             // Переключаемся на вкладку слов
             this.switchDictionaryTab('words');
             
+            // Устанавливаем начальную сортировку
+            this.currentSortType = 'alphabet-asc';
+            document.getElementById('sort-select').value = 'alphabet-asc';
+            
             // Загружаем слова
             await this.loadWords(id);
             

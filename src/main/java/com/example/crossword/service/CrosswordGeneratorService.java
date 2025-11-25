@@ -110,9 +110,9 @@ public class CrosswordGeneratorService {
      * Проверяет ВСЕ варианты, но останавливается на первой найденной цепочке нужной длины
      */
     private List<Word> findWordChain(List<Word> allWords, int count) {
-        // Сортируем слова по ID для детерминированности
+        // Перемешиваем слова для случайного выбора первого слова
         List<Word> words = new ArrayList<>(allWords);
-        words.sort(Comparator.comparing(Word::getId));
+        Collections.shuffle(words);
         
         // Строим граф связей между словами
         Map<Long, List<Word>> graph = buildWordGraph(words);
