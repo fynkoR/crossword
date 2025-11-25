@@ -1,6 +1,7 @@
 // Управление словарями
 class DictionaryManager {
     constructor() {
+        console.log('[DictionaryManager] Constructor called');
         this.currentDictionaryId = null;
         this.currentWords = [];
         this.currentSortBy = null;
@@ -8,6 +9,8 @@ class DictionaryManager {
     }
 
     init() {
+        console.log('DictionaryManager: init() called');
+        
         // Кнопка назад
         document.getElementById('back-to-dashboard').addEventListener('click', () => {
             this.showDashboard();
@@ -59,12 +62,15 @@ class DictionaryManager {
         });
 
         // Обработчик изменения сортировки через делегирование событий
+        // Используем делегирование, так как элемент может быть создан динамически
         document.addEventListener('change', (e) => {
             if (e.target && e.target.id === 'sort-select') {
-                console.log('Sort select changed via delegation:', e.target.value);
+                console.log('[DELEGATION] Sort select changed:', e.target.value);
                 this.handleSortChange(e.target.value);
             }
         });
+        
+        console.log('DictionaryManager: init() completed');
     }
 
     showDashboard() {
@@ -131,77 +137,91 @@ class DictionaryManager {
     }
 
     async openDictionary(id) {
+        console.log('[openDictionary] Opening dictionary with id:', id);
         this.currentDictionaryId = id;
         
         try {
             const dictionary = await ApiService.getDictionary(id);
+            console.log('[openDictionary] Dictionary loaded:', dictionary.title);
             document.getElementById('dictionary-detail-title').textContent = dictionary.title;
             
             // Переключаемся на вкладку слов
             this.switchDictionaryTab('words');
+            console.log('[openDictionary] Switched to words tab');
             
             // Сбрасываем сортировку при открытии словаря
             this.currentSortBy = null;
             const sortSelect = document.getElementById('sort-select');
+            console.log('[openDictionary] sort-select element found:', !!sortSelect);
+            
             if (sortSelect) {
                 sortSelect.value = '';
-                // Удаляем старый обработчик, если есть
+                console.log('[openDictionary] Sort select value reset to empty');
+                
+                // Удаляем старый обработчик, если есть, и добавляем новый
                 const newSortSelect = sortSelect.cloneNode(true);
                 sortSelect.parentNode.replaceChild(newSortSelect, sortSelect);
+                console.log('[openDictionary] Sort select element cloned and replaced');
                 
                 // Добавляем прямой обработчик
                 newSortSelect.addEventListener('change', (e) => {
-                    console.log('Sort select changed via direct handler:', e.target.value);
+                    console.log('[DIRECT HANDLER] Sort select changed:', e.target.value);
                     this.handleSortChange(e.target.value);
                 });
+                console.log('[openDictionary] Direct change handler attached to sort-select');
+            } else {
+                console.warn('[openDictionary] sort-select element NOT FOUND!');
             }
             
             // Загружаем слова
+            console.log('[openDictionary] Loading words...');
             await this.loadWords(id);
             
             // Показываем модальное окно
             document.getElementById('dictionary-detail-modal').classList.add('active');
+            console.log('[openDictionary] Modal opened');
         } catch (error) {
+            console.error('[openDictionary] Error:', error);
             alert('Ошибка загрузки словаря: ' + error.message);
         }
     }
 
     handleSortChange(sortValue) {
-        console.log('handleSortChange called with:', sortValue);
+        console.log('[handleSortChange] Called with value:', sortValue);
         this.currentSortBy = sortValue || null;
-        console.log('Current sortBy:', this.currentSortBy);
-        console.log('Current dictionaryId:', this.currentDictionaryId);
+        console.log('[handleSortChange] Current sortBy:', this.currentSortBy);
+        console.log('[handleSortChange] Current dictionaryId:', this.currentDictionaryId);
         
         if (this.currentDictionaryId) {
-            console.log('Loading words with sort:', this.currentSortBy);
+            console.log('[handleSortChange] Loading words with sort:', this.currentSortBy);
             this.loadWords(this.currentDictionaryId);
         } else {
-            console.warn('No dictionary ID, cannot load words');
+            console.warn('[handleSortChange] No dictionary ID, cannot load words');
         }
     }
 
     async loadWords(dictionaryId) {
         try {
-            console.log('loadWords called with dictionaryId:', dictionaryId, 'sortBy:', this.currentSortBy);
+            console.log('[loadWords] Called with dictionaryId:', dictionaryId, 'sortBy:', this.currentSortBy);
             // Загружаем слова с учетом текущей сортировки
             this.currentWords = await ApiService.getWordsFromDictionary(dictionaryId, this.currentSortBy);
-            console.log('Words loaded:', this.currentWords.length, 'words');
+            console.log('[loadWords] Words loaded from API:', this.currentWords.length, 'words');
             this.displayWords();
         } catch (error) {
-            console.error('Ошибка загрузки слов:', error);
+            console.error('[loadWords] Error loading words:', error);
             alert('Ошибка загрузки слов: ' + error.message);
         }
     }
 
     displayWords() {
-        console.log('displayWords() called');
+        console.log('[displayWords] Called');
         const container = document.getElementById('words-list');
         if (!container) {
-            console.error('words-list container not found in displayWords!');
+            console.error('[displayWords] words-list container NOT FOUND!');
             return;
         }
         
-        console.log('Container found, current words:', this.currentWords.length);
+        console.log('[displayWords] Container found, current words:', this.currentWords.length);
         container.innerHTML = '';
 
         if (this.currentWords.length === 0) {
@@ -371,5 +391,7 @@ class DictionaryManager {
 }
 
 // Глобальный экземпляр
+console.log('[DictionaryManager] Creating global instance...');
 const dictionaryManager = new DictionaryManager();
+console.log('[DictionaryManager] Global instance created:', dictionaryManager);
 
