@@ -7,6 +7,7 @@ import com.example.crossword.mapper.CrosswordMapper;
 import com.example.crossword.repository.CrosswordRepository;
 import com.example.crossword.repository.DictionaryRepository;
 import com.example.crossword.repository.GameRepository;
+import com.example.crossword.repository.WordRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,7 @@ public class CrosswordService {
     private final CrosswordRepository crosswordRepository;
     private final DictionaryRepository dictionaryRepository;
     private final GameRepository gameRepository;
+    private final WordRepository wordRepository;
     private final CrosswordMapper crosswordMapper;
     private final CrosswordJsonService crosswordJsonService;
     private final CrosswordGeneratorService crosswordGeneratorService;
@@ -32,12 +34,14 @@ public class CrosswordService {
     public CrosswordService(CrosswordRepository crosswordRepository,
                            DictionaryRepository dictionaryRepository,
                            GameRepository gameRepository,
+                           WordRepository wordRepository,
                            CrosswordMapper crosswordMapper,
                            CrosswordJsonService crosswordJsonService,
                            CrosswordGeneratorService crosswordGeneratorService) {
         this.crosswordRepository = crosswordRepository;
         this.dictionaryRepository = dictionaryRepository;
         this.gameRepository = gameRepository;
+        this.wordRepository = wordRepository;
         this.crosswordMapper = crosswordMapper;
         this.crosswordJsonService = crosswordJsonService;
         this.crosswordGeneratorService = crosswordGeneratorService;
@@ -296,6 +300,74 @@ public class CrosswordService {
         
         // Возвращаем детальную информацию
         return getCrosswordDetailById(savedCrossword.getId());
+    }
+
+    /**
+     * Создать кроссворд из выбранных слов (ручной режим)
+     */
+    public CrosswordDetailDto createManualCrossword(Long dictionaryId, List<Long> wordIds, String title) {
+        // Проверяем существование словаря
+        Dictionary dictionary = dictionaryRepository.findById(dictionaryId)
+                .orElseThrow(() -> new RuntimeException("Словарь с ID " + dictionaryId + " не найден"));
+
+        // Получаем слова по ID
+        List<com.example.crossword.enitity.Word> words = new java.util.ArrayList<>();
+        for (Long wordId : wordIds) {
+            com.example.crossword.enitity.Word word = wordRepository.findById(wordId)
+                    .orElseThrow(() -> new RuntimeException("Слово с ID " + wordId + " не найдено"));
+            words.add(word);
+        }
+
+        // Валидируем цепочку слов
+        validateWordChain(words);
+
+        // Генерируем сетку и размещаем слова
+        CrosswordGeneratorService.CrosswordGenerationResult result = 
+                crosswordGeneratorService.placeWordsInGrid(words);
+
+        // Создаем кроссворд
+        Crossword crossword = new Crossword();
+        crossword.setTitle(title);
+        crossword.setDictionary(dictionary);
+        crossword.setGrid_width(result.getGrid().getSize().getWidth());
+        crossword.setGrid_height(result.getGrid().getSize().getHeight());
+        
+        // Сериализуем данные
+        String gridJson = crosswordJsonService.serializeGridData(result.getGrid());
+        String wordsJson = crosswordJsonService.serializeWordsData(result.getWords());
+        crossword.setGrid_data(gridJson);
+        crossword.setWords_data(wordsJson);
+
+        Crossword savedCrossword = crosswordRepository.save(crossword);
+        
+        // Возвращаем детальную информацию
+        return getCrosswordDetailById(savedCrossword.getId());
+    }
+
+    /**
+     * Валидирует цепочку слов
+     */
+    private void validateWordChain(List<com.example.crossword.enitity.Word> words) {
+        if (words.size() < 3) {
+            throw new RuntimeException("Минимум 3 слова в цепочке");
+        }
+        if (words.size() > 10) {
+            throw new RuntimeException("Максимум 10 слов в цепочке");
+        }
+        
+        for (int i = 0; i < words.size() - 1; i++) {
+            String currentWord = words.get(i).getWord().toLowerCase();
+            String nextWord = words.get(i + 1).getWord().toLowerCase();
+            char lastLetter = currentWord.charAt(currentWord.length() - 1);
+            char firstLetter = nextWord.charAt(0);
+            
+            if (lastLetter != firstLetter) {
+                throw new RuntimeException(
+                    String.format("Слово '%s' должно начинаться с буквы '%c' (последняя буква слова '%s')",
+                        words.get(i + 1).getWord(), Character.toUpperCase(lastLetter), words.get(i).getWord())
+                );
+            }
+        }
     }
 
     /**

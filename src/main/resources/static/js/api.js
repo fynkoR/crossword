@@ -206,6 +206,13 @@ class ApiService {
         return this.request(`/crosswords/check-variants?dictionaryId=${dictionaryId}&minWords=${minWords}&maxWords=${maxWords}`);
     }
 
+    static async createManualCrossword(dictionaryId, wordIds, title) {
+        return this.request('/crosswords/create-manual', {
+            method: 'POST',
+            body: { dictionaryId, wordIds, title },
+        });
+    }
+
     // Игры
     static async startGame(crosswordId, userId) {
         return this.request('/games', {

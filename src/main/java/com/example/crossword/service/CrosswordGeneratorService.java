@@ -230,7 +230,7 @@ public class CrosswordGeneratorService {
     /**
      * Размещает слова в сетке кроссворда
      */
-    private CrosswordGenerationResult placeWordsInGrid(List<Word> words) {
+    public CrosswordGenerationResult placeWordsInGrid(List<Word> words) {
         if (words.isEmpty()) {
             throw new RuntimeException("Список слов пуст");
         }

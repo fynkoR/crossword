@@ -31,16 +31,21 @@ class GameManager {
         this.gameSettings = settings;
         
         try {
-            // Генерируем кроссворд из словаря
-            const title = `Кроссворд из словаря ${settings.dictionaryId}`;
-            this.crossword = await ApiService.generateCrossword(
-                settings.dictionaryId, 
-                settings.wordCount, 
-                title
-            );
+            // Если кроссворд уже создан (ручной режим), загружаем его
+            if (settings.crosswordId) {
+                this.crossword = await ApiService.getCrosswordDetail(settings.crosswordId);
+            } else {
+                // Генерируем кроссворд из словаря (автоматический режим)
+                const title = `Кроссворд из словаря ${settings.dictionaryId}`;
+                this.crossword = await ApiService.generateCrossword(
+                    settings.dictionaryId, 
+                    settings.wordCount, 
+                    title
+                );
+            }
             
             if (!this.crossword || !this.crossword.gridData || !this.crossword.wordsData) {
-                alert('Ошибка генерации кроссворда');
+                alert('Ошибка загрузки кроссворда');
                 this.showDashboard();
                 return;
             }

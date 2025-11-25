@@ -212,5 +212,36 @@ public class CrosswordController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    /**
+     * Создать кроссворд из выбранных слов (ручной режим)
+     * POST /crosswords/create-manual
+     */
+    @PostMapping("/create-manual")
+    public ResponseEntity<CrosswordDetailDto> createManualCrossword(@RequestBody java.util.Map<String, Object> request) {
+        try {
+            Long dictionaryId = Long.valueOf(request.get("dictionaryId").toString());
+            @SuppressWarnings("unchecked")
+            java.util.List<Integer> wordIdsList = (java.util.List<Integer>) request.get("wordIds");
+            java.util.List<Long> wordIds = wordIdsList.stream()
+                    .map(Long::valueOf)
+                    .collect(java.util.stream.Collectors.toList());
+            String title = request.get("title").toString();
+            
+            logger.info("POST /crosswords/create-manual - Создание ручного кроссворда из словаря {}, слов: {}", dictionaryId, wordIds.size());
+            CrosswordDetailDto crossword = crosswordService.createManualCrossword(dictionaryId, wordIds, title);
+            logger.info("Ручной кроссворд успешно создан с ID: {}", crossword.getId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(crossword);
+        } catch (RuntimeException e) {
+            logger.error("Ошибка при создании ручного кроссворда: {}", e.getMessage());
+            java.util.Map<String, String> errorResponse = new java.util.HashMap<>();
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        } catch (Exception e) {
+            logger.error("Непредвиденная ошибка при создании ручного кроссворда: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }
 

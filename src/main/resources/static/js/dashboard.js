@@ -79,10 +79,45 @@ class DashboardManager {
     }
 
     onDictionarySelected(dictionaryId) {
+        const modeSelect = document.getElementById('mode-select');
+        const autoModeSettings = document.getElementById('auto-mode-settings');
         const wordCountSelect = document.getElementById('word-count-select');
         const statusDiv = document.getElementById('variants-status');
         
-        // Активируем селект количества слов
+        // Активируем селект режима
+        modeSelect.disabled = false;
+        modeSelect.value = '';
+        
+        // Скрываем настройки автоматического режима
+        autoModeSettings.style.display = 'none';
+        document.getElementById('start-game-btn').disabled = true;
+        
+        // Сохраняем ID словаря
+        this.selectedDictionaryId = dictionaryId;
+        
+        // Добавляем обработчик изменения режима
+        modeSelect.removeEventListener('change', this.handleModeChange);
+        this.handleModeChange = (e) => {
+            const mode = e.target.value;
+            if (mode === 'auto') {
+                this.showAutoModeSettings(dictionaryId);
+            } else if (mode === 'manual') {
+                this.showManualMode(dictionaryId);
+            } else {
+                autoModeSettings.style.display = 'none';
+                document.getElementById('start-game-btn').disabled = true;
+            }
+        };
+        modeSelect.addEventListener('change', this.handleModeChange);
+    }
+
+    showAutoModeSettings(dictionaryId) {
+        const autoModeSettings = document.getElementById('auto-mode-settings');
+        const wordCountSelect = document.getElementById('word-count-select');
+        const statusDiv = document.getElementById('variants-status');
+        
+        // Показываем настройки автоматического режима
+        autoModeSettings.style.display = 'block';
         wordCountSelect.disabled = false;
         wordCountSelect.innerHTML = '';
         
@@ -105,15 +140,12 @@ class DashboardManager {
         statusDiv.innerHTML = '';
         document.getElementById('start-game-btn').disabled = true;
         
-        // Сохраняем ID словаря
-        this.selectedDictionaryId = dictionaryId;
-        
         // Добавляем обработчик изменения количества слов
         wordCountSelect.removeEventListener('change', this.handleWordCountChange);
         this.handleWordCountChange = (e) => {
             const wordCount = parseInt(e.target.value);
             if (wordCount) {
-                this.checkVariantForWordCount(this.selectedDictionaryId, wordCount);
+                this.checkVariantForWordCount(dictionaryId, wordCount);
             } else {
                 // Если выбрана пустая опция, сбрасываем статус
                 statusDiv.innerHTML = '';
@@ -123,10 +155,30 @@ class DashboardManager {
         wordCountSelect.addEventListener('change', this.handleWordCountChange);
     }
 
+    showManualMode(dictionaryId) {
+        // Скрываем настройки автоматического режима
+        document.getElementById('auto-mode-settings').style.display = 'none';
+        document.getElementById('start-game-btn').disabled = true;
+        
+        // Переходим к экрану ручного составления
+        document.getElementById('dashboard-screen').classList.remove('active');
+        document.getElementById('manual-crossword-screen').classList.add('active');
+        
+        // Инициализируем ручное составление
+        if (typeof manualCrosswordManager !== 'undefined') {
+            manualCrosswordManager.start(dictionaryId);
+        }
+    }
+
     resetWordCountSelect() {
+        const modeSelect = document.getElementById('mode-select');
+        const autoModeSettings = document.getElementById('auto-mode-settings');
         const wordCountSelect = document.getElementById('word-count-select');
         const statusDiv = document.getElementById('variants-status');
         
+        modeSelect.disabled = true;
+        modeSelect.value = '';
+        autoModeSettings.style.display = 'none';
         wordCountSelect.disabled = true;
         wordCountSelect.innerHTML = '<option value="">Сначала выберите словарь</option>';
         statusDiv.innerHTML = '';

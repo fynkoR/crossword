@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="styles/auth.css">
     <link rel="stylesheet" href="styles/dashboard.css">
     <link rel="stylesheet" href="styles/dictionary.css">
+    <link rel="stylesheet" href="styles/manual-crossword.css">
     <link rel="stylesheet" href="styles/game.css">
 </head>
 <body>
@@ -101,12 +102,23 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="word-count-select">Количество слов:</label>
-                    <select id="word-count-select" class="form-control" disabled>
+                    <label for="mode-select">Режим составления:</label>
+                    <select id="mode-select" class="form-control" disabled>
                         <option value="">Сначала выберите словарь</option>
+                        <option value="auto">Автоматический</option>
+                        <option value="manual">Ручной</option>
                     </select>
                 </div>
-                <div id="variants-status" class="variants-status"></div>
+                <!-- Автоматический режим -->
+                <div id="auto-mode-settings" style="display: none;">
+                    <div class="form-group">
+                        <label for="word-count-select">Количество слов:</label>
+                        <select id="word-count-select" class="form-control" disabled>
+                            <option value="">Выберите количество слов</option>
+                        </select>
+                    </div>
+                    <div id="variants-status" class="variants-status"></div>
+                </div>
                 <button id="start-game-btn" class="btn btn-primary" disabled>Начать игру</button>
             </div>
         </div>
@@ -212,6 +224,50 @@
         </div>
     </div>
 
+    <!-- Экран ручного составления кроссворда -->
+    <div id="manual-crossword-screen" class="screen">
+        <nav class="navbar">
+            <div class="navbar-brand">✏️ Ручное составление кроссворда</div>
+            <button id="back-from-manual" class="btn btn-secondary">← Назад</button>
+        </nav>
+        
+        <div class="manual-crossword-container">
+            <div class="manual-crossword-header">
+                <h2>Составьте цепочку слов</h2>
+                <p>Выберите слова так, чтобы последняя буква предыдущего слова совпадала с первой буквой следующего</p>
+            </div>
+            
+            <div class="manual-crossword-content">
+                <div class="word-chain-section">
+                    <h3>Цепочка слов</h3>
+                    <div id="word-chain-display" class="word-chain-display">
+                        <p class="empty-chain">Цепочка пуста. Выберите первое слово.</p>
+                    </div>
+                    <div class="chain-info">
+                        <span>Выбрано слов: <strong id="selected-words-count">0</strong> / <strong>10</strong></span>
+                        <span class="chain-status" id="chain-status"></span>
+                    </div>
+                </div>
+                
+                <div class="word-selection-section">
+                    <h3 id="word-selection-title">Выберите первое слово</h3>
+                    <div id="available-words-list" class="available-words-list">
+                        <!-- Слова будут загружены динамически -->
+                    </div>
+                    <div id="no-words-message" class="no-words-message" style="display: none;">
+                        <p>Нет доступных слов для продолжения цепочки</p>
+                        <button id="remove-last-word-btn" class="btn btn-secondary">Удалить последнее слово</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="manual-crossword-actions">
+                <button id="clear-chain-btn" class="btn btn-secondary">Очистить цепочку</button>
+                <button id="create-crossword-btn" class="btn btn-primary" disabled>Создать кроссворд</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Экран игры -->
     <div id="game-screen" class="screen">
         <nav class="navbar">
@@ -273,6 +329,7 @@
     <script src="js/auth.js"></script>
     <script src="js/dashboard.js"></script>
     <script src="js/dictionary.js"></script>
+    <script src="js/manual-crossword.js"></script>
     <script src="js/game.js"></script>
     <script src="js/main.js"></script>
 </body>
