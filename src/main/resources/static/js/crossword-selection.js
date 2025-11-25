@@ -130,8 +130,29 @@ class CrosswordSelectionManager {
             dictionaryInfo.className = 'info-item';
             dictionaryInfo.innerHTML = `<strong>Словарь:</strong> ${crossword.dictionary?.title || 'N/A'}`;
             
+            // Определяем тип кроссворда из названия
+            const isManual = crossword.title && crossword.title.includes('(Ручной)');
+            const isAuto = crossword.title && crossword.title.includes('(Автоматический)');
+            const typeInfo = document.createElement('span');
+            typeInfo.className = 'info-item';
+            if (isManual) {
+                typeInfo.innerHTML = '<strong>Тип:</strong> <span style="color: #3b82f6;">Ручной</span>';
+            } else if (isAuto) {
+                typeInfo.innerHTML = '<strong>Тип:</strong> <span style="color: #10b981;">Автоматический</span>';
+            } else {
+                typeInfo.innerHTML = '<strong>Тип:</strong> Не указан';
+            }
+            
+            if (crossword.maxHints !== null && crossword.maxHints !== undefined) {
+                const hintsInfo = document.createElement('span');
+                hintsInfo.className = 'info-item';
+                hintsInfo.innerHTML = `<strong>Подсказок:</strong> ${crossword.maxHints}`;
+                info.appendChild(hintsInfo);
+            }
+            
             info.appendChild(gridSize);
             info.appendChild(dictionaryInfo);
+            info.appendChild(typeInfo);
             
             const actions = document.createElement('div');
             actions.className = 'crossword-actions';
@@ -210,11 +231,107 @@ class CrosswordSelectionManager {
 
     async showCrosswordDetails(crosswordId) {
         try {
-            const crossword = await ApiService.getCrosswordDetail(crosswordId);
-            alert(`Кроссворд: ${crossword.title}\nСлов: ${crossword.wordsData?.words?.length || 0}`);
+            // Загружаем детали кроссворда и статистику параллельно
+            const [crossword, statistics] = await Promise.all([
+                ApiService.getCrosswordDetail(crosswordId),
+                ApiService.getCrosswordStatistics(crosswordId)
+            ]);
+
+            // Заполняем модальное окно
+            const modal = document.getElementById('crossword-details-modal');
+            const titleEl = document.getElementById('crossword-details-title');
+            const bodyEl = document.getElementById('crossword-details-body');
+
+            titleEl.textContent = crossword.title || 'Без названия';
+
+            // Формируем HTML с деталями
+            let detailsHTML = '<div class="crossword-details">';
+            
+            // Основная информация
+            detailsHTML += '<div class="detail-section">';
+            detailsHTML += '<h3>Основная информация</h3>';
+            detailsHTML += `<div class="detail-item"><strong>ID:</strong> ${crossword.id || 'N/A'}</div>`;
+            detailsHTML += `<div class="detail-item"><strong>Название:</strong> ${crossword.title || 'Без названия'}</div>`;
+            detailsHTML += `<div class="detail-item"><strong>Размер сетки:</strong> ${crossword.gridWidth || 'N/A'} × ${crossword.gridHeight || 'N/A'}</div>`;
+            detailsHTML += `<div class="detail-item"><strong>Максимум подсказок:</strong> ${crossword.maxHints !== null && crossword.maxHints !== undefined ? crossword.maxHints : 'Не указано'}</div>`;
+            detailsHTML += '</div>';
+
+            // Информация о словаре
+            detailsHTML += '<div class="detail-section">';
+            detailsHTML += '<h3>Словарь</h3>';
+            if (crossword.dictionary) {
+                detailsHTML += `<div class="detail-item"><strong>ID словаря:</strong> ${crossword.dictionary.id || 'N/A'}</div>`;
+                detailsHTML += `<div class="detail-item"><strong>Название словаря:</strong> ${crossword.dictionary.title || 'N/A'}</div>`;
+                if (crossword.dictionary.description) {
+                    detailsHTML += `<div class="detail-item"><strong>Описание:</strong> ${crossword.dictionary.description}</div>`;
+                }
+            } else {
+                detailsHTML += '<div class="detail-item">Словарь не указан</div>';
+            }
+            detailsHTML += '</div>';
+
+            // Информация о словах
+            detailsHTML += '<div class="detail-section">';
+            detailsHTML += '<h3>Слова в кроссворде</h3>';
+            const wordsCount = crossword.wordsData?.words?.length || 0;
+            detailsHTML += `<div class="detail-item"><strong>Количество слов:</strong> ${wordsCount}</div>`;
+            if (statistics && statistics.wordsCount !== undefined) {
+                detailsHTML += `<div class="detail-item"><strong>Слов в кроссворде (из статистики):</strong> ${statistics.wordsCount}</div>`;
+            }
+            detailsHTML += '</div>';
+
+            // Статистика игр
+            detailsHTML += '<div class="detail-section">';
+            detailsHTML += '<h3>Статистика игр</h3>';
+            if (statistics) {
+                detailsHTML += `<div class="detail-item"><strong>Всего попыток:</strong> ${statistics.gamesCount || 0}</div>`;
+                detailsHTML += `<div class="detail-item"><strong>Завершенных игр:</strong> ${statistics.completedGamesCount || 0}</div>`;
+                const completionRate = statistics.gamesCount > 0 
+                    ? ((statistics.completedGamesCount / statistics.gamesCount) * 100).toFixed(1) 
+                    : '0';
+                detailsHTML += `<div class="detail-item"><strong>Процент завершения:</strong> ${completionRate}%</div>`;
+            } else {
+                detailsHTML += '<div class="detail-item">Статистика недоступна</div>';
+            }
+            detailsHTML += '</div>';
+
+            // Дополнительная информация
+            detailsHTML += '<div class="detail-section">';
+            detailsHTML += '<h3>Дополнительная информация</h3>';
+            if (crossword.wordsData && crossword.wordsData.words && crossword.wordsData.words.length > 0) {
+                detailsHTML += '<div class="detail-item"><strong>Список слов:</strong></div>';
+                detailsHTML += '<ul class="words-list">';
+                crossword.wordsData.words.forEach((word, index) => {
+                    detailsHTML += `<li>${index + 1}. ${word.text || 'N/A'} - ${word.definition || 'Без определения'}</li>`;
+                });
+                detailsHTML += '</ul>';
+            }
+            detailsHTML += '</div>';
+
+            detailsHTML += '</div>';
+
+            bodyEl.innerHTML = detailsHTML;
+
+            // Показываем модальное окно
+            modal.classList.add('active');
+
+            // Обработчик закрытия
+            const closeBtn = document.getElementById('close-crossword-details-modal');
+            const closeHandler = () => {
+                modal.classList.remove('active');
+                closeBtn.removeEventListener('click', closeHandler);
+            };
+            closeBtn.addEventListener('click', closeHandler);
+
+            // Закрытие по клику вне модального окна
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
         } catch (error) {
             console.error('Ошибка загрузки деталей кроссворда:', error);
-            alert('Ошибка загрузки деталей кроссворда');
+            alert('Ошибка загрузки деталей кроссворда: ' + (error.message || 'Неизвестная ошибка'));
         }
     }
 

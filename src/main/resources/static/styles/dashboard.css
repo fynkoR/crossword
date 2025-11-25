@@ -253,6 +253,114 @@
     margin-bottom: 24px;
 }
 
+/* Модальное окно деталей кроссворда */
+.crossword-details {
+    padding: 20px 0;
+}
+
+.detail-section {
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.detail-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.detail-section h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+.detail-item {
+    margin-bottom: 12px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+.detail-item strong {
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-right: 8px;
+}
+
+.words-list {
+    margin-top: 12px;
+    padding-left: 20px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.words-list li {
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 24px;
+    color: var(--text-primary);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 32px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+}
+
+.modal-close:hover {
+    color: var(--text-primary);
+}
+
+.modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
 @media (max-width: 768px) {
     .selection-header {
         flex-direction: column;
@@ -266,6 +374,11 @@
     
     .crosswords-grid {
         grid-template-columns: 1fr;
+    }
+    
+    .modal-content.large {
+        width: 95%;
+        max-width: 95%;
     }
 }
 

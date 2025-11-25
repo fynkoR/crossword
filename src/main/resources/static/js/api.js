@@ -196,6 +196,10 @@ class ApiService {
         return this.request(`/crosswords/${id}/detail`);
     }
 
+    static async getCrosswordStatistics(id) {
+        return this.request(`/crosswords/${id}/statistics`);
+    }
+
     static async generateCrossword(dictionaryId, wordCount, title, maxHints = null) {
         // Валидация параметров
         if (!dictionaryId) {
