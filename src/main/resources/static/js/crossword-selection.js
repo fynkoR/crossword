@@ -230,6 +230,35 @@ class CrosswordSelectionManager {
     }
 
     async showCrosswordDetails(crosswordId) {
+        // Сразу открываем модальное окно с индикатором загрузки
+        const modal = document.getElementById('crossword-details-modal');
+        const titleEl = document.getElementById('crossword-details-title');
+        const bodyEl = document.getElementById('crossword-details-body');
+
+        // Показываем модальное окно сразу
+        modal.classList.add('active');
+        
+        // Показываем индикатор загрузки
+        titleEl.textContent = 'Загрузка...';
+        bodyEl.innerHTML = '<div style="text-align: center; padding: 40px;"><div class="loading-spinner" style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div><p style="margin-top: 16px; color: var(--text-secondary);">Загрузка информации о кроссворде...</p></div>';
+
+        // Обработчик закрытия (добавляем сразу)
+        const closeBtn = document.getElementById('close-crossword-details-modal');
+        const closeHandler = () => {
+            modal.classList.remove('active');
+            closeBtn.removeEventListener('click', closeHandler);
+        };
+        closeBtn.addEventListener('click', closeHandler);
+
+        // Закрытие по клику вне модального окна
+        const modalClickHandler = (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+                modal.removeEventListener('click', modalClickHandler);
+            }
+        };
+        modal.addEventListener('click', modalClickHandler);
+
         try {
             // Загружаем детали кроссворда и статистику параллельно
             const [crossword, statistics] = await Promise.all([
@@ -237,11 +266,7 @@ class CrosswordSelectionManager {
                 ApiService.getCrosswordStatistics(crosswordId)
             ]);
 
-            // Заполняем модальное окно
-            const modal = document.getElementById('crossword-details-modal');
-            const titleEl = document.getElementById('crossword-details-title');
-            const bodyEl = document.getElementById('crossword-details-body');
-
+            // Обновляем заголовок
             titleEl.textContent = crossword.title || 'Без названия';
 
             // Формируем HTML с деталями
@@ -311,27 +336,18 @@ class CrosswordSelectionManager {
             detailsHTML += '</div>';
 
             bodyEl.innerHTML = detailsHTML;
-
-            // Показываем модальное окно
-            modal.classList.add('active');
-
-            // Обработчик закрытия
-            const closeBtn = document.getElementById('close-crossword-details-modal');
-            const closeHandler = () => {
-                modal.classList.remove('active');
-                closeBtn.removeEventListener('click', closeHandler);
-            };
-            closeBtn.addEventListener('click', closeHandler);
-
-            // Закрытие по клику вне модального окна
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.classList.remove('active');
-                }
-            });
         } catch (error) {
             console.error('Ошибка загрузки деталей кроссворда:', error);
-            alert('Ошибка загрузки деталей кроссворда: ' + (error.message || 'Неизвестная ошибка'));
+            
+            // Показываем ошибку в модальном окне
+            titleEl.textContent = 'Ошибка загрузки';
+            bodyEl.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <p style="color: var(--error-color); margin-bottom: 16px;">Не удалось загрузить информацию о кроссворде</p>
+                    <p style="color: var(--text-secondary); font-size: 14px;">${error.message || 'Неизвестная ошибка'}</p>
+                    <button class="btn btn-secondary" style="margin-top: 20px;" onclick="document.getElementById('crossword-details-modal').classList.remove('active')">Закрыть</button>
+                </div>
+            `;
         }
     }
 
