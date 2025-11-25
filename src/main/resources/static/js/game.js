@@ -36,6 +36,11 @@ class GameManager {
                 this.crossword = await ApiService.getCrosswordDetail(settings.crosswordId);
             } else {
                 // Генерируем кроссворд из словаря (автоматический режим)
+                if (!settings.wordCount) {
+                    alert('Не указано количество слов для генерации кроссворда');
+                    this.showDashboard();
+                    return;
+                }
                 const title = `Кроссворд из словаря ${settings.dictionaryId}`;
                 this.crossword = await ApiService.generateCrossword(
                     settings.dictionaryId, 
@@ -452,8 +457,24 @@ class GameManager {
 
     restartGame() {
         document.getElementById('game-complete-modal').classList.remove('active');
-        if (this.gameSettings) {
-            this.startGame(this.gameSettings);
+        
+        // Если это был ручной кроссворд, возвращаемся на дашборд
+        if (this.gameSettings && this.gameSettings.isManual) {
+            this.showDashboard();
+            return;
+        }
+        
+        // Для автоматического режима создаем новый кроссворд с теми же настройками
+        if (this.gameSettings && this.gameSettings.wordCount) {
+            // Убираем старый crosswordId, чтобы создать новый
+            const newSettings = {
+                dictionaryId: this.gameSettings.dictionaryId,
+                wordCount: this.gameSettings.wordCount
+            };
+            this.startGame(newSettings);
+        } else {
+            // Если настроек нет или они некорректны, возвращаемся на дашборд
+            this.showDashboard();
         }
     }
 

@@ -213,7 +213,8 @@ class ManualCrosswordManager {
             if (typeof gameManager !== 'undefined') {
                 gameManager.startGame({
                     dictionaryId: this.dictionaryId,
-                    crosswordId: crossword.id
+                    crosswordId: crossword.id,
+                    isManual: true  // Явно указываем, что это ручной режим
                 });
             }
         } catch (error) {
