@@ -250,16 +250,40 @@
         </div>
     </div>
 
-    <!-- Экран выбора кроссворда -->
-    <div id="crossword-selection-screen" class="screen">
+    <!-- Экран выбора игры (простой список для игры) -->
+    <div id="play-selection-screen" class="screen">
         <nav class="navbar">
-            <div class="navbar-brand">📋 Выбор кроссворда</div>
-            <button id="back-from-selection" class="btn btn-secondary">← Назад</button>
+            <div class="navbar-brand">🎮 Выбор кроссворда</div>
+            <button id="back-from-play-selection" class="btn btn-secondary">← Назад</button>
         </nav>
         
         <div class="crossword-selection-container">
             <div class="selection-header">
                 <h1>Выберите кроссворд для игры</h1>
+            </div>
+            
+            <div id="play-crosswords-list" class="crosswords-grid">
+                <!-- Кроссворды будут загружены динамически -->
+            </div>
+            
+            <div id="no-play-crosswords-message" class="no-items-message" style="display: none;">
+                <p>Нет доступных кроссвордов</p>
+                <p style="color: var(--text-secondary); font-size: 14px;">Создайте кроссворд в разделе "Создать кроссворд"</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран управления кроссвордами -->
+    <div id="crossword-selection-screen" class="screen">
+        <nav class="navbar">
+            <div class="navbar-brand">📋 Управление кроссвордами</div>
+            <button id="back-from-selection" class="btn btn-secondary">← Назад</button>
+        </nav>
+        
+        <div class="crossword-selection-container">
+            <div class="selection-header">
+                <h1>Мои кроссворды</h1>
+                <button id="create-new-crossword-btn" class="btn btn-primary">+ Создать новый кроссворд</button>
             </div>
             
             <div class="selection-filters">
@@ -439,7 +463,8 @@
     <script src="js/crossword-creation.js?v=6"></script>
     <script src="js/manual-crossword.js?v=6"></script>
     <script src="js/game.js?v=9"></script>
-    <script src="js/crossword-selection.js?v=12"></script>
+    <script src="js/crossword-selection.js?v=13"></script>
+    <script src="js/play-selection.js?v=1"></script>
     <script src="js/main.js?v=6"></script>
 </body>
 </html>

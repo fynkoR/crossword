@@ -22,7 +22,7 @@ class DashboardManager {
         const playCard = document.getElementById('play-card');
         if (playCard) {
             playCard.addEventListener('click', () => {
-                this.showCrosswordSelection();
+                this.showPlaySelection();
             });
         }
 
@@ -36,7 +36,7 @@ class DashboardManager {
         const createCrosswordCard = document.getElementById('create-crossword-card');
         if (createCrosswordCard) {
             createCrosswordCard.addEventListener('click', () => {
-                this.showCrosswordCreation();
+                this.showCrosswordManagement();
             });
         }
     }
@@ -47,21 +47,21 @@ class DashboardManager {
         dictionaryManager.loadDictionaries();
     }
 
-    showCrosswordSelection() {
+    showPlaySelection() {
+        document.getElementById('dashboard-screen').classList.remove('active');
+        document.getElementById('play-selection-screen').classList.add('active');
+        
+        if (typeof playSelectionManager !== 'undefined') {
+            playSelectionManager.show();
+        }
+    }
+
+    showCrosswordManagement() {
         document.getElementById('dashboard-screen').classList.remove('active');
         document.getElementById('crossword-selection-screen').classList.add('active');
         
         if (typeof crosswordSelectionManager !== 'undefined') {
             crosswordSelectionManager.show();
-        }
-    }
-
-    showCrosswordCreation() {
-        document.getElementById('dashboard-screen').classList.remove('active');
-        document.getElementById('crossword-creation-screen').classList.add('active');
-        
-        if (typeof crosswordCreationManager !== 'undefined') {
-            crosswordCreationManager.show();
         }
     }
 }
