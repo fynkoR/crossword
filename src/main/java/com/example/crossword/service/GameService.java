@@ -172,8 +172,11 @@ public class GameService {
         CrosswordWords words = crosswordJsonService.parseWordsData(game.getCrossword().getWords_data());
         CrosswordGrid grid = crosswordJsonService.parseGridData(game.getCrossword().getGrid_data());
         
-        // Получаем случайную букву для подсказки
-        String hintData = getRandomHintLetter(words, grid);
+        // Получаем сохраненное состояние сетки (уже отгаданные буквы)
+        String gridState = game.getGrid_state();
+        
+        // Получаем случайную неотгаданную букву для подсказки
+        String hintData = getRandomHintLetter(words, grid, gridState);
         
         if (hintData == null || hintData.isEmpty()) {
             return createResult(false, "Нет доступных букв для подсказки", null, false, gameMapper.toDTO(game));
@@ -204,8 +207,35 @@ public class GameService {
     /**
      * Вспомогательные методы
      */
-    private String getRandomHintLetter(CrosswordWords words, CrosswordGrid grid) {
-        // Собираем все незаполненные клетки (где letter == null)
+    private String getRandomHintLetter(CrosswordWords words, CrosswordGrid grid, String gridState) {
+        // Парсим сохраненное состояние сетки для определения уже отгаданных клеток
+        java.util.Set<String> filledCells = new java.util.HashSet<>();
+        
+        if (gridState != null && !gridState.isEmpty()) {
+            try {
+                // gridState имеет формат: [{"x":1,"y":2,"letter":"А","isLocked":true},...]
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                com.fasterxml.jackson.databind.JsonNode stateArray = mapper.readTree(gridState);
+                
+                if (stateArray.isArray()) {
+                    for (com.fasterxml.jackson.databind.JsonNode cellNode : stateArray) {
+                        int x = cellNode.has("x") ? cellNode.get("x").asInt() : -1;
+                        int y = cellNode.has("y") ? cellNode.get("y").asInt() : -1;
+                        boolean isLocked = cellNode.has("isLocked") && cellNode.get("isLocked").asBoolean();
+                        String letter = cellNode.has("letter") ? cellNode.get("letter").asText() : null;
+                        
+                        // Если клетка заполнена (isLocked или есть буква), добавляем в set
+                        if (isLocked || (letter != null && !letter.isEmpty())) {
+                            filledCells.add(x + "," + y);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                // Если не удалось распарсить, продолжаем без учета состояния
+            }
+        }
+        
+        // Собираем все незаполненные клетки
         List<HintCell> availableCells = new java.util.ArrayList<>();
         
         for (CrosswordWords.CrosswordWord word : words.getWords()) {
@@ -215,9 +245,15 @@ public class GameService {
                     int x = word.getPositions().get(i);
                     int y = word.getPositions().get(i + 1);
                     
+                    // Проверяем, не заполнена ли уже эта клетка
+                    String cellKey = x + "," + y;
+                    if (filledCells.contains(cellKey)) {
+                        continue; // Клетка уже заполнена, пропускаем
+                    }
+                    
                     // Находим соответствующую клетку в сетке
                     CrosswordGrid.GridCell cell = findCell(grid, x, y);
-                    if (cell != null && cell.getLetter() == null && !cell.getIsBlack()) {
+                    if (cell != null && !cell.getIsBlack()) {
                         // Клетка пустая, можно использовать для подсказки
                         int letterIndex = i / 2;
                         if (letterIndex < wordText.length()) {
