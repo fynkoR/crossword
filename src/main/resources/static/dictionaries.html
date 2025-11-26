@@ -220,7 +220,14 @@
             try {
                 resultDiv.innerHTML = '<p>Импортирование...</p>';
                 const result = await ApiService.importDictionary(currentDictionaryId, file, skipDuplicates);
-                resultDiv.innerHTML = `<p class="success">Импортировано слов: ${result.imported || 0}</p>`;
+                let message = `<p class="success">Импортировано слов: ${result.successfullyImported || 0}</p>`;
+                if (result.skipped > 0) {
+                    message += `<p>Пропущено (дубликаты): ${result.skipped}</p>`;
+                }
+                if (result.failed > 0) {
+                    message += `<p class="error">Ошибок: ${result.failed}</p>`;
+                }
+                resultDiv.innerHTML = message;
                 await loadWords(currentDictionaryId);
             } catch (error) {
                 resultDiv.innerHTML = `<p class="error">Ошибка: ${error.message || 'Неизвестная ошибка'}</p>`;
