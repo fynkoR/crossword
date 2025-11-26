@@ -76,7 +76,7 @@
                 <div class="card" id="play-card">
                     <div class="card-icon">🎮</div>
                     <h3>Играть</h3>
-                    <p>Начать новую игру в линейный кроссворд</p>
+                    <p>Выбрать готовый кроссворд</p>
                 </div>
                 
                 <div class="card" id="dictionary-card">
@@ -85,41 +85,11 @@
                     <p>Управление словарями и словами</p>
                 </div>
                 
-                <div class="card" id="settings-card">
-                    <div class="card-icon">⚙️</div>
-                    <h3>Настройки</h3>
-                    <p>Настройки игры</p>
+                <div class="card" id="create-crossword-card">
+                    <div class="card-icon">✏️</div>
+                    <h3>Создать кроссворд</h3>
+                    <p>Автоматический или ручной режим</p>
                 </div>
-            </div>
-            
-            <!-- Настройки игры -->
-            <div id="game-settings" class="settings-panel" style="display: none;">
-                <h2>Настройки игры</h2>
-                <div class="form-group">
-                    <label for="dictionary-select">Выберите словарь:</label>
-                    <select id="dictionary-select" class="form-control">
-                        <option value="">Загрузка...</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="mode-select">Режим составления:</label>
-                    <select id="mode-select" class="form-control" disabled>
-                        <option value="">Сначала выберите словарь</option>
-                        <option value="auto">Автоматический</option>
-                        <option value="manual">Ручной</option>
-                    </select>
-                </div>
-                <!-- Автоматический режим -->
-                <div id="auto-mode-settings" style="display: none;">
-                    <div class="form-group">
-                        <label for="word-count-select">Количество слов:</label>
-                        <select id="word-count-select" class="form-control" disabled>
-                            <option value="">Выберите количество слов</option>
-                        </select>
-                    </div>
-                    <div id="variants-status" class="variants-status"></div>
-                </div>
-                <button id="start-game-btn" class="btn btn-primary" disabled>Начать игру</button>
             </div>
         </div>
     </div>

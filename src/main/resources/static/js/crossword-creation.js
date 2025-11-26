@@ -8,7 +8,7 @@ class CrosswordCreationManager {
     init() {
         // Кнопка назад
         document.getElementById('back-from-creation').addEventListener('click', () => {
-            this.showSelectionScreen();
+            this.showDashboard();
         });
 
         // Обработчик выбора словаря
