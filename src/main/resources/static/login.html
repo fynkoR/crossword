@@ -39,7 +39,12 @@
         // Проверяем, авторизован ли пользователь
         const currentUser = localStorage.getItem('currentUser');
         if (currentUser) {
-            window.location.href = 'dashboard.html';
+            const user = JSON.parse(currentUser);
+            if (user.isAdmin === true) {
+                window.location.href = 'admin-dashboard.html';
+            } else {
+                window.location.href = 'user-dashboard.html';
+            }
         }
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -53,7 +58,13 @@
             try {
                 const user = await ApiService.login(login, password);
                 localStorage.setItem('currentUser', JSON.stringify(user));
-                window.location.href = 'dashboard.html';
+                
+                // Редирект в зависимости от роли
+                if (user.isAdmin === true) {
+                    window.location.href = 'admin-dashboard.html';
+                } else {
+                    window.location.href = 'user-dashboard.html';
+                }
             } catch (error) {
                 errorDiv.textContent = error.message || 'Ошибка входа';
                 errorDiv.style.display = 'block';

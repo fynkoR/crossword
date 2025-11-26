@@ -45,12 +45,15 @@
 
     <script src="js/api.js"></script>
     <script>
-        // Проверяем авторизацию
+        // Проверяем авторизацию и права админа
         const currentUser = JSON.parse(localStorage.getItem('currentUser'));
         if (!currentUser) {
             window.location.href = 'login.html';
+        } else if (currentUser.isAdmin !== true) {
+            // Не админ - перенаправляем на пользовательскую панель
+            window.location.href = 'user-dashboard.html';
         } else {
-            document.getElementById('user-name').textContent = currentUser.login || 'Пользователь';
+            document.getElementById('user-name').textContent = currentUser.login || 'Администратор';
         }
 
         // Выход

@@ -8,7 +8,12 @@
         // Проверяем авторизацию и перенаправляем
         const currentUser = localStorage.getItem('currentUser');
         if (currentUser) {
-            window.location.href = 'dashboard.html';
+            const user = JSON.parse(currentUser);
+            if (user.isAdmin === true) {
+                window.location.href = 'admin-dashboard.html';
+            } else {
+                window.location.href = 'user-dashboard.html';
+            }
         } else {
             window.location.href = 'login.html';
         }
