@@ -320,9 +320,6 @@ class CrosswordSelectionManager {
             detailsHTML += '<h3>Слова в кроссворде</h3>';
             const wordsCount = crossword.wordsData?.words?.length || 0;
             detailsHTML += `<div class="detail-item"><strong>Количество слов:</strong> ${wordsCount}</div>`;
-            if (statistics && statistics.wordsCount !== undefined) {
-                detailsHTML += `<div class="detail-item"><strong>Слов в кроссворде (из статистики):</strong> ${statistics.wordsCount}</div>`;
-            }
             detailsHTML += '</div>';
 
             // Информация о создателе
