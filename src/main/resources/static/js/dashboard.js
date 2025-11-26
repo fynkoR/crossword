@@ -1,27 +1,44 @@
 // Управление главным экраном
 class DashboardManager {
     constructor() {
-        this.init();
+        // Отложенная инициализация после загрузки DOM
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.init());
+        } else {
+            this.init();
+        }
     }
 
     init() {
         // Кнопка выхода
-        document.getElementById('logout-btn').addEventListener('click', () => {
-            authManager.logout();
-        });
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                authManager.logout();
+            });
+        }
 
         // Карточки действий
-        document.getElementById('play-card').addEventListener('click', () => {
-            this.showCrosswordSelection();
-        });
+        const playCard = document.getElementById('play-card');
+        if (playCard) {
+            playCard.addEventListener('click', () => {
+                this.showCrosswordSelection();
+            });
+        }
 
-        document.getElementById('dictionary-card').addEventListener('click', () => {
-            this.showDictionaryScreen();
-        });
+        const dictionaryCard = document.getElementById('dictionary-card');
+        if (dictionaryCard) {
+            dictionaryCard.addEventListener('click', () => {
+                this.showDictionaryScreen();
+            });
+        }
 
-        document.getElementById('create-crossword-card').addEventListener('click', () => {
-            this.showCrosswordCreation();
-        });
+        const createCrosswordCard = document.getElementById('create-crossword-card');
+        if (createCrosswordCard) {
+            createCrosswordCard.addEventListener('click', () => {
+                this.showCrosswordCreation();
+            });
+        }
     }
 
     showDictionaryScreen() {

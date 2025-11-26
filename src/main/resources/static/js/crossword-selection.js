@@ -12,12 +12,7 @@ class CrosswordSelectionManager {
             this.showDashboard();
         });
 
-        // Кнопка создания нового кроссворда
-        document.getElementById('create-new-crossword-btn').addEventListener('click', () => {
-            this.showCreationScreen();
-        });
-
-        // Кнопка создания первого кроссворда
+        // Кнопка создания первого кроссворда (когда список пуст)
         const createFirstBtn = document.getElementById('create-first-crossword-btn');
         if (createFirstBtn) {
             createFirstBtn.addEventListener('click', () => {
