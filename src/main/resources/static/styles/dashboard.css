@@ -233,10 +233,18 @@
 .crossword-actions {
     display: flex;
     gap: 12px;
+    flex-wrap: wrap;
 }
 
-.crossword-actions .btn {
+.crossword-actions .btn-primary,
+.crossword-actions .btn-secondary {
     flex: 1;
+    min-width: 80px;
+}
+
+.crossword-actions .btn-danger {
+    flex: 0 0 auto;
+    padding: 12px 20px;
 }
 
 /* Контейнер для деталей кроссворда */

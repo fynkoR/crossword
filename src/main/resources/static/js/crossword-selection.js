@@ -267,6 +267,19 @@ class CrosswordSelectionManager {
     async toggleCrosswordDetails(crosswordId, detailBtn, crosswordCard) {
         const detailsContainer = document.getElementById(`crossword-details-${crosswordId}`);
         
+        // Закрываем все другие открытые детали
+        document.querySelectorAll('.crossword-details-container').forEach(container => {
+            if (container.id !== `crossword-details-${crosswordId}`) {
+                container.style.display = 'none';
+            }
+        });
+        
+        document.querySelectorAll('.crossword-card .btn-secondary').forEach(btn => {
+            if (btn.dataset.crosswordId && btn.dataset.crosswordId !== String(crosswordId)) {
+                btn.textContent = 'Детали';
+            }
+        });
+        
         // Если детали уже загружены и контейнер виден, просто скрываем/показываем
         if (detailsContainer.dataset.loaded === 'true') {
             const isVisible = detailsContainer.style.display !== 'none';
