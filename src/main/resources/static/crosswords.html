@@ -328,6 +328,7 @@
             crosswords.forEach(crossword => {
                 const card = document.createElement('div');
                 card.className = 'crossword-card';
+                card.id = `crossword-card-${crossword.id}`;
                 
                 const title = document.createElement('h3');
                 title.textContent = crossword.title || 'Без названия';
@@ -372,9 +373,7 @@
                 const detailBtn = document.createElement('button');
                 detailBtn.className = 'btn btn-secondary';
                 detailBtn.textContent = 'Детали';
-                detailBtn.addEventListener('click', () => {
-                    window.location.href = `crossword-detail.html?id=${crossword.id}`;
-                });
+                detailBtn.addEventListener('click', () => toggleDetails(crossword.id, card));
                 
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'btn btn-danger';
@@ -398,8 +397,78 @@
                 card.appendChild(info);
                 card.appendChild(actions);
                 
+                // Контейнер для деталей (скрыт по умолчанию)
+                const detailsContainer = document.createElement('div');
+                detailsContainer.className = 'crossword-details';
+                detailsContainer.id = `details-${crossword.id}`;
+                detailsContainer.style.display = 'none';
+                card.appendChild(detailsContainer);
+                
                 listContainer.appendChild(card);
             });
+        }
+
+        async function toggleDetails(crosswordId, cardElement) {
+            const detailsContainer = document.getElementById(`details-${crosswordId}`);
+            
+            // Закрываем все остальные открытые детали
+            document.querySelectorAll('.crossword-details').forEach(el => {
+                if (el.id !== `details-${crosswordId}`) {
+                    el.style.display = 'none';
+                    el.parentElement.classList.remove('expanded');
+                }
+            });
+            
+            // Переключаем текущий
+            if (detailsContainer.style.display === 'none') {
+                detailsContainer.innerHTML = '<div class="details-loading">Загрузка...</div>';
+                detailsContainer.style.display = 'block';
+                cardElement.classList.add('expanded');
+                
+                try {
+                    // Загружаем детальную информацию и статистику
+                    const [detail, stats] = await Promise.all([
+                        ApiService.getCrosswordDetail(crosswordId),
+                        ApiService.getCrosswordStatistics(crosswordId)
+                    ]);
+                    
+                    detailsContainer.innerHTML = `
+                        <div class="details-section">
+                            <h4>📊 Статистика</h4>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <span class="stat-value">${stats.totalGames || 0}</span>
+                                    <span class="stat-label">Всего игр</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value">${stats.completedGames || 0}</span>
+                                    <span class="stat-label">Завершено</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value">${stats.completionRate ? stats.completionRate.toFixed(1) : 0}%</span>
+                                    <span class="stat-label">Процент</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="details-section">
+                            <h4>📝 Слова в кроссворде</h4>
+                            <div class="words-list">
+                                ${detail.words && detail.words.length > 0 ? detail.words.map(w => `
+                                    <div class="word-item">
+                                        <span class="word-text">${w.word}</span>
+                                        <span class="word-definition">${w.definition || 'Без определения'}</span>
+                                    </div>
+                                `).join('') : '<p class="no-words">Нет данных о словах</p>'}
+                            </div>
+                        </div>
+                    `;
+                } catch (error) {
+                    detailsContainer.innerHTML = `<div class="details-error">Ошибка загрузки: ${error.message}</div>`;
+                }
+            } else {
+                detailsContainer.style.display = 'none';
+                cardElement.classList.remove('expanded');
+            }
         }
 
         // Загружаем данные при загрузке страницы
