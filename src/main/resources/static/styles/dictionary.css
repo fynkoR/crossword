@@ -162,11 +162,171 @@
 
 .import-result {
     margin-top: 24px;
-    padding: 16px;
-    border-radius: 8px;
-    background: var(--bg-color);
+    padding: 20px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid #e2e8f0;
 }
 
+.import-result:empty {
+    display: none;
+}
+
+/* Loading state */
+.import-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 20px;
+    color: var(--primary-color, #667eea);
+    font-weight: 500;
+}
+
+.loading-spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid #e2e8f0;
+    border-top-color: var(--primary-color, #667eea);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Success header */
+.import-success-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #059669;
+    margin-bottom: 16px;
+}
+
+.import-icon {
+    font-size: 24px;
+}
+
+/* Error header */
+.import-error-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #dc2626;
+    margin-bottom: 12px;
+}
+
+.import-error-message {
+    color: #991b1b;
+    background: #fef2f2;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border-left: 4px solid #dc2626;
+    margin: 0;
+}
+
+/* Stats grid */
+.import-stats {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.import-stat {
+    flex: 1;
+    text-align: center;
+    padding: 16px 12px;
+    border-radius: 10px;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: transform 0.2s ease;
+}
+
+.import-stat:hover {
+    transform: translateY(-2px);
+}
+
+.import-stat .stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 6px;
+}
+
+.import-stat .stat-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.8;
+}
+
+.import-stat.imported {
+    border-bottom: 3px solid #10b981;
+}
+
+.import-stat.imported .stat-value {
+    color: #059669;
+}
+
+.import-stat.imported .stat-label {
+    color: #047857;
+}
+
+.import-stat.skipped {
+    border-bottom: 3px solid #f59e0b;
+}
+
+.import-stat.skipped .stat-value {
+    color: #d97706;
+}
+
+.import-stat.skipped .stat-label {
+    color: #b45309;
+}
+
+.import-stat.failed {
+    border-bottom: 3px solid #ef4444;
+}
+
+.import-stat.failed .stat-value {
+    color: #dc2626;
+}
+
+.import-stat.failed .stat-label {
+    color: #b91c1c;
+}
+
+/* Progress bar */
+.import-progress-bar {
+    display: flex;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #e2e8f0;
+}
+
+.progress-imported {
+    background: linear-gradient(90deg, #10b981, #34d399);
+    transition: width 0.5s ease;
+}
+
+.progress-skipped {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    transition: width 0.5s ease;
+}
+
+.progress-failed {
+    background: linear-gradient(90deg, #ef4444, #f87171);
+    transition: width 0.5s ease;
+}
+
+/* Legacy support */
 .import-result.success {
     background: #d1fae5;
     color: var(--success-color);
@@ -175,32 +335,5 @@
 .import-result.error {
     background: #fee2e2;
     color: var(--error-color);
-}
-
-.import-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 16px;
-    margin-top: 16px;
-}
-
-.import-stat {
-    text-align: center;
-    padding: 12px;
-    background: white;
-    border-radius: 8px;
-}
-
-.import-stat-number {
-    font-size: 24px;
-    font-weight: bold;
-    color: var(--primary-color);
-    display: block;
-}
-
-.import-stat-label {
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin-top: 4px;
 }
 

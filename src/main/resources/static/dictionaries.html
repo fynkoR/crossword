@@ -218,19 +218,59 @@
             const resultDiv = document.getElementById('import-result');
             
             try {
-                resultDiv.innerHTML = '<p>Импортирование...</p>';
+                resultDiv.innerHTML = `
+                    <div class="import-loading">
+                        <div class="loading-spinner"></div>
+                        <span>Импортирование...</span>
+                    </div>
+                `;
                 const result = await ApiService.importDictionary(currentDictionaryId, file, skipDuplicates);
-                let message = `<p class="success">Импортировано слов: ${result.successfullyImported || 0}</p>`;
-                if (result.skipped > 0) {
-                    message += `<p>Пропущено (дубликаты): ${result.skipped}</p>`;
-                }
-                if (result.failed > 0) {
-                    message += `<p class="error">Ошибок: ${result.failed}</p>`;
-                }
-                resultDiv.innerHTML = message;
+                
+                const imported = result.successfullyImported || 0;
+                const skipped = result.skipped || 0;
+                const failed = result.failed || 0;
+                const total = imported + skipped + failed;
+                
+                resultDiv.innerHTML = `
+                    <div class="import-success-header">
+                        <span class="import-icon">✅</span>
+                        <span>Импорт завершён</span>
+                    </div>
+                    <div class="import-stats">
+                        <div class="import-stat imported">
+                            <div class="stat-value">${imported}</div>
+                            <div class="stat-label">Добавлено</div>
+                        </div>
+                        ${skipped > 0 ? `
+                        <div class="import-stat skipped">
+                            <div class="stat-value">${skipped}</div>
+                            <div class="stat-label">Пропущено</div>
+                        </div>
+                        ` : ''}
+                        ${failed > 0 ? `
+                        <div class="import-stat failed">
+                            <div class="stat-value">${failed}</div>
+                            <div class="stat-label">Ошибок</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                    ${total > 0 ? `
+                    <div class="import-progress-bar">
+                        <div class="progress-imported" style="width: ${(imported/total)*100}%"></div>
+                        <div class="progress-skipped" style="width: ${(skipped/total)*100}%"></div>
+                        <div class="progress-failed" style="width: ${(failed/total)*100}%"></div>
+                    </div>
+                    ` : ''}
+                `;
                 await loadWords(currentDictionaryId);
             } catch (error) {
-                resultDiv.innerHTML = `<p class="error">Ошибка: ${error.message || 'Неизвестная ошибка'}</p>`;
+                resultDiv.innerHTML = `
+                    <div class="import-error-header">
+                        <span class="import-icon">❌</span>
+                        <span>Ошибка импорта</span>
+                    </div>
+                    <p class="import-error-message">${error.message || 'Неизвестная ошибка'}</p>
+                `;
             }
         });
 
