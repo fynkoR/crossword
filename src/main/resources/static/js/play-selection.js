@@ -44,6 +44,29 @@ class PlaySelectionManager {
         noMessage.style.display = 'none';
         listContainer.innerHTML = '';
 
+        // Получаем текущего пользователя
+        const user = typeof authManager !== 'undefined' ? authManager.getCurrentUser() : null;
+        const userId = user && user.id ? user.id : null;
+
+        // Загружаем игры пользователя для расчета оставшихся подсказок
+        let userGames = [];
+        if (userId) {
+            try {
+                userGames = await ApiService.getUserGames(userId);
+            } catch (error) {
+                console.error('Ошибка загрузки игр пользователя:', error);
+            }
+        }
+        
+        // Создаем Map: crosswordId -> game (активная игра)
+        const userGamesMap = new Map();
+        userGames.forEach(game => {
+            // Берем только активные игры (не завершенные)
+            if (!game.gameOver) {
+                userGamesMap.set(game.crosswordId, game);
+            }
+        });
+
         // Загружаем статистику для всех кроссвордов параллельно
         const statsPromises = this.crosswords.map(async (crossword) => {
             try {
@@ -79,9 +102,14 @@ class PlaySelectionManager {
             dictionaryInfo.className = 'info-item';
             dictionaryInfo.innerHTML = `<strong>Словарь:</strong> ${crossword.dictionary?.title || 'N/A'}`;
             
+            // Оставшиеся подсказки
             const hintsInfo = document.createElement('span');
             hintsInfo.className = 'info-item';
-            hintsInfo.innerHTML = `<strong>Подсказок:</strong> ${crossword.maxHints !== null && crossword.maxHints !== undefined ? crossword.maxHints : 'N/A'}`;
+            const maxHints = crossword.maxHints !== null && crossword.maxHints !== undefined ? crossword.maxHints : 0;
+            const userGame = userGamesMap.get(crossword.id);
+            const hintsUsed = userGame ? (userGame.hintsUsed || 0) : 0;
+            const remainingHints = Math.max(0, maxHints - hintsUsed);
+            hintsInfo.innerHTML = `<strong>Подсказок осталось:</strong> ${remainingHints}`;
             
             // Информация о создателе
             const creatorInfo = document.createElement('span');

@@ -271,6 +271,10 @@ class ApiService {
         return this.request(`/games/${id}`);
     }
 
+    static async getUserGames(userId) {
+        return this.request(`/games/user/${userId}`);
+    }
+
     static async checkAnswer(gameId, wordId, answer) {
         return this.request(`/games/${gameId}/action`, {
             method: 'POST',
