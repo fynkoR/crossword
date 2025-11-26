@@ -23,14 +23,14 @@ class PlaySelectionManager {
     async loadCrosswords() {
         try {
             this.crosswords = await ApiService.getCrosswords();
-            this.renderCrosswords();
+            await this.renderCrosswords();
         } catch (error) {
             console.error('Ошибка загрузки кроссвордов:', error);
-            this.renderCrosswords();
+            await this.renderCrosswords();
         }
     }
 
-    renderCrosswords() {
+    async renderCrosswords() {
         const listContainer = document.getElementById('play-crosswords-list');
         const noMessage = document.getElementById('no-play-crosswords-message');
 
@@ -43,6 +43,23 @@ class PlaySelectionManager {
         listContainer.style.display = 'grid';
         noMessage.style.display = 'none';
         listContainer.innerHTML = '';
+
+        // Загружаем статистику для всех кроссвордов параллельно
+        const statsPromises = this.crosswords.map(async (crossword) => {
+            try {
+                const [detail, statistics] = await Promise.all([
+                    ApiService.getCrosswordDetail(crossword.id),
+                    ApiService.getCrosswordStatistics(crossword.id)
+                ]);
+                return { crosswordId: crossword.id, detail, statistics };
+            } catch (error) {
+                console.error(`Ошибка загрузки статистики для кроссворда ${crossword.id}:`, error);
+                return { crosswordId: crossword.id, detail: null, statistics: null };
+            }
+        });
+
+        const allStats = await Promise.all(statsPromises);
+        const statsMap = new Map(allStats.map(s => [s.crosswordId, s]));
 
         this.crosswords.forEach(crossword => {
             const card = document.createElement('div');
@@ -72,10 +89,30 @@ class PlaySelectionManager {
             const creatorName = crossword.createdByUserLogin || 'Неизвестен';
             creatorInfo.innerHTML = `<strong>Создатель:</strong> ${creatorName}`;
             
+            // Процент выполнения
+            const completionInfo = document.createElement('span');
+            completionInfo.className = 'info-item';
+            const statsData = statsMap.get(crossword.id);
+            let completionText = 'N/A';
+            
+            if (statsData && statsData.detail && statsData.statistics) {
+                const { detail, statistics } = statsData;
+                if (detail.gridData && detail.gridData.cells) {
+                    const totalLetters = detail.gridData.cells.filter(cell => !cell.isBlack).length;
+                    const guessedLetters = statistics.totalGuessedLetters || 0;
+                    const completionPercentage = totalLetters > 0 
+                        ? ((guessedLetters / totalLetters) * 100).toFixed(1)
+                        : '0';
+                    completionText = `${completionPercentage}%`;
+                }
+            }
+            completionInfo.innerHTML = `<strong>Выполнено:</strong> ${completionText}`;
+            
             info.appendChild(gridSize);
             info.appendChild(dictionaryInfo);
             info.appendChild(hintsInfo);
             info.appendChild(creatorInfo);
+            info.appendChild(completionInfo);
             
             const actions = document.createElement('div');
             actions.className = 'crossword-actions';
