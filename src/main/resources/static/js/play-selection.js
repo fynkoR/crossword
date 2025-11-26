@@ -70,8 +70,7 @@ class PlaySelectionManager {
             const creatorInfo = document.createElement('span');
             creatorInfo.className = 'info-item';
             const creatorName = crossword.createdByUserLogin || 'Неизвестен';
-            const creatorId = crossword.createdByUserId || 'N/A';
-            creatorInfo.innerHTML = `<strong>Создатель:</strong> ${creatorName} (ID: ${creatorId})`;
+            creatorInfo.innerHTML = `<strong>Создатель:</strong> ${creatorName}`;
             
             info.appendChild(gridSize);
             info.appendChild(dictionaryInfo);
