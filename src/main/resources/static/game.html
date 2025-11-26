@@ -213,6 +213,16 @@
                 });
             }
 
+            // Создаем карту номеров слов по первым клеткам
+            const wordNumberMap = new Map();
+            gameState.words.forEach((word, index) => {
+                if (word.positions && word.positions.length >= 2) {
+                    const startX = word.positions[0];
+                    const startY = word.positions[1];
+                    wordNumberMap.set(`${startX},${startY}`, index + 1);
+                }
+            });
+
             for (let y = 0; y < height; y++) {
                 const row = document.createElement('tr');
                 for (let x = 0; x < width; x++) {
@@ -226,10 +236,12 @@
                         cell.dataset.x = x;
                         cell.dataset.y = y;
 
-                        if (cellData.number) {
+                        // Проверяем номер слова для этой клетки
+                        const wordNumber = wordNumberMap.get(`${x},${y}`);
+                        if (wordNumber) {
                             const numberSpan = document.createElement('span');
                             numberSpan.className = 'cell-number';
-                            numberSpan.textContent = cellData.number;
+                            numberSpan.textContent = wordNumber;
                             cell.appendChild(numberSpan);
                         }
 
