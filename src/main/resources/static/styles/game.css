@@ -1,13 +1,14 @@
 /* Переопределяем фон для страницы игры */
 body {
-    background: var(--bg-color, #f8fafc) !important;
+    background: #f8fafc !important;
+    background-image: none !important;
 }
 
 .game-container {
     max-width: 1400px;
     margin: 0 auto;
     padding: 40px 20px;
-    background: var(--bg-color, #f8fafc);
+    background: #f8fafc;
     min-height: calc(100vh - 80px);
 }
 
