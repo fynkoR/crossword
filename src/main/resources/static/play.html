@@ -76,30 +76,34 @@
                 console.error('Ошибка загрузки игр пользователя:', error);
             }
             
-            // Создаем Map: crosswordId -> hintsUsed
-            const hintsUsedMap = new Map();
+            // Создаем Map: crosswordId -> { hintsUsed, gridState, gameOver, solvedWordsCount }
+            const userGameMap = new Map();
             userGames.forEach(game => {
                 const crosswordId = Number(game.crosswordId);
-                const currentHints = hintsUsedMap.get(crosswordId) || 0;
-                const gameHints = game.hintsUsed || 0;
-                hintsUsedMap.set(crosswordId, Math.max(currentHints, gameHints));
-            });
-
-            // Загружаем статистику для всех кроссвордов
-            const statsPromises = crosswords.map(async (crossword) => {
-                try {
-                    const [detail, statistics] = await Promise.all([
-                        ApiService.getCrosswordDetail(crossword.id),
-                        ApiService.getCrosswordStatistics(crossword.id)
-                    ]);
-                    return { crosswordId: crossword.id, detail, statistics };
-                } catch (error) {
-                    return { crosswordId: crossword.id, detail: null, statistics: null };
+                // Берем последнюю (или активную) игру для этого кроссворда
+                const existingGame = userGameMap.get(crosswordId);
+                if (!existingGame || !existingGame.gameOver) {
+                    userGameMap.set(crosswordId, {
+                        hintsUsed: game.hintsUsed || 0,
+                        gridState: game.gridState || null,
+                        gameOver: game.gameOver || false,
+                        solvedWordsCount: game.solvedWordsCount || 0
+                    });
                 }
             });
 
-            const allStats = await Promise.all(statsPromises);
-            const statsMap = new Map(allStats.map(s => [s.crosswordId, s]));
+            // Загружаем детали кроссвордов для расчета процента
+            const detailsPromises = crosswords.map(async (crossword) => {
+                try {
+                    const detail = await ApiService.getCrosswordDetail(crossword.id);
+                    return { crosswordId: crossword.id, detail };
+                } catch (error) {
+                    return { crosswordId: crossword.id, detail: null };
+                }
+            });
+
+            const allDetails = await Promise.all(detailsPromises);
+            const detailsMap = new Map(allDetails.map(d => [d.crosswordId, d.detail]));
 
             crosswords.forEach(crossword => {
                 const card = document.createElement('div');
@@ -119,12 +123,15 @@
                 dictionaryInfo.className = 'info-item';
                 dictionaryInfo.innerHTML = `<strong>Словарь:</strong> ${crossword.dictionary?.title || 'N/A'}`;
                 
+                const crosswordIdNum = Number(crossword.id);
+                const userGame = userGameMap.get(crosswordIdNum);
+                const detail = detailsMap.get(crossword.id);
+                
                 // Оставшиеся подсказки
                 const hintsInfo = document.createElement('span');
                 hintsInfo.className = 'info-item';
                 const maxHints = crossword.maxHints !== null && crossword.maxHints !== undefined ? crossword.maxHints : 0;
-                const crosswordIdNum = Number(crossword.id);
-                const hintsUsed = hintsUsedMap.get(crosswordIdNum) || 0;
+                const hintsUsed = userGame ? userGame.hintsUsed : 0;
                 const remainingHints = Math.max(0, maxHints - hintsUsed);
                 hintsInfo.innerHTML = `<strong>Подсказок осталось:</strong> ${remainingHints}`;
                 
@@ -134,19 +141,33 @@
                 const creatorName = crossword.createdByUserLogin || 'Неизвестен';
                 creatorInfo.innerHTML = `<strong>Создатель:</strong> ${creatorName}`;
                 
-                // Процент выполнения
+                // Процент выполнения (на основе данных игры пользователя)
                 const completionInfo = document.createElement('span');
                 completionInfo.className = 'info-item';
-                const statsData = statsMap.get(crossword.id);
-                let completionText = 'N/A';
+                let completionText = '0%';
                 
-                if (statsData && statsData.detail && statsData.statistics) {
-                    const { detail, statistics } = statsData;
-                    if (detail.gridData && detail.gridData.cells) {
-                        const totalLetters = detail.gridData.cells.filter(cell => !cell.isBlack).length;
-                        const guessedLetters = statistics.totalGuessedLetters || 0;
+                if (detail && detail.gridData && detail.gridData.cells) {
+                    const totalLetters = detail.gridData.cells.filter(cell => !cell.isBlack).length;
+                    let guessedLetters = 0;
+                    
+                    // Считаем буквы из gridState пользователя
+                    if (userGame && userGame.gridState) {
+                        try {
+                            const gridState = JSON.parse(userGame.gridState);
+                            if (Array.isArray(gridState)) {
+                                guessedLetters = gridState.filter(cell => cell.isLocked).length;
+                            }
+                        } catch (e) {
+                            console.error('Ошибка парсинга gridState:', e);
+                        }
+                    }
+                    
+                    // Если игра завершена, показываем 100%
+                    if (userGame && userGame.gameOver) {
+                        completionText = '100%';
+                    } else {
                         const completionPercentage = totalLetters > 0 
-                            ? ((guessedLetters / totalLetters) * 100).toFixed(1)
+                            ? Math.min(100, (guessedLetters / totalLetters) * 100).toFixed(1)
                             : '0';
                         completionText = `${completionPercentage}%`;
                     }
