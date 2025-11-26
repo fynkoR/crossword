@@ -7,6 +7,8 @@ import lombok.Data;
 public class CrosswordDto extends CrosswordDtoBase{
     private Long id;
     private DictionaryDto dictionary; // только базовая информация о словаре
+    private Long createdByUserId; // ID создателя
+    private String createdByUserLogin; // логин создателя
 
     // ❌ НЕТ games - чтобы избежать циклических ссылок
     // ❌ НЕТ grid_data - это внутренние данные для генерации

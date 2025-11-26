@@ -66,9 +66,17 @@ class PlaySelectionManager {
             hintsInfo.className = 'info-item';
             hintsInfo.innerHTML = `<strong>Подсказок:</strong> ${crossword.maxHints !== null && crossword.maxHints !== undefined ? crossword.maxHints : 'N/A'}`;
             
+            // Информация о создателе
+            const creatorInfo = document.createElement('span');
+            creatorInfo.className = 'info-item';
+            const creatorName = crossword.createdByUserLogin || 'Неизвестен';
+            const creatorId = crossword.createdByUserId || 'N/A';
+            creatorInfo.innerHTML = `<strong>Создатель:</strong> ${creatorName} (ID: ${creatorId})`;
+            
             info.appendChild(gridSize);
             info.appendChild(dictionaryInfo);
             info.appendChild(hintsInfo);
+            info.appendChild(creatorInfo);
             
             const actions = document.createElement('div');
             actions.className = 'crossword-actions';

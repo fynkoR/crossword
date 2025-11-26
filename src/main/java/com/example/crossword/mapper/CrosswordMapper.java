@@ -22,6 +22,8 @@ public interface CrosswordMapper {
     @Mapping(source = "grid_height", target = "gridHeight")
     @Mapping(source = "max_hints", target = "maxHints")
     @Mapping(source = "dictionary", target = "dictionary")
+    @Mapping(source = "createdBy.id", target = "createdByUserId")
+    @Mapping(source = "createdBy.login", target = "createdByUserLogin")
     CrosswordDto toDto(Crossword crossword);
 
     /**
@@ -35,6 +37,8 @@ public interface CrosswordMapper {
     @Mapping(source = "dictionary", target = "dictionary")
     @Mapping(target = "gridData", ignore = true)
     @Mapping(target = "wordsData", ignore = true)
+    @Mapping(target = "createdByUserId", ignore = true)
+    @Mapping(target = "createdByUserLogin", ignore = true)
     CrosswordDetailDto toDetailDto(Crossword crossword);
 
     /**
@@ -45,6 +49,7 @@ public interface CrosswordMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "games", ignore = true)
     @Mapping(target = "dictionary", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
     @Mapping(source = "gridWidth", target = "grid_width")
     @Mapping(source = "gridHeight", target = "grid_height")
     @Mapping(source = "maxHints", target = "max_hints")
@@ -58,6 +63,7 @@ public interface CrosswordMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "games", ignore = true)
     @Mapping(target = "dictionary", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
     @Mapping(source = "gridWidth", target = "grid_width")
     @Mapping(source = "gridHeight", target = "grid_height")
     @Mapping(source = "maxHints", target = "max_hints")

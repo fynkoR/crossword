@@ -160,32 +160,6 @@ class CrosswordSelectionManager {
             const actions = document.createElement('div');
             actions.className = 'crossword-actions';
             
-            const playBtn = document.createElement('button');
-            playBtn.className = 'btn btn-primary';
-            playBtn.textContent = 'Играть';
-            playBtn.addEventListener('click', () => {
-                console.log('[CrosswordSelectionManager] ===== КНОПКА ИГРАТЬ НАЖАТА =====');
-                console.log('[CrosswordSelectionManager] crossword объект:', crossword);
-                console.log('[CrosswordSelectionManager] crossword.id:', crossword.id, 'тип:', typeof crossword.id);
-                console.log('[CrosswordSelectionManager] this:', this);
-                console.log('[CrosswordSelectionManager] Проверка gameManager перед вызовом:');
-                
-                // Безопасная проверка gameManager через window (избегаем ReferenceError)
-                const windowManager = typeof window !== 'undefined' ? window.gameManager : null;
-                console.log('  - window.gameManager:', windowManager);
-                console.log('  - window.gameManager существует:', windowManager !== null && windowManager !== undefined);
-                console.log('  - window.gameManager тип:', typeof windowManager);
-                
-                if (!crossword.id) {
-                    console.error('[CrosswordSelectionManager] Ошибка: у кроссворда отсутствует ID');
-                    alert('Ошибка: у кроссворда отсутствует ID');
-                    return;
-                }
-                
-                console.log('[CrosswordSelectionManager] Вызываем this.startGame с ID:', crossword.id);
-                this.startGame(crossword.id);
-            });
-            
             const detailBtn = document.createElement('button');
             detailBtn.className = 'btn btn-secondary';
             detailBtn.textContent = 'Детали';
@@ -202,7 +176,6 @@ class CrosswordSelectionManager {
                 this.deleteCrossword(crossword.id, crossword.title);
             });
             
-            actions.appendChild(playBtn);
             actions.appendChild(detailBtn);
             actions.appendChild(deleteBtn);
             
