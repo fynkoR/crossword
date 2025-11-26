@@ -70,11 +70,6 @@ body {
 }
 
 .auth-form {
-    display: none;
-    padding: 40px;
-}
-
-.auth-form.active {
     display: block;
 }
 
