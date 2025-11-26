@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игра - Кроссворды</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/game.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">🎮 Игра</div>
+        <button id="back-btn" class="btn btn-secondary">← Назад</button>
+    </nav>
+    
+    <div class="game-container">
+        <div class="game-header">
+            <div class="game-info">
+                <h2 id="game-title">Кроссворд</h2>
+                <p>Введите буквы в клетки. Слова пересекаются: последняя буква первого слова = первая буква второго</p>
+            </div>
+            <div class="game-stats">
+                <div class="stat">
+                    <span class="stat-label">Слов:</span>
+                    <span id="words-count">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Правильно:</span>
+                    <span id="correct-count">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Подсказок:</span>
+                    <span id="hints-remaining">0</span>
+                </div>
+            </div>
+            <div class="game-hints">
+                <button id="use-hint-btn" class="btn btn-secondary">💡 Использовать подсказку</button>
+            </div>
+        </div>
+        
+        <div class="game-area">
+            <div class="crossword-container">
+                <div class="grid-section">
+                    <div id="current-word-hint" class="current-word-hint">
+                        <span class="hint-label">Подсказка:</span>
+                        <span id="current-hint-text" class="hint-text">Выберите слово из списка</span>
+                    </div>
+                    <div id="crossword-grid" class="crossword-grid">
+                        <!-- Сетка кроссворда -->
+                    </div>
+                </div>
+                
+                <div class="words-panel">
+                    <h3>Слова кроссворда</h3>
+                    <div id="words-list-panel" class="words-list">
+                        <!-- Список слов -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Модальное окно завершения игры -->
+        <div id="game-complete-modal" class="modal">
+            <div class="modal-content">
+                <h2>🎉 Игра завершена!</h2>
+                <p>Вы успешно составили цепочку из <span id="final-words-count">0</span> слов!</p>
+                <button id="play-again-btn" class="btn btn-primary">Играть снова</button>
+                <button id="back-to-menu-btn" class="btn btn-secondary">В меню</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Проверяем авторизацию
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = 'login.html';
+        }
+
+        // Получаем ID кроссворда из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const crosswordId = urlParams.get('crosswordId');
+
+        if (!crosswordId) {
+            alert('Кроссворд не указан');
+            window.location.href = 'play.html';
+        }
+
+        // Состояние игры
+        let gameState = {
+            crossword: null,
+            grid: null,
+            words: [],
+            currentGame: null,
+            currentWord: null
+        };
+
+        // Кнопка назад
+        document.getElementById('back-btn').addEventListener('click', () => {
+            window.location.href = 'play.html';
+        });
+
+        // Кнопки модального окна
+        document.getElementById('play-again-btn').addEventListener('click', () => {
+            window.location.reload();
+        });
+
+        document.getElementById('back-to-menu-btn').addEventListener('click', () => {
+            window.location.href = 'dashboard.html';
+        });
+
+        // Подсказка
+        document.getElementById('use-hint-btn').addEventListener('click', useHint);
+
+        async function initGame() {
+            try {
+                // Загружаем кроссворд
+                gameState.crossword = await ApiService.getCrosswordDetail(crosswordId);
+                
+                if (!gameState.crossword) {
+                    alert('Кроссворд не найден');
+                    window.location.href = 'play.html';
+                    return;
+                }
+
+                document.getElementById('game-title').textContent = gameState.crossword.title || 'Кроссворд';
+                gameState.grid = gameState.crossword.gridData;
+                gameState.words = gameState.crossword.wordsData?.words || [];
+
+                // Создаем или продолжаем игру на backend
+                const gameResult = await ApiService.startGame(crosswordId, currentUser.id);
+                if (gameResult && gameResult.game) {
+                    gameState.currentGame = gameResult.game;
+                    
+                    // Восстанавливаем состояние сетки если есть
+                    if (gameState.currentGame.gridState) {
+                        try {
+                            const savedState = JSON.parse(gameState.currentGame.gridState);
+                            restoreGridState(savedState);
+                        } catch (e) {
+                            console.error('Ошибка восстановления состояния:', e);
+                        }
+                    }
+                }
+
+                renderGrid();
+                renderWordsList();
+                updateStats();
+            } catch (error) {
+                console.error('Ошибка загрузки игры:', error);
+                alert('Ошибка загрузки игры: ' + (error.message || 'Неизвестная ошибка'));
+                window.location.href = 'play.html';
+            }
+        }
+
+        function restoreGridState(savedState) {
+            if (!savedState || !Array.isArray(savedState)) return;
+            
+            savedState.forEach(cellState => {
+                if (gameState.grid && gameState.grid.cells) {
+                    const cell = gameState.grid.cells.find(c => c.x === cellState.x && c.y === cellState.y);
+                    if (cell) {
+                        cell.letter = cellState.letter;
+                        cell.isLocked = cellState.isLocked;
+                    }
+                }
+            });
+
+            // Помечаем отгаданные слова
+            gameState.words.forEach(word => {
+                if (isWordSolved(word)) {
+                    word.isSolved = true;
+                }
+            });
+        }
+
+        function isWordSolved(word) {
+            if (!word.positions || word.positions.length < 2) return false;
+            
+            for (let i = 0; i < word.positions.length; i += 2) {
+                const x = word.positions[i];
+                const y = word.positions[i + 1];
+                const cell = gameState.grid?.cells?.find(c => c.x === x && c.y === y);
+                
+                if (!cell || !cell.letter || !cell.isLocked) {
+                    return false;
+                }
+                
+                const letterIndex = i / 2;
+                const correctLetter = word.text.charAt(letterIndex).toUpperCase();
+                if (cell.letter.toUpperCase() !== correctLetter) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function renderGrid() {
+            const container = document.getElementById('crossword-grid');
+            if (!container || !gameState.grid || !gameState.grid.size) return;
+
+            container.innerHTML = '';
+            const { width, height } = gameState.grid.size;
+
+            const table = document.createElement('table');
+            table.className = 'crossword-table';
+
+            const cellMap = new Map();
+            if (gameState.grid.cells) {
+                gameState.grid.cells.forEach(cell => {
+                    cellMap.set(`${cell.x},${cell.y}`, cell);
+                });
+            }
+
+            for (let y = 0; y < height; y++) {
+                const row = document.createElement('tr');
+                for (let x = 0; x < width; x++) {
+                    const cell = document.createElement('td');
+                    const cellData = cellMap.get(`${x},${y}`);
+
+                    if (cellData && cellData.isBlack) {
+                        cell.className = 'grid-cell black';
+                    } else if (cellData) {
+                        cell.className = 'grid-cell';
+                        cell.dataset.x = x;
+                        cell.dataset.y = y;
+
+                        if (cellData.number) {
+                            const numberSpan = document.createElement('span');
+                            numberSpan.className = 'cell-number';
+                            numberSpan.textContent = cellData.number;
+                            cell.appendChild(numberSpan);
+                        }
+
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.maxLength = 1;
+                        input.className = 'cell-input';
+                        input.dataset.x = x;
+                        input.dataset.y = y;
+
+                        if (cellData.letter) {
+                            input.value = cellData.letter;
+                            if (cellData.isLocked) {
+                                input.disabled = true;
+                                input.classList.add('correct-letter');
+                                cell.classList.add('solved');
+                            }
+                        }
+
+                        input.addEventListener('input', (e) => handleInput(e.target, x, y));
+                        input.addEventListener('focus', () => selectCell(x, y));
+                        input.addEventListener('keydown', (e) => handleKeydown(e, x, y));
+
+                        cell.appendChild(input);
+                    } else {
+                        cell.className = 'grid-cell black';
+                    }
+
+                    row.appendChild(cell);
+                }
+                table.appendChild(row);
+            }
+
+            container.appendChild(table);
+        }
+
+        function renderWordsList() {
+            const container = document.getElementById('words-list-panel');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            gameState.words.forEach((word, index) => {
+                const item = document.createElement('div');
+                item.className = 'word-item' + (word.isSolved ? ' solved' : '');
+                item.dataset.wordId = word.wordId;
+
+                const number = document.createElement('span');
+                number.className = 'word-number';
+                number.textContent = `${index + 1}.`;
+
+                const definition = document.createElement('span');
+                definition.className = 'word-definition';
+                definition.textContent = word.definition || 'Без определения';
+
+                item.appendChild(number);
+                item.appendChild(definition);
+
+                item.addEventListener('click', () => selectWord(word));
+                container.appendChild(item);
+            });
+        }
+
+        function selectWord(word) {
+            gameState.currentWord = word;
+            
+            // Подсветка
+            document.querySelectorAll('.word-item').forEach(el => el.classList.remove('active'));
+            document.querySelector(`.word-item[data-word-id="${word.wordId}"]`)?.classList.add('active');
+
+            // Обновляем подсказку
+            document.getElementById('current-hint-text').textContent = word.definition || 'Без определения';
+
+            // Фокус на первую клетку слова
+            if (word.positions && word.positions.length >= 2) {
+                const input = document.querySelector(`.cell-input[data-x="${word.positions[0]}"][data-y="${word.positions[1]}"]`);
+                if (input && !input.disabled) {
+                    input.focus();
+                }
+            }
+
+            highlightWord(word);
+        }
+
+        function highlightWord(word) {
+            document.querySelectorAll('.grid-cell').forEach(cell => cell.classList.remove('highlighted'));
+            
+            if (word && word.positions) {
+                for (let i = 0; i < word.positions.length; i += 2) {
+                    const x = word.positions[i];
+                    const y = word.positions[i + 1];
+                    const cell = document.querySelector(`.grid-cell[data-x="${x}"][data-y="${y}"]`);
+                    if (cell) cell.classList.add('highlighted');
+                }
+            }
+        }
+
+        function selectCell(x, y) {
+            const word = findWordByCell(x, y);
+            if (word) {
+                gameState.currentWord = word;
+                document.querySelectorAll('.word-item').forEach(el => el.classList.remove('active'));
+                document.querySelector(`.word-item[data-word-id="${word.wordId}"]`)?.classList.add('active');
+                document.getElementById('current-hint-text').textContent = word.definition || 'Без определения';
+                highlightWord(word);
+            }
+        }
+
+        function findWordByCell(x, y) {
+            return gameState.words.find(word => {
+                if (!word.positions) return false;
+                for (let i = 0; i < word.positions.length; i += 2) {
+                    if (word.positions[i] === x && word.positions[i + 1] === y) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+        }
+
+        function handleInput(input, x, y) {
+            const value = input.value.toUpperCase().replace(/[^А-ЯA-Z]/g, '');
+            input.value = value;
+
+            if (value) {
+                checkLetter(input, x, y, value);
+                
+                if (gameState.grid && gameState.grid.cells) {
+                    const cell = gameState.grid.cells.find(c => c.x === x && c.y === y);
+                    if (cell) cell.letter = value;
+                }
+
+                moveToNextCell(x, y);
+            } else {
+                input.classList.remove('correct-letter', 'incorrect-letter');
+                if (gameState.grid && gameState.grid.cells) {
+                    const cell = gameState.grid.cells.find(c => c.x === x && c.y === y);
+                    if (cell && !cell.isLocked) cell.letter = null;
+                }
+            }
+
+            saveGridState();
+            checkWord();
+        }
+
+        function checkLetter(input, x, y, userLetter) {
+            const word = findWordByCell(x, y);
+            if (!word || !word.positions) return;
+
+            let letterIndex = -1;
+            for (let i = 0; i < word.positions.length; i += 2) {
+                if (word.positions[i] === x && word.positions[i + 1] === y) {
+                    letterIndex = i / 2;
+                    break;
+                }
+            }
+
+            if (letterIndex === -1) return;
+
+            const correctLetter = word.text.charAt(letterIndex).toUpperCase();
+            const isCorrect = userLetter === correctLetter;
+
+            input.classList.remove('correct-letter', 'incorrect-letter');
+            input.classList.add(isCorrect ? 'correct-letter' : 'incorrect-letter');
+        }
+
+        function moveToNextCell(x, y) {
+            const word = findWordByCell(x, y);
+            if (!word || !word.positions) return;
+
+            for (let i = 0; i < word.positions.length; i += 2) {
+                if (word.positions[i] === x && word.positions[i + 1] === y) {
+                    if (i + 2 < word.positions.length) {
+                        const nextX = word.positions[i + 2];
+                        const nextY = word.positions[i + 3];
+                        const nextInput = document.querySelector(`.cell-input[data-x="${nextX}"][data-y="${nextY}"]`);
+                        if (nextInput && !nextInput.disabled) {
+                            nextInput.focus();
+                            nextInput.select();
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        function handleKeydown(e, x, y) {
+            if (e.key === 'Backspace' && !e.target.value) {
+                moveToPreviousCell(x, y);
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                moveToPreviousCell(x, y);
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                moveToNextCell(x, y);
+            }
+        }
+
+        function moveToPreviousCell(x, y) {
+            const word = findWordByCell(x, y);
+            if (!word || !word.positions) return;
+
+            for (let i = 0; i < word.positions.length; i += 2) {
+                if (word.positions[i] === x && word.positions[i + 1] === y) {
+                    if (i >= 2) {
+                        const prevX = word.positions[i - 2];
+                        const prevY = word.positions[i - 1];
+                        const prevInput = document.querySelector(`.cell-input[data-x="${prevX}"][data-y="${prevY}"]`);
+                        if (prevInput && !prevInput.disabled) {
+                            prevInput.focus();
+                            prevInput.select();
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        async function checkWord() {
+            if (!gameState.currentWord || gameState.currentWord.isSolved) return;
+
+            let userWord = '';
+            if (gameState.currentWord.positions) {
+                for (let i = 0; i < gameState.currentWord.positions.length; i += 2) {
+                    const x = gameState.currentWord.positions[i];
+                    const y = gameState.currentWord.positions[i + 1];
+                    const input = document.querySelector(`.cell-input[data-x="${x}"][data-y="${y}"]`);
+                    if (input) {
+                        userWord += input.value.toUpperCase() || ' ';
+                    }
+                }
+            }
+
+            userWord = userWord.trim();
+            const correctWord = gameState.currentWord.text.toUpperCase();
+
+            if (userWord.length === correctWord.length && userWord === correctWord) {
+                // Слово отгадано!
+                for (let i = 0; i < gameState.currentWord.positions.length; i += 2) {
+                    const x = gameState.currentWord.positions[i];
+                    const y = gameState.currentWord.positions[i + 1];
+                    const input = document.querySelector(`.cell-input[data-x="${x}"][data-y="${y}"]`);
+                    const cell = input?.closest('.grid-cell');
+                    
+                    if (input && cell) {
+                        input.disabled = true;
+                        cell.classList.add('solved');
+                        
+                        if (gameState.grid && gameState.grid.cells) {
+                            const gridCell = gameState.grid.cells.find(c => c.x === x && c.y === y);
+                            if (gridCell) {
+                                gridCell.isLocked = true;
+                                if (!gridCell.letter) gridCell.letter = input.value.toUpperCase();
+                            }
+                        }
+                    }
+                }
+
+                gameState.currentWord.isSolved = true;
+                renderWordsList();
+                updateStats();
+                saveGridState();
+
+                // Отправляем на backend
+                if (gameState.currentGame && gameState.currentGame.id && gameState.currentWord.wordId) {
+                    try {
+                        const result = await ApiService.checkAnswer(
+                            gameState.currentGame.id,
+                            gameState.currentWord.wordId,
+                            userWord
+                        );
+                        if (result && result.game) {
+                            gameState.currentGame = result.game;
+                        }
+                    } catch (error) {
+                        console.error('Ошибка проверки ответа:', error);
+                    }
+                }
+
+                // Проверяем, все ли слова отгаданы
+                const allSolved = gameState.words.every(w => w.isSolved);
+                if (allSolved) {
+                    setTimeout(completeGame, 1000);
+                }
+            }
+        }
+
+        async function completeGame() {
+            if (gameState.currentGame && gameState.currentGame.id) {
+                try {
+                    await ApiService.completeGame(gameState.currentGame.id);
+                } catch (error) {
+                    console.error('Ошибка завершения игры:', error);
+                }
+            }
+            
+            document.getElementById('final-words-count').textContent = gameState.words.filter(w => w.isSolved).length;
+            document.getElementById('game-complete-modal').classList.add('active');
+        }
+
+        function updateStats() {
+            const totalWords = gameState.words.length;
+            const solvedWords = gameState.words.filter(w => w.isSolved).length;
+            
+            document.getElementById('words-count').textContent = totalWords;
+            document.getElementById('correct-count').textContent = solvedWords;
+
+            if (gameState.crossword && gameState.currentGame) {
+                const maxHints = gameState.crossword.maxHints || 0;
+                const usedHints = gameState.currentGame.hintsUsed || 0;
+                const remaining = Math.max(0, maxHints - usedHints);
+                document.getElementById('hints-remaining').textContent = remaining;
+                
+                const hintBtn = document.getElementById('use-hint-btn');
+                if (hintBtn) {
+                    hintBtn.disabled = remaining <= 0;
+                    hintBtn.textContent = remaining <= 0 ? '💡 Подсказки закончились' : `💡 Подсказка (${remaining})`;
+                }
+            }
+        }
+
+        async function saveGridState() {
+            if (!gameState.currentGame || !gameState.currentGame.id) return;
+            
+            const state = [];
+            if (gameState.grid && gameState.grid.cells) {
+                gameState.grid.cells.forEach(cell => {
+                    if (cell.letter && !cell.isBlack) {
+                        state.push({
+                            x: cell.x,
+                            y: cell.y,
+                            letter: cell.letter,
+                            isLocked: cell.isLocked || false
+                        });
+                    }
+                });
+            }
+
+            try {
+                await ApiService.saveGridState(gameState.currentGame.id, JSON.stringify(state));
+            } catch (error) {
+                console.error('Ошибка сохранения состояния:', error);
+            }
+        }
+
+        async function useHint() {
+            if (!gameState.currentGame || !gameState.currentGame.id) {
+                alert('Игра не запущена');
+                return;
+            }
+
+            const hintBtn = document.getElementById('use-hint-btn');
+            if (hintBtn) {
+                hintBtn.disabled = true;
+                hintBtn.textContent = '⏳ Загрузка...';
+            }
+
+            try {
+                const result = await ApiService.useHint(gameState.currentGame.id);
+                
+                if (result && result.success && result.data) {
+                    const hintData = JSON.parse(result.data);
+                    const { x, y, letter } = hintData;
+
+                    const input = document.querySelector(`.cell-input[data-x="${x}"][data-y="${y}"]`);
+                    if (input) {
+                        input.value = letter.toUpperCase();
+                        input.disabled = true;
+                        input.classList.add('correct-letter');
+                        input.closest('.grid-cell').classList.add('solved');
+
+                        if (gameState.grid && gameState.grid.cells) {
+                            const cell = gameState.grid.cells.find(c => c.x === x && c.y === y);
+                            if (cell) {
+                                cell.letter = letter.toUpperCase();
+                                cell.isLocked = true;
+                            }
+                        }
+
+                        const word = findWordByCell(x, y);
+                        if (word) {
+                            gameState.currentWord = word;
+                            checkWord();
+                        }
+                    }
+
+                    if (result.game) {
+                        gameState.currentGame = result.game;
+                    }
+
+                    updateStats();
+                    saveGridState();
+                } else {
+                    alert(result?.message || 'Не удалось использовать подсказку');
+                }
+            } catch (error) {
+                console.error('Ошибка использования подсказки:', error);
+                alert('Ошибка: ' + (error.message || 'Неизвестная ошибка'));
+            }
+
+            updateStats();
+        }
+
+        // Запускаем игру
+        initGame();
+    </script>
+</body>
+</html>
+

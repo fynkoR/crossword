@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Играть - Кроссворды</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/dashboard.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">🎮 Выбор кроссворда</div>
+        <button id="back-btn" class="btn btn-secondary">← Назад</button>
+    </nav>
+    
+    <div class="crossword-selection-container">
+        <div class="selection-header">
+            <h1>Выберите кроссворд для игры</h1>
+        </div>
+        
+        <div id="crosswords-list" class="crosswords-grid">
+            <!-- Кроссворды будут загружены динамически -->
+        </div>
+        
+        <div id="no-crosswords-message" class="no-items-message" style="display: none;">
+            <p>Нет доступных кроссвордов</p>
+            <p style="color: var(--text-secondary); font-size: 14px;">Создайте кроссворд в разделе "Создать кроссворд"</p>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Проверяем авторизацию
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = 'login.html';
+        }
+
+        // Кнопка назад
+        document.getElementById('back-btn').addEventListener('click', () => {
+            window.location.href = 'dashboard.html';
+        });
+
+        // Загрузка и отображение кроссвордов
+        async function loadCrosswords() {
+            try {
+                const crosswords = await ApiService.getCrosswords();
+                await renderCrosswords(crosswords);
+            } catch (error) {
+                console.error('Ошибка загрузки кроссвордов:', error);
+                document.getElementById('no-crosswords-message').style.display = 'block';
+            }
+        }
+
+        async function renderCrosswords(crosswords) {
+            const listContainer = document.getElementById('crosswords-list');
+            const noMessage = document.getElementById('no-crosswords-message');
+
+            if (crosswords.length === 0) {
+                listContainer.style.display = 'none';
+                noMessage.style.display = 'block';
+                return;
+            }
+
+            listContainer.style.display = 'grid';
+            noMessage.style.display = 'none';
+            listContainer.innerHTML = '';
+
+            const userId = currentUser.id;
+
+            // Загружаем игры пользователя для расчета оставшихся подсказок
+            let userGames = [];
+            try {
+                userGames = await ApiService.getUserGames(userId);
+            } catch (error) {
+                console.error('Ошибка загрузки игр пользователя:', error);
+            }
+            
+            // Создаем Map: crosswordId -> hintsUsed
+            const hintsUsedMap = new Map();
+            userGames.forEach(game => {
+                const crosswordId = Number(game.crosswordId);
+                const currentHints = hintsUsedMap.get(crosswordId) || 0;
+                const gameHints = game.hintsUsed || 0;
+                hintsUsedMap.set(crosswordId, Math.max(currentHints, gameHints));
+            });
+
+            // Загружаем статистику для всех кроссвордов
+            const statsPromises = crosswords.map(async (crossword) => {
+                try {
+                    const [detail, statistics] = await Promise.all([
+                        ApiService.getCrosswordDetail(crossword.id),
+                        ApiService.getCrosswordStatistics(crossword.id)
+                    ]);
+                    return { crosswordId: crossword.id, detail, statistics };
+                } catch (error) {
+                    return { crosswordId: crossword.id, detail: null, statistics: null };
+                }
+            });
+
+            const allStats = await Promise.all(statsPromises);
+            const statsMap = new Map(allStats.map(s => [s.crosswordId, s]));
+
+            crosswords.forEach(crossword => {
+                const card = document.createElement('div');
+                card.className = 'crossword-card';
+                
+                const title = document.createElement('h3');
+                title.textContent = crossword.title || 'Без названия';
+                
+                const info = document.createElement('div');
+                info.className = 'crossword-info';
+                
+                const gridSize = document.createElement('span');
+                gridSize.className = 'info-item';
+                gridSize.innerHTML = `<strong>Размер:</strong> ${crossword.gridWidth || 'N/A'} × ${crossword.gridHeight || 'N/A'}`;
+                
+                const dictionaryInfo = document.createElement('span');
+                dictionaryInfo.className = 'info-item';
+                dictionaryInfo.innerHTML = `<strong>Словарь:</strong> ${crossword.dictionary?.title || 'N/A'}`;
+                
+                // Оставшиеся подсказки
+                const hintsInfo = document.createElement('span');
+                hintsInfo.className = 'info-item';
+                const maxHints = crossword.maxHints !== null && crossword.maxHints !== undefined ? crossword.maxHints : 0;
+                const crosswordIdNum = Number(crossword.id);
+                const hintsUsed = hintsUsedMap.get(crosswordIdNum) || 0;
+                const remainingHints = Math.max(0, maxHints - hintsUsed);
+                hintsInfo.innerHTML = `<strong>Подсказок осталось:</strong> ${remainingHints}`;
+                
+                // Информация о создателе
+                const creatorInfo = document.createElement('span');
+                creatorInfo.className = 'info-item';
+                const creatorName = crossword.createdByUserLogin || 'Неизвестен';
+                creatorInfo.innerHTML = `<strong>Создатель:</strong> ${creatorName}`;
+                
+                // Процент выполнения
+                const completionInfo = document.createElement('span');
+                completionInfo.className = 'info-item';
+                const statsData = statsMap.get(crossword.id);
+                let completionText = 'N/A';
+                
+                if (statsData && statsData.detail && statsData.statistics) {
+                    const { detail, statistics } = statsData;
+                    if (detail.gridData && detail.gridData.cells) {
+                        const totalLetters = detail.gridData.cells.filter(cell => !cell.isBlack).length;
+                        const guessedLetters = statistics.totalGuessedLetters || 0;
+                        const completionPercentage = totalLetters > 0 
+                            ? ((guessedLetters / totalLetters) * 100).toFixed(1)
+                            : '0';
+                        completionText = `${completionPercentage}%`;
+                    }
+                }
+                completionInfo.innerHTML = `<strong>Выполнено:</strong> ${completionText}`;
+                
+                info.appendChild(gridSize);
+                info.appendChild(dictionaryInfo);
+                info.appendChild(hintsInfo);
+                info.appendChild(creatorInfo);
+                info.appendChild(completionInfo);
+                
+                const actions = document.createElement('div');
+                actions.className = 'crossword-actions';
+                
+                const playBtn = document.createElement('button');
+                playBtn.className = 'btn btn-primary';
+                playBtn.textContent = '🎮 Играть';
+                playBtn.style.width = '100%';
+                playBtn.addEventListener('click', () => {
+                    window.location.href = `game.html?crosswordId=${crossword.id}`;
+                });
+                
+                actions.appendChild(playBtn);
+                
+                card.appendChild(title);
+                card.appendChild(info);
+                card.appendChild(actions);
+                
+                listContainer.appendChild(card);
+            });
+        }
+
+        // Загружаем кроссворды при загрузке страницы
+        loadCrosswords();
+    </script>
+</body>
+</html>
+

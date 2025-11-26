@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная - Кроссворды</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/dashboard.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">🎯 Кроссворды</div>
+        <div class="navbar-user">
+            <span id="user-name"></span>
+            <button id="logout-btn" class="btn btn-secondary">Выйти</button>
+        </div>
+    </nav>
+    
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h1>Добро пожаловать!</h1>
+            <p>Выберите действие</p>
+        </div>
+        
+        <div class="dashboard-cards">
+            <div class="card" id="play-card">
+                <div class="card-icon">🎮</div>
+                <h3>Играть</h3>
+                <p>Выбрать готовый кроссворд</p>
+            </div>
+            
+            <div class="card" id="dictionary-card">
+                <div class="card-icon">📚</div>
+                <h3>Словари</h3>
+                <p>Управление словарями и словами</p>
+            </div>
+            
+            <div class="card" id="create-crossword-card">
+                <div class="card-icon">✏️</div>
+                <h3>Создать кроссворд</h3>
+                <p>Автоматический или ручной режим</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Проверяем авторизацию
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = 'login.html';
+        } else {
+            document.getElementById('user-name').textContent = currentUser.login || 'Пользователь';
+        }
+
+        // Выход
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'login.html';
+        });
+
+        // Навигация
+        document.getElementById('play-card').addEventListener('click', () => {
+            window.location.href = 'play.html';
+        });
+
+        document.getElementById('dictionary-card').addEventListener('click', () => {
+            window.location.href = 'dictionaries.html';
+        });
+
+        document.getElementById('create-crossword-card').addEventListener('click', () => {
+            window.location.href = 'crosswords.html';
+        });
+    </script>
+</body>
+</html>
+

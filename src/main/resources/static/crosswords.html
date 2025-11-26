@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление кроссвордами - Кроссворды</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/dashboard.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">📋 Управление кроссвордами</div>
+        <button id="back-btn" class="btn btn-secondary">← Назад</button>
+    </nav>
+    
+    <div class="crossword-selection-container">
+        <div class="selection-header">
+            <h1>Мои кроссворды</h1>
+            <button id="create-new-btn" class="btn btn-primary">+ Создать новый кроссворд</button>
+        </div>
+        
+        <div class="selection-filters">
+            <div class="form-group">
+                <label for="filter-dictionary-select">Фильтр по словарю:</label>
+                <select id="filter-dictionary-select" class="form-control">
+                    <option value="">Все словари</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="search-crossword-input">Поиск по названию:</label>
+                <input type="text" id="search-crossword-input" class="form-control" placeholder="Введите название...">
+            </div>
+        </div>
+        
+        <div id="crosswords-list" class="crosswords-grid">
+            <!-- Кроссворды будут загружены динамически -->
+        </div>
+        
+        <div id="no-crosswords-message" class="no-items-message" style="display: none;">
+            <p>Кроссворды не найдены</p>
+            <button id="create-first-btn" class="btn btn-primary">Создать первый кроссворд</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно создания кроссворда -->
+    <div id="create-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Создать новый кроссворд</h2>
+            
+            <div class="form-group">
+                <label for="creation-dictionary-select">Выберите словарь:</label>
+                <select id="creation-dictionary-select" class="form-control">
+                    <option value="">Загрузка...</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="creation-mode-select">Режим составления:</label>
+                <select id="creation-mode-select" class="form-control" disabled>
+                    <option value="">Сначала выберите словарь</option>
+                    <option value="auto">Автоматический</option>
+                    <option value="manual">Ручной</option>
+                </select>
+            </div>
+            
+            <!-- Автоматический режим -->
+            <div id="auto-mode-settings" style="display: none;">
+                <div class="form-group">
+                    <label for="word-count-select">Количество слов:</label>
+                    <select id="word-count-select" class="form-control" disabled>
+                        <option value="">Выберите количество слов</option>
+                    </select>
+                </div>
+                <div id="variants-status" class="variants-status"></div>
+                <div class="form-group">
+                    <label for="title-input">Название кроссворда:</label>
+                    <input type="text" id="title-input" class="form-control" placeholder="Введите название">
+                </div>
+                <div class="form-group">
+                    <label for="max-hints-input">Количество подсказок:</label>
+                    <input type="number" id="max-hints-input" class="form-control" min="0" value="" placeholder="По умолчанию: половина от количества слов">
+                    <small class="form-text" style="color: var(--text-secondary); font-size: 12px;">Оставьте пустым для автоматического расчета</small>
+                </div>
+                <button id="create-crossword-btn" class="btn btn-primary" disabled style="width: 100%;">Создать кроссворд</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Проверяем авторизацию
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = 'login.html';
+        }
+
+        let allCrosswords = [];
+        let filteredCrosswords = [];
+        let selectedDictionaryId = null;
+
+        // Кнопка назад
+        document.getElementById('back-btn').addEventListener('click', () => {
+            window.location.href = 'dashboard.html';
+        });
+
+        // Открытие модального окна создания
+        document.getElementById('create-new-btn').addEventListener('click', openCreateModal);
+        document.getElementById('create-first-btn')?.addEventListener('click', openCreateModal);
+
+        // Закрытие модального окна
+        document.querySelector('.close').addEventListener('click', () => {
+            document.getElementById('create-modal').classList.remove('active');
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('active');
+            }
+        });
+
+        // Фильтры
+        document.getElementById('filter-dictionary-select').addEventListener('change', applyFilters);
+        document.getElementById('search-crossword-input').addEventListener('input', applyFilters);
+
+        // Создание кроссворда - обработчики
+        document.getElementById('creation-dictionary-select').addEventListener('change', (e) => {
+            const dictionaryId = e.target.value;
+            if (dictionaryId) {
+                selectedDictionaryId = parseInt(dictionaryId);
+                document.getElementById('creation-mode-select').disabled = false;
+                document.getElementById('creation-mode-select').value = '';
+                document.getElementById('auto-mode-settings').style.display = 'none';
+            } else {
+                selectedDictionaryId = null;
+                document.getElementById('creation-mode-select').disabled = true;
+                document.getElementById('auto-mode-settings').style.display = 'none';
+            }
+        });
+
+        document.getElementById('creation-mode-select').addEventListener('change', (e) => {
+            const mode = e.target.value;
+            if (mode === 'auto') {
+                showAutoModeSettings();
+            } else if (mode === 'manual') {
+                document.getElementById('create-modal').classList.remove('active');
+                window.location.href = `manual-crossword.html?dictionaryId=${selectedDictionaryId}`;
+            } else {
+                document.getElementById('auto-mode-settings').style.display = 'none';
+            }
+        });
+
+        document.getElementById('word-count-select').addEventListener('change', async (e) => {
+            const wordCount = parseInt(e.target.value);
+            if (wordCount) {
+                await checkVariant(selectedDictionaryId, wordCount);
+            } else {
+                document.getElementById('variants-status').innerHTML = '';
+                document.getElementById('create-crossword-btn').disabled = true;
+            }
+        });
+
+        document.getElementById('create-crossword-btn').addEventListener('click', createCrossword);
+
+        async function openCreateModal() {
+            document.getElementById('create-modal').classList.add('active');
+            await loadDictionariesForCreation();
+        }
+
+        async function loadDictionariesForCreation() {
+            try {
+                const dictionaries = await ApiService.getDictionaries();
+                const select = document.getElementById('creation-dictionary-select');
+                select.innerHTML = '<option value="">Выберите словарь...</option>';
+                dictionaries.forEach(dict => {
+                    const option = document.createElement('option');
+                    option.value = dict.id;
+                    option.textContent = `${dict.title} (${dict.description || 'без описания'})`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Ошибка загрузки словарей:', error);
+            }
+        }
+
+        function showAutoModeSettings() {
+            const autoSettings = document.getElementById('auto-mode-settings');
+            const wordCountSelect = document.getElementById('word-count-select');
+            
+            autoSettings.style.display = 'block';
+            wordCountSelect.disabled = false;
+            wordCountSelect.innerHTML = '<option value="">Выберите количество слов</option>';
+            
+            for (let count = 3; count <= 10; count++) {
+                const option = document.createElement('option');
+                option.value = count;
+                option.textContent = `${count} ${getWordForm(count)}`;
+                wordCountSelect.appendChild(option);
+            }
+            
+            document.getElementById('variants-status').innerHTML = '';
+            document.getElementById('create-crossword-btn').disabled = true;
+        }
+
+        function getWordForm(count) {
+            const lastDigit = count % 10;
+            const lastTwo = count % 100;
+            if (lastTwo >= 11 && lastTwo <= 19) return 'слов';
+            if (lastDigit === 1) return 'слово';
+            if (lastDigit >= 2 && lastDigit <= 4) return 'слова';
+            return 'слов';
+        }
+
+        async function checkVariant(dictionaryId, wordCount) {
+            const statusDiv = document.getElementById('variants-status');
+            const createBtn = document.getElementById('create-crossword-btn');
+            
+            statusDiv.innerHTML = '<span class="status-icon">⏳</span><span class="status-text">Проверка...</span>';
+            createBtn.disabled = true;
+            
+            try {
+                const variants = await ApiService.checkCrosswordVariants(dictionaryId, wordCount, wordCount);
+                const isAvailable = variants[String(wordCount)] === true;
+                
+                if (isAvailable) {
+                    statusDiv.innerHTML = '<span class="status-icon success">✓</span><span class="status-text success">Вариант доступен</span>';
+                    createBtn.disabled = false;
+                } else {
+                    statusDiv.innerHTML = '<span class="status-icon error">⚠</span><span class="status-text error">Невозможно создать</span>';
+                    createBtn.disabled = true;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<span class="status-icon error">⚠</span><span class="status-text error">Ошибка проверки</span>';
+                createBtn.disabled = true;
+            }
+        }
+
+        async function createCrossword() {
+            const wordCount = parseInt(document.getElementById('word-count-select').value);
+            let title = document.getElementById('title-input').value.trim();
+            const maxHintsInput = document.getElementById('max-hints-input').value.trim();
+            let maxHints = null;
+            
+            if (maxHintsInput !== '') {
+                const parsed = parseInt(maxHintsInput);
+                if (!isNaN(parsed) && parsed >= 0) {
+                    maxHints = parsed;
+                }
+            }
+            
+            if (!title) {
+                title = `Кроссворд из словаря ${selectedDictionaryId}`;
+            }
+            title = `${title} (Автоматический)`;
+
+            try {
+                await ApiService.generateCrossword(selectedDictionaryId, wordCount, title, maxHints, currentUser.id);
+                document.getElementById('create-modal').classList.remove('active');
+                alert('Кроссворд успешно создан!');
+                await loadCrosswords();
+            } catch (error) {
+                alert('Ошибка создания: ' + (error.message || 'Неизвестная ошибка'));
+            }
+        }
+
+        async function loadDictionaries() {
+            try {
+                const dictionaries = await ApiService.getDictionaries();
+                const select = document.getElementById('filter-dictionary-select');
+                select.innerHTML = '<option value="">Все словари</option>';
+                dictionaries.forEach(dict => {
+                    const option = document.createElement('option');
+                    option.value = dict.id;
+                    option.textContent = dict.title;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Ошибка загрузки словарей:', error);
+            }
+        }
+
+        async function loadCrosswords() {
+            try {
+                allCrosswords = await ApiService.getCrosswords();
+                applyFilters();
+            } catch (error) {
+                console.error('Ошибка загрузки кроссвордов:', error);
+                renderCrosswords([]);
+            }
+        }
+
+        function applyFilters() {
+            const dictionaryFilter = document.getElementById('filter-dictionary-select').value;
+            const searchText = document.getElementById('search-crossword-input').value.toLowerCase().trim();
+
+            filteredCrosswords = allCrosswords.filter(crossword => {
+                if (dictionaryFilter && crossword.dictionary) {
+                    if (crossword.dictionary.id.toString() !== dictionaryFilter) {
+                        return false;
+                    }
+                }
+                if (searchText) {
+                    const title = (crossword.title || '').toLowerCase();
+                    if (!title.includes(searchText)) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            renderCrosswords(filteredCrosswords);
+        }
+
+        function renderCrosswords(crosswords) {
+            const listContainer = document.getElementById('crosswords-list');
+            const noMessage = document.getElementById('no-crosswords-message');
+
+            if (crosswords.length === 0) {
+                listContainer.style.display = 'none';
+                noMessage.style.display = 'block';
+                return;
+            }
+
+            listContainer.style.display = 'grid';
+            noMessage.style.display = 'none';
+            listContainer.innerHTML = '';
+
+            crosswords.forEach(crossword => {
+                const card = document.createElement('div');
+                card.className = 'crossword-card';
+                
+                const title = document.createElement('h3');
+                title.textContent = crossword.title || 'Без названия';
+                
+                const info = document.createElement('div');
+                info.className = 'crossword-info';
+                
+                const gridSize = document.createElement('span');
+                gridSize.className = 'info-item';
+                gridSize.innerHTML = `<strong>Размер:</strong> ${crossword.gridWidth || 'N/A'} × ${crossword.gridHeight || 'N/A'}`;
+                
+                const dictionaryInfo = document.createElement('span');
+                dictionaryInfo.className = 'info-item';
+                dictionaryInfo.innerHTML = `<strong>Словарь:</strong> ${crossword.dictionary?.title || 'N/A'}`;
+
+                const isManual = crossword.title && crossword.title.includes('(Ручной)');
+                const isAuto = crossword.title && crossword.title.includes('(Автоматический)');
+                const typeInfo = document.createElement('span');
+                typeInfo.className = 'info-item';
+                if (isManual) {
+                    typeInfo.innerHTML = '<strong>Тип:</strong> <span style="color: #3b82f6;">Ручной</span>';
+                } else if (isAuto) {
+                    typeInfo.innerHTML = '<strong>Тип:</strong> <span style="color: #10b981;">Автоматический</span>';
+                } else {
+                    typeInfo.innerHTML = '<strong>Тип:</strong> Не указан';
+                }
+                
+                if (crossword.maxHints !== null && crossword.maxHints !== undefined) {
+                    const hintsInfo = document.createElement('span');
+                    hintsInfo.className = 'info-item';
+                    hintsInfo.innerHTML = `<strong>Подсказок:</strong> ${crossword.maxHints}`;
+                    info.appendChild(hintsInfo);
+                }
+                
+                info.appendChild(gridSize);
+                info.appendChild(dictionaryInfo);
+                info.appendChild(typeInfo);
+                
+                const actions = document.createElement('div');
+                actions.className = 'crossword-actions';
+                
+                const detailBtn = document.createElement('button');
+                detailBtn.className = 'btn btn-secondary';
+                detailBtn.textContent = 'Детали';
+                detailBtn.addEventListener('click', () => {
+                    window.location.href = `crossword-detail.html?id=${crossword.id}`;
+                });
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn btn-danger';
+                deleteBtn.textContent = 'Удалить';
+                deleteBtn.addEventListener('click', async () => {
+                    if (confirm(`Удалить кроссворд "${crossword.title}"?`)) {
+                        try {
+                            await ApiService.deleteCrossword(crossword.id);
+                            alert('Кроссворд удален');
+                            await loadCrosswords();
+                        } catch (error) {
+                            alert('Ошибка удаления: ' + (error.message || 'Неизвестная ошибка'));
+                        }
+                    }
+                });
+                
+                actions.appendChild(detailBtn);
+                actions.appendChild(deleteBtn);
+                
+                card.appendChild(title);
+                card.appendChild(info);
+                card.appendChild(actions);
+                
+                listContainer.appendChild(card);
+            });
+        }
+
+        // Загружаем данные при загрузке страницы
+        loadDictionaries();
+        loadCrosswords();
+    </script>
+</body>
+</html>
+

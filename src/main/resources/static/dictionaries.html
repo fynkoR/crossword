@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Словари - Кроссворды</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/dictionary.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">📚 Управление словарями</div>
+        <button id="back-btn" class="btn btn-secondary">← Назад</button>
+    </nav>
+    
+    <div class="dictionary-container">
+        <div class="dictionary-header">
+            <h1>Словари</h1>
+            <button id="create-dictionary-btn" class="btn btn-primary">+ Создать словарь</button>
+        </div>
+        
+        <div id="dictionaries-list" class="dictionaries-grid">
+            <!-- Словари будут загружены динамически -->
+        </div>
+    </div>
+
+    <!-- Модальное окно создания словаря -->
+    <div id="create-dictionary-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Создать новый словарь</h2>
+            <form id="create-dictionary-form">
+                <div class="form-group">
+                    <label for="dictionary-title">Название:</label>
+                    <input type="text" id="dictionary-title" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="dictionary-description">Описание:</label>
+                    <textarea id="dictionary-description" class="form-control" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Создать</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно работы со словарем -->
+    <div id="dictionary-detail-modal" class="modal">
+        <div class="modal-content large">
+            <span class="close">&times;</span>
+            <h2 id="dictionary-detail-title">Словарь</h2>
+            
+            <div class="dictionary-tabs">
+                <button class="tab-btn active" data-tab="words">Слова</button>
+                <button class="tab-btn" data-tab="import">Импорт</button>
+                <button class="tab-btn" data-tab="export">Экспорт</button>
+            </div>
+            
+            <!-- Вкладка слов -->
+            <div id="words-tab" class="tab-content active">
+                <div class="words-header">
+                    <button id="add-word-btn" class="btn btn-primary">+ Добавить слово</button>
+                    <div class="sort-controls">
+                        <label for="sort-select">Сортировка:</label>
+                        <select id="sort-select" class="form-control">
+                            <option value="">Без сортировки</option>
+                            <option value="alphabet-asc">По алфавиту (А-Я)</option>
+                            <option value="alphabet-desc">По алфавиту (Я-А)</option>
+                            <option value="length-asc">По длине (короткие)</option>
+                            <option value="length-desc">По длине (длинные)</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="words-list" class="words-list">
+                    <!-- Слова будут загружены динамически -->
+                </div>
+            </div>
+            
+            <!-- Вкладка импорта -->
+            <div id="import-tab" class="tab-content">
+                <h3>Импорт слов из файла</h3>
+                <p class="help-text">Формат файла: каждая строка содержит слово и определение, разделённые символом |</p>
+                <p class="help-text">Пример: кот|домашнее животное семейства кошачьих</p>
+                <form id="import-form">
+                    <div class="form-group">
+                        <label for="import-file">Выберите файл .txt:</label>
+                        <input type="file" id="import-file" accept=".txt" required>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="skip-duplicates" checked>
+                            Пропускать дубликаты
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Импортировать</button>
+                </form>
+                <div id="import-result" class="import-result"></div>
+            </div>
+            
+            <!-- Вкладка экспорта -->
+            <div id="export-tab" class="tab-content">
+                <h3>Экспорт словаря</h3>
+                <p>Скачайте все слова из словаря в текстовом формате</p>
+                <button id="export-btn" class="btn btn-primary">Экспортировать словарь</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно добавления слова -->
+    <div id="add-word-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Добавить слово</h2>
+            <form id="add-word-form">
+                <div class="form-group">
+                    <label for="word-text">Слово:</label>
+                    <input type="text" id="word-text" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="word-definition">Определение:</label>
+                    <textarea id="word-definition" class="form-control" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Добавить</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Проверяем авторизацию
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = 'login.html';
+        }
+
+        let currentDictionaryId = null;
+        let currentWords = [];
+
+        // Навигация
+        document.getElementById('back-btn').addEventListener('click', () => {
+            window.location.href = 'dashboard.html';
+        });
+
+        // Модальные окна
+        document.querySelectorAll('.close').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.classList.remove('active');
+                });
+            });
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('active');
+            }
+        });
+
+        // Создание словаря
+        document.getElementById('create-dictionary-btn').addEventListener('click', () => {
+            document.getElementById('create-dictionary-modal').classList.add('active');
+        });
+
+        document.getElementById('create-dictionary-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('dictionary-title').value.trim();
+            const description = document.getElementById('dictionary-description').value.trim();
+            
+            try {
+                await ApiService.createDictionary(title, description);
+                document.getElementById('create-dictionary-modal').classList.remove('active');
+                document.getElementById('create-dictionary-form').reset();
+                await loadDictionaries();
+            } catch (error) {
+                alert('Ошибка создания словаря: ' + (error.message || 'Неизвестная ошибка'));
+            }
+        });
+
+        // Вкладки
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab + '-tab').classList.add('active');
+            });
+        });
+
+        // Добавление слова
+        document.getElementById('add-word-btn').addEventListener('click', () => {
+            document.getElementById('add-word-modal').classList.add('active');
+        });
+
+        document.getElementById('add-word-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const word = document.getElementById('word-text').value.trim();
+            const definition = document.getElementById('word-definition').value.trim();
+            
+            try {
+                await ApiService.createWord(currentDictionaryId, word, definition);
+                document.getElementById('add-word-modal').classList.remove('active');
+                document.getElementById('add-word-form').reset();
+                await loadWords(currentDictionaryId);
+            } catch (error) {
+                alert('Ошибка добавления слова: ' + (error.message || 'Неизвестная ошибка'));
+            }
+        });
+
+        // Сортировка
+        document.getElementById('sort-select').addEventListener('change', () => {
+            renderWords();
+        });
+
+        // Импорт
+        document.getElementById('import-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const file = document.getElementById('import-file').files[0];
+            const skipDuplicates = document.getElementById('skip-duplicates').checked;
+            const resultDiv = document.getElementById('import-result');
+            
+            try {
+                resultDiv.innerHTML = '<p>Импортирование...</p>';
+                const result = await ApiService.importDictionary(currentDictionaryId, file, skipDuplicates);
+                resultDiv.innerHTML = `<p class="success">Импортировано слов: ${result.imported || 0}</p>`;
+                await loadWords(currentDictionaryId);
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">Ошибка: ${error.message || 'Неизвестная ошибка'}</p>`;
+            }
+        });
+
+        // Экспорт
+        document.getElementById('export-btn').addEventListener('click', async () => {
+            try {
+                await ApiService.exportDictionary(currentDictionaryId);
+            } catch (error) {
+                alert('Ошибка экспорта: ' + (error.message || 'Неизвестная ошибка'));
+            }
+        });
+
+        async function loadDictionaries() {
+            try {
+                const dictionaries = await ApiService.getDictionaries();
+                renderDictionaries(dictionaries);
+            } catch (error) {
+                console.error('Ошибка загрузки словарей:', error);
+            }
+        }
+
+        function renderDictionaries(dictionaries) {
+            const container = document.getElementById('dictionaries-list');
+            container.innerHTML = '';
+
+            if (dictionaries.length === 0) {
+                container.innerHTML = '<p class="no-items">Словари не найдены. Создайте первый словарь!</p>';
+                return;
+            }
+
+            dictionaries.forEach(dict => {
+                const card = document.createElement('div');
+                card.className = 'dictionary-card';
+                
+                card.innerHTML = `
+                    <h3>${dict.title}</h3>
+                    <p>${dict.description || 'Без описания'}</p>
+                    <div class="dictionary-actions">
+                        <button class="btn btn-primary open-btn" data-id="${dict.id}">Открыть</button>
+                        <button class="btn btn-danger delete-btn" data-id="${dict.id}" data-title="${dict.title}">Удалить</button>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+
+            // Обработчики для кнопок
+            document.querySelectorAll('.open-btn').forEach(btn => {
+                btn.addEventListener('click', () => openDictionary(parseInt(btn.dataset.id)));
+            });
+
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    if (confirm(`Удалить словарь "${btn.dataset.title}"?`)) {
+                        try {
+                            await ApiService.deleteDictionary(parseInt(btn.dataset.id));
+                            await loadDictionaries();
+                        } catch (error) {
+                            alert('Ошибка удаления: ' + (error.message || 'Неизвестная ошибка'));
+                        }
+                    }
+                });
+            });
+        }
+
+        async function openDictionary(id) {
+            currentDictionaryId = id;
+            try {
+                const dict = await ApiService.getDictionary(id);
+                document.getElementById('dictionary-detail-title').textContent = dict.title;
+                document.getElementById('dictionary-detail-modal').classList.add('active');
+                await loadWords(id);
+            } catch (error) {
+                alert('Ошибка загрузки словаря: ' + (error.message || 'Неизвестная ошибка'));
+            }
+        }
+
+        async function loadWords(dictionaryId) {
+            try {
+                const sortBy = document.getElementById('sort-select').value || null;
+                currentWords = await ApiService.getWordsFromDictionary(dictionaryId, sortBy);
+                renderWords();
+            } catch (error) {
+                console.error('Ошибка загрузки слов:', error);
+            }
+        }
+
+        function renderWords() {
+            const container = document.getElementById('words-list');
+            container.innerHTML = '';
+
+            if (currentWords.length === 0) {
+                container.innerHTML = '<p class="no-items">Слова не найдены. Добавьте первое слово!</p>';
+                return;
+            }
+
+            currentWords.forEach(word => {
+                const item = document.createElement('div');
+                item.className = 'word-item';
+                
+                item.innerHTML = `
+                    <div class="word-content">
+                        <strong>${word.word}</strong>
+                        <p>${word.definition}</p>
+                    </div>
+                    <div class="word-actions">
+                        <button class="btn btn-danger delete-word-btn" data-id="${word.id}">Удалить</button>
+                    </div>
+                `;
+                
+                container.appendChild(item);
+            });
+
+            document.querySelectorAll('.delete-word-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    if (confirm('Удалить это слово?')) {
+                        try {
+                            await ApiService.deleteWord(parseInt(btn.dataset.id));
+                            await loadWords(currentDictionaryId);
+                        } catch (error) {
+                            alert('Ошибка удаления: ' + (error.message || 'Неизвестная ошибка'));
+                        }
+                    }
+                });
+            });
+        }
+
+        // Загружаем словари при загрузке страницы
+        loadDictionaries();
+    </script>
+</body>
+</html>
+

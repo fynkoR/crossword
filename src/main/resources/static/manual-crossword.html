@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ручное составление - Кроссворды</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/manual-crossword.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">✏️ Ручное составление кроссворда</div>
+        <button id="back-btn" class="btn btn-secondary">← Назад</button>
+    </nav>
+    
+    <div class="manual-crossword-container">
+        <div class="manual-crossword-header">
+            <h2>Составьте цепочку слов</h2>
+            <p>Выберите слова так, чтобы последняя буква предыдущего слова совпадала с первой буквой следующего</p>
+        </div>
+        
+        <div class="manual-crossword-content">
+            <div class="word-chain-section">
+                <h3>Цепочка слов</h3>
+                <div id="word-chain-display" class="word-chain-display">
+                    <p class="empty-chain">Цепочка пуста. Выберите первое слово.</p>
+                </div>
+                <div class="chain-info">
+                    <span>Выбрано слов: <strong id="selected-words-count">0</strong> / <strong>10</strong></span>
+                    <span class="chain-status" id="chain-status"></span>
+                </div>
+            </div>
+            
+            <div class="word-selection-section">
+                <h3 id="word-selection-title">Выберите первое слово</h3>
+                <div class="word-selection-controls">
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label for="search-input">Поиск слова:</label>
+                        <input type="text" id="search-input" class="form-control" placeholder="Введите слово для поиска...">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label for="sort-select">Сортировка:</label>
+                        <select id="sort-select" class="form-control">
+                            <option value="">Без сортировки</option>
+                            <option value="alphabet-asc">По алфавиту (А-Я)</option>
+                            <option value="alphabet-desc">По алфавиту (Я-А)</option>
+                            <option value="length-asc">По длине (короткие)</option>
+                            <option value="length-desc">По длине (длинные)</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="available-words-list" class="available-words-list">
+                    <!-- Слова будут загружены динамически -->
+                </div>
+                <div id="no-words-message" class="no-words-message" style="display: none;">
+                    <p>Нет доступных слов для продолжения цепочки</p>
+                    <button id="remove-last-word-btn" class="btn btn-secondary">Удалить последнее слово</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="manual-crossword-actions">
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label for="title-input">Название кроссворда:</label>
+                <input type="text" id="title-input" class="form-control" placeholder="Введите название">
+            </div>
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label for="max-hints-input">Количество подсказок:</label>
+                <input type="number" id="max-hints-input" class="form-control" min="0" value="" placeholder="По умолчанию: половина от количества слов">
+                <small class="form-text" style="color: var(--text-secondary); font-size: 12px;">Оставьте пустым для автоматического расчета</small>
+            </div>
+            <button id="clear-chain-btn" class="btn btn-secondary">Очистить цепочку</button>
+            <button id="create-crossword-btn" class="btn btn-primary" disabled>Создать кроссворд</button>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Проверяем авторизацию
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = 'login.html';
+        }
+
+        // Получаем ID словаря из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const dictionaryId = urlParams.get('dictionaryId');
+
+        if (!dictionaryId) {
+            alert('Словарь не указан');
+            window.location.href = 'crosswords.html';
+        }
+
+        let allWords = [];
+        let availableWords = [];
+        let selectedWordIds = [];
+        let lastLetter = null;
+
+        // Навигация
+        document.getElementById('back-btn').addEventListener('click', () => {
+            window.location.href = 'crosswords.html';
+        });
+
+        // Обработчики
+        document.getElementById('search-input').addEventListener('input', renderAvailableWords);
+        document.getElementById('sort-select').addEventListener('change', renderAvailableWords);
+        document.getElementById('clear-chain-btn').addEventListener('click', clearChain);
+        document.getElementById('remove-last-word-btn').addEventListener('click', removeLastWord);
+        document.getElementById('create-crossword-btn').addEventListener('click', createCrossword);
+
+        async function init() {
+            try {
+                allWords = await ApiService.getWordsFromDictionary(dictionaryId);
+                availableWords = [...allWords];
+                renderAvailableWords();
+            } catch (error) {
+                console.error('Ошибка загрузки слов:', error);
+                alert('Ошибка загрузки слов');
+            }
+        }
+
+        function renderAvailableWords() {
+            const container = document.getElementById('available-words-list');
+            const noWordsMessage = document.getElementById('no-words-message');
+            const searchText = document.getElementById('search-input').value.toLowerCase().trim();
+            const sortBy = document.getElementById('sort-select').value;
+
+            // Фильтруем слова
+            let words = availableWords.filter(word => {
+                // Исключаем уже выбранные
+                if (selectedWordIds.includes(word.id)) return false;
+                
+                // Поиск
+                if (searchText && !word.word.toLowerCase().includes(searchText)) return false;
+                
+                // Проверяем первую букву если есть lastLetter
+                if (lastLetter) {
+                    const firstLetter = word.word.charAt(0).toLowerCase();
+                    if (firstLetter !== lastLetter.toLowerCase()) return false;
+                }
+                
+                return true;
+            });
+
+            // Сортировка
+            if (sortBy) {
+                words.sort((a, b) => {
+                    switch (sortBy) {
+                        case 'alphabet-asc':
+                            return a.word.localeCompare(b.word, 'ru');
+                        case 'alphabet-desc':
+                            return b.word.localeCompare(a.word, 'ru');
+                        case 'length-asc':
+                            return a.word.length - b.word.length;
+                        case 'length-desc':
+                            return b.word.length - a.word.length;
+                        default:
+                            return 0;
+                    }
+                });
+            }
+
+            if (words.length === 0) {
+                container.innerHTML = '';
+                container.style.display = 'none';
+                noWordsMessage.style.display = 'block';
+                return;
+            }
+
+            container.style.display = 'grid';
+            noWordsMessage.style.display = 'none';
+            container.innerHTML = '';
+
+            words.forEach(word => {
+                const item = document.createElement('div');
+                item.className = 'word-card';
+                item.innerHTML = `
+                    <div class="word-text">${word.word}</div>
+                    <div class="word-definition">${word.definition || 'Без определения'}</div>
+                `;
+                item.addEventListener('click', () => selectWord(word));
+                container.appendChild(item);
+            });
+        }
+
+        function selectWord(word) {
+            if (selectedWordIds.length >= 10) {
+                alert('Максимум 10 слов в цепочке');
+                return;
+            }
+
+            selectedWordIds.push(word.id);
+            lastLetter = word.word.charAt(word.word.length - 1);
+
+            updateChainDisplay();
+            updateTitle();
+            renderAvailableWords();
+            updateCreateButton();
+        }
+
+        function removeLastWord() {
+            if (selectedWordIds.length === 0) return;
+
+            selectedWordIds.pop();
+            
+            if (selectedWordIds.length > 0) {
+                const lastWord = allWords.find(w => w.id === selectedWordIds[selectedWordIds.length - 1]);
+                if (lastWord) {
+                    lastLetter = lastWord.word.charAt(lastWord.word.length - 1);
+                }
+            } else {
+                lastLetter = null;
+            }
+
+            updateChainDisplay();
+            updateTitle();
+            renderAvailableWords();
+            updateCreateButton();
+        }
+
+        function clearChain() {
+            selectedWordIds = [];
+            lastLetter = null;
+            updateChainDisplay();
+            updateTitle();
+            renderAvailableWords();
+            updateCreateButton();
+        }
+
+        function updateChainDisplay() {
+            const container = document.getElementById('word-chain-display');
+            const countSpan = document.getElementById('selected-words-count');
+            
+            countSpan.textContent = selectedWordIds.length;
+
+            if (selectedWordIds.length === 0) {
+                container.innerHTML = '<p class="empty-chain">Цепочка пуста. Выберите первое слово.</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            selectedWordIds.forEach((id, index) => {
+                const word = allWords.find(w => w.id === id);
+                if (!word) return;
+
+                const item = document.createElement('div');
+                item.className = 'chain-word';
+                item.innerHTML = `
+                    <span class="chain-number">${index + 1}</span>
+                    <span class="chain-text">${word.word}</span>
+                    ${index === selectedWordIds.length - 1 ? '<button class="remove-btn" title="Удалить">×</button>' : ''}
+                `;
+
+                if (index === selectedWordIds.length - 1) {
+                    item.querySelector('.remove-btn').addEventListener('click', removeLastWord);
+                }
+
+                container.appendChild(item);
+
+                // Добавляем стрелку между словами
+                if (index < selectedWordIds.length - 1) {
+                    const arrow = document.createElement('span');
+                    arrow.className = 'chain-arrow';
+                    arrow.textContent = '→';
+                    container.appendChild(arrow);
+                }
+            });
+        }
+
+        function updateTitle() {
+            const title = document.getElementById('word-selection-title');
+            if (selectedWordIds.length === 0) {
+                title.textContent = 'Выберите первое слово';
+            } else if (lastLetter) {
+                title.textContent = `Выберите слово на букву "${lastLetter.toUpperCase()}"`;
+            }
+        }
+
+        function updateCreateButton() {
+            const btn = document.getElementById('create-crossword-btn');
+            btn.disabled = selectedWordIds.length < 3;
+        }
+
+        async function createCrossword() {
+            if (selectedWordIds.length < 3) {
+                alert('Минимум 3 слова в цепочке');
+                return;
+            }
+
+            let title = document.getElementById('title-input').value.trim();
+            const maxHintsInput = document.getElementById('max-hints-input').value.trim();
+            let maxHints = null;
+
+            if (maxHintsInput !== '') {
+                const parsed = parseInt(maxHintsInput);
+                if (!isNaN(parsed) && parsed >= 0) {
+                    maxHints = parsed;
+                }
+            }
+
+            if (!title) {
+                title = `Кроссворд ${selectedWordIds.length} слов`;
+            }
+            title = `${title} (Ручной)`;
+
+            try {
+                await ApiService.createManualCrossword(
+                    parseInt(dictionaryId),
+                    selectedWordIds,
+                    title,
+                    maxHints,
+                    currentUser.id
+                );
+                alert('Кроссворд успешно создан!');
+                window.location.href = 'crosswords.html';
+            } catch (error) {
+                alert('Ошибка создания: ' + (error.message || 'Неизвестная ошибка'));
+            }
+        }
+
+        // Инициализация
+        init();
+    </script>
+</body>
+</html>
+
