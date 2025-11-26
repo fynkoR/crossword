@@ -53,19 +53,22 @@ class PlaySelectionManager {
         if (userId) {
             try {
                 userGames = await ApiService.getUserGames(userId);
+                console.log('[PlaySelection] Загружено игр пользователя:', userGames.length, userGames);
             } catch (error) {
                 console.error('Ошибка загрузки игр пользователя:', error);
             }
         }
         
-        // Создаем Map: crosswordId -> game (активная игра)
-        const userGamesMap = new Map();
+        // Создаем Map: crosswordId -> hintsUsed (суммируем из всех игр для этого кроссворда)
+        const hintsUsedMap = new Map();
         userGames.forEach(game => {
-            // Берем только активные игры (не завершенные)
-            if (!game.gameOver) {
-                userGamesMap.set(game.crosswordId, game);
-            }
+            const crosswordId = Number(game.crosswordId);
+            const currentHints = hintsUsedMap.get(crosswordId) || 0;
+            const gameHints = game.hintsUsed || 0;
+            // Берем максимум использованных подсказок (на случай нескольких игр)
+            hintsUsedMap.set(crosswordId, Math.max(currentHints, gameHints));
         });
+        console.log('[PlaySelection] hintsUsedMap:', hintsUsedMap);
 
         // Загружаем статистику для всех кроссвордов параллельно
         const statsPromises = this.crosswords.map(async (crossword) => {
@@ -106,8 +109,8 @@ class PlaySelectionManager {
             const hintsInfo = document.createElement('span');
             hintsInfo.className = 'info-item';
             const maxHints = crossword.maxHints !== null && crossword.maxHints !== undefined ? crossword.maxHints : 0;
-            const userGame = userGamesMap.get(crossword.id);
-            const hintsUsed = userGame ? (userGame.hintsUsed || 0) : 0;
+            const crosswordIdNum = Number(crossword.id);
+            const hintsUsed = hintsUsedMap.get(crosswordIdNum) || 0;
             const remainingHints = Math.max(0, maxHints - hintsUsed);
             hintsInfo.innerHTML = `<strong>Подсказок осталось:</strong> ${remainingHints}`;
             
