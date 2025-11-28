@@ -66,7 +66,7 @@ class PlaySelectionManager {
             const currentHints = hintsUsedMap.get(crosswordId) || 0;
             const gameHints = game.hintsUsed || 0;
             // Берем максимум использованных подсказок (на случай нескольких игр)
-            hintsUsedMap.set(crosswordId, Math.max(currentHints, gameHints));
+            hintsUsedMap.set(crosswordId, (currentHints - gameHints));
         });
         console.log('[PlaySelection] hintsUsedMap:', hintsUsedMap);
 
