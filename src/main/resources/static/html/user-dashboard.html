@@ -9,12 +9,40 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="navbar-brand">🎯 Кроссворды</div>
+        <div class="navbar-left">
+            <button id="info-btn" class="info-btn" title="Информация">ℹ️</button>
+            <div class="navbar-brand">🎯 Кроссворды</div>
+        </div>
         <div class="navbar-user">
             <span id="user-name"></span>
             <button id="logout-btn" class="btn btn-secondary">Выйти</button>
         </div>
     </nav>
+    
+    <!-- Модальное окно с информацией -->
+    <div id="info-modal" class="modal">
+        <div class="modal-content info-modal-content">
+            <span class="close" id="close-info-modal">&times;</span>
+            <div class="info-content">
+                <h2>📚 О приложении</h2>
+                <p class="info-section-title">Лабораторный практикум по дисциплине</p>
+                <p class="info-discipline">"Технологии программирования"</p>
+                
+                <p class="info-section-title">Тема приложения:</p>
+                <p class="info-theme">"Линейный кроссворд"</p>
+                
+                <p class="info-section-title">Выполнено обучающимся в группе № 6401-090301D:</p>
+                <ul class="info-authors">
+                    <li>А.П. Добрынкин</li>
+                    <li>И.А. Толкунов</li>
+                    <li>В.И. Дзюба</li>
+                </ul>
+                
+                <p class="info-section-title">Руководитель:</p>
+                <p class="info-supervisor">Д.С. Оплачко</p>
+            </div>
+        </div>
+    </div>
     
     <div class="dashboard-container">
         <div class="dashboard-header">
@@ -48,6 +76,21 @@
         document.getElementById('logout-btn').addEventListener('click', () => {
             localStorage.removeItem('currentUser');
             window.location.href = 'login.html';
+        });
+
+        // Информационное окно
+        document.getElementById('info-btn').addEventListener('click', () => {
+            document.getElementById('info-modal').classList.add('active');
+        });
+
+        document.getElementById('close-info-modal').addEventListener('click', () => {
+            document.getElementById('info-modal').classList.remove('active');
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target.id === 'info-modal') {
+                document.getElementById('info-modal').classList.remove('active');
+            }
         });
 
         // Навигация
