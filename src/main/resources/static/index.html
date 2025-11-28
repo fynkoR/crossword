@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кроссворды</title>
+    <script>
+        // Проверяем авторизацию и перенаправляем
+        const currentUser = localStorage.getItem('currentUser');
+        if (currentUser) {
+            const user = JSON.parse(currentUser);
+            if (user.isAdmin === true) {
+                window.location.href = 'html/admin-dashboard.html';
+            } else {
+                window.location.href = 'html/user-dashboard.html';
+            }
+        } else {
+            window.location.href = 'html/login.html';
+        }
+    </script>
+</head>
+<body>
+    <p>Перенаправление...</p>
+</body>
+</html>
