@@ -312,6 +312,14 @@ public class CrosswordService {
      * Генерировать кроссворд из словаря
      */
     public CrosswordDetailDto generateCrosswordFromDictionary(Long dictionaryId, int wordCount, String title, Integer maxHints, Long userId) {
+        // Валидация названия кроссворда
+        if (title == null || title.trim().isEmpty()) {
+            throw new RuntimeException("Название кроссворда обязательно");
+        }
+        if (title.length() < 4 || title.length() > 12) {
+            throw new RuntimeException("Название кроссворда должно содержать от 4 до 12 символов");
+        }
+        
         // Проверяем существование словаря
         Dictionary dictionary = dictionaryRepository.findById(dictionaryId)
                 .orElseThrow(() -> new RuntimeException("Словарь с ID " + dictionaryId + " не найден"));
@@ -358,6 +366,14 @@ public class CrosswordService {
      * Создать кроссворд из выбранных слов (ручной режим)
      */
     public CrosswordDetailDto createManualCrossword(Long dictionaryId, List<Long> wordIds, String title, Integer maxHints, Long userId) {
+        // Валидация названия кроссворда
+        if (title == null || title.trim().isEmpty()) {
+            throw new RuntimeException("Название кроссворда обязательно");
+        }
+        if (title.length() < 4 || title.length() > 12) {
+            throw new RuntimeException("Название кроссворда должно содержать от 4 до 12 символов");
+        }
+        
         // Проверяем существование словаря
         Dictionary dictionary = dictionaryRepository.findById(dictionaryId)
                 .orElseThrow(() -> new RuntimeException("Словарь с ID " + dictionaryId + " не найден"));

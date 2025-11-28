@@ -5,10 +5,13 @@ import com.example.crossword.dto.dtoCrossword.CrosswordDetailDto;
 import com.example.crossword.dto.dtoCrossword.CrosswordDto;
 import com.example.crossword.dto.dtoCrossword.CrosswordUpdateDto;
 import com.example.crossword.service.CrosswordService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,6 +22,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/crosswords")
+@Validated
 public class CrosswordController {
 
     private static final Logger logger = LoggerFactory.getLogger(CrosswordController.class);
@@ -33,7 +37,7 @@ public class CrosswordController {
      * POST /crosswords
      */
     @PostMapping
-    public ResponseEntity<CrosswordDto> createCrossword(@RequestBody CrosswordCreateDto crosswordCreateDto) {
+    public ResponseEntity<CrosswordDto> createCrossword(@Valid @RequestBody CrosswordCreateDto crosswordCreateDto) {
         try {
             logger.info("POST /crosswords - Создание кроссворда: {}", crosswordCreateDto.getTitle());
             CrosswordDto createdCrossword = crosswordService.createCrossword(crosswordCreateDto);
@@ -182,7 +186,7 @@ public class CrosswordController {
     public ResponseEntity<CrosswordDetailDto> generateCrossword(
             @RequestParam Long dictionaryId,
             @RequestParam int wordCount,
-            @RequestParam String title,
+            @RequestParam @Size(min = 4, max = 12, message = "Название кроссворда должно содержать от 4 до 12 символов") String title,
             @RequestParam(required = false) Integer maxHints,
             @RequestParam(required = false) Long userId) {
         try {

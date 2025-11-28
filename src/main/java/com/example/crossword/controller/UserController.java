@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -32,7 +33,7 @@ public class UserController {
      * POST /users/register
      */
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody UserRegAuthDto userRegAuthDto) {
+    public ResponseEntity<?> register(@Valid @RequestBody UserRegAuthDto userRegAuthDto) {
         try {
             logger.info("POST /users/register - Регистрация пользователя: {}", userRegAuthDto.getLogin());
             UserDto registeredUser = userService.registerUser(userRegAuthDto);
@@ -52,7 +53,7 @@ public class UserController {
      * POST /users/auth
      */
     @PostMapping("/auth")
-    public ResponseEntity<UserDto> auth(@RequestBody UserRegAuthDto userRegAuthDto) {
+    public ResponseEntity<UserDto> auth(@Valid @RequestBody UserRegAuthDto userRegAuthDto) {
         try {
             logger.info("POST /users/auth - Авторизация пользователя: {}", userRegAuthDto.getLogin());
             UserDto authenticatedUser = userService.authUser(userRegAuthDto);

@@ -62,7 +62,11 @@
         <div class="manual-crossword-actions">
             <div class="form-group">
                 <label for="title-input">Название кроссворда:</label>
-                <input type="text" id="title-input" class="form-control" placeholder="Введите название">
+                <input type="text" id="title-input" class="form-control" 
+                       minlength="4" maxlength="12"
+                       placeholder="4-12 символов">
+                <div class="field-hint" style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">От 4 до 12 символов</div>
+                <div class="field-error" id="title-error" style="font-size: 12px; color: #ef4444; margin-top: 4px;"></div>
             </div>
             <div class="form-group">
                 <label for="max-hints-input">Количество подсказок:</label>
@@ -280,6 +284,46 @@
             btn.disabled = selectedWordIds.length < 3;
         }
 
+        // Константы валидации
+        const VALIDATION = {
+            TITLE_MIN: 4,
+            TITLE_MAX: 12
+        };
+        
+        // Валидация названия в реальном времени
+        const titleInput = document.getElementById('title-input');
+        const titleError = document.getElementById('title-error');
+        
+        titleInput.addEventListener('input', () => {
+            validateTitleField();
+        });
+        
+        function validateTitleField() {
+            const value = titleInput.value.trim();
+            
+            if (value.length === 0) {
+                titleError.textContent = '';
+                titleInput.classList.remove('invalid');
+                return true; // Пустое название допустимо
+            }
+            
+            if (value.length < VALIDATION.TITLE_MIN) {
+                titleError.textContent = `Название должно содержать минимум ${VALIDATION.TITLE_MIN} символов`;
+                titleInput.classList.add('invalid');
+                return false;
+            }
+            
+            if (value.length > VALIDATION.TITLE_MAX) {
+                titleError.textContent = `Название должно содержать максимум ${VALIDATION.TITLE_MAX} символов`;
+                titleInput.classList.add('invalid');
+                return false;
+            }
+            
+            titleError.textContent = '';
+            titleInput.classList.remove('invalid');
+            return true;
+        }
+
         async function createCrossword() {
             if (selectedWordIds.length < 3) {
                 alert('Минимум 3 слова в цепочке');
@@ -289,6 +333,11 @@
             let title = document.getElementById('title-input').value.trim();
             const maxHintsInput = document.getElementById('max-hints-input').value.trim();
             let maxHints = null;
+            
+            // Валидация названия
+            if (title && !validateTitleField()) {
+                return;
+            }
 
             if (maxHintsInput !== '') {
                 const parsed = parseInt(maxHintsInput);
@@ -298,7 +347,7 @@
             }
 
             if (!title) {
-                title = `Кроссворд ${selectedWordIds.length} слов`;
+                title = `Ручн${selectedWordIds.length}`;
             }
             title = `${title} (Ручной)`;
 

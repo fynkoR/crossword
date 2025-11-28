@@ -263,6 +263,12 @@ public class DictionaryService {
                     continue;
                 }
                 
+                // Проверяем длину слова (от 3 до 15 символов)
+                if (wordText.length() < 3 || wordText.length() > 15) {
+                    skipped++;
+                    continue;
+                }
+                
                 // Проверяем на дубликаты
                 if (wordRepository.existsByWordAndDictionaryId(wordText, dictionaryId)) {
                     if (skipDuplicates) {

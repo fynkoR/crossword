@@ -16,8 +16,8 @@ class CrosswordSelectionManager {
         const createNewBtn = document.getElementById('create-new-crossword-btn');
         if (createNewBtn) {
             createNewBtn.addEventListener('click', () => {
-                this.showCreationScreen();
-            });
+            this.showCreationScreen();
+        });
         }
 
         // Кнопка создания первого кроссворда (когда список пуст)

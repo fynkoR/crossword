@@ -4,6 +4,7 @@ import com.example.crossword.dto.dtoWord.WordCreateDto;
 import com.example.crossword.dto.dtoWord.WordDto;
 import com.example.crossword.dto.dtoWord.WordUpdateDto;
 import com.example.crossword.service.WordService;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -31,7 +32,7 @@ public class WordController {
      * POST /words
      */
     @PostMapping
-    public ResponseEntity<WordDto> createWord(@RequestBody WordCreateDto wordCreateDto) {
+    public ResponseEntity<WordDto> createWord(@Valid @RequestBody WordCreateDto wordCreateDto) {
         try {
             logger.info("POST /words - Создание слова: {}", wordCreateDto.getWord());
             WordDto createdWord = wordService.createWord(wordCreateDto);
@@ -101,7 +102,7 @@ public class WordController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<WordDto> updateWord(@PathVariable Long id,
-                                             @RequestBody WordUpdateDto wordUpdateDto) {
+                                             @Valid @RequestBody WordUpdateDto wordUpdateDto) {
         try {
             logger.info("PUT /words/{} - Обновление слова", id);
             WordDto updatedWord = wordService.updateWord(id, wordUpdateDto);

@@ -5,7 +5,7 @@ class DashboardManager {
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.init());
         } else {
-            this.init();
+        this.init();
         }
     }
 
@@ -14,8 +14,8 @@ class DashboardManager {
         const logoutBtn = document.getElementById('logout-btn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', () => {
-                authManager.logout();
-            });
+            authManager.logout();
+        });
         }
 
         // Карточки действий
@@ -31,7 +31,7 @@ class DashboardManager {
             dictionaryCard.addEventListener('click', () => {
                 this.showDictionaryScreen();
             });
-        }
+    }
 
         const createCrosswordCard = document.getElementById('create-crossword-card');
         if (createCrosswordCard) {

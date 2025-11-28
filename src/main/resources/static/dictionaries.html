@@ -110,15 +110,20 @@
         <div class="modal-content">
             <span class="close">&times;</span>
             <h2>Добавить слово</h2>
-            <form id="add-word-form">
+            <form id="add-word-form" novalidate>
                 <div class="form-group">
                     <label for="word-text">Слово:</label>
-                    <input type="text" id="word-text" class="form-control" required>
+                    <input type="text" id="word-text" class="form-control" 
+                           required minlength="3" maxlength="15"
+                           placeholder="3-15 символов">
+                    <div class="field-hint">От 3 до 15 символов</div>
+                    <div class="field-error" id="word-text-error"></div>
                 </div>
                 <div class="form-group">
                     <label for="word-definition">Определение:</label>
                     <textarea id="word-definition" class="form-control" rows="3" required></textarea>
                 </div>
+                <div id="add-word-error" class="error-message"></div>
                 <button type="submit" class="btn btn-primary">Добавить</button>
             </form>
         </div>
@@ -185,23 +190,75 @@
             });
         });
 
+        // Константы валидации
+        const VALIDATION = {
+            WORD_MIN: 3,
+            WORD_MAX: 15
+        };
+
+        // Функция валидации поля
+        function validateField(input, errorDiv, minLen, maxLen, fieldName) {
+            const value = input.value.trim();
+            
+            if (!value) {
+                errorDiv.textContent = `${fieldName} обязательно`;
+                input.classList.add('invalid');
+                return false;
+            }
+            
+            if (value.length < minLen) {
+                errorDiv.textContent = `${fieldName} должно содержать минимум ${minLen} символов`;
+                input.classList.add('invalid');
+                return false;
+            }
+            
+            if (value.length > maxLen) {
+                errorDiv.textContent = `${fieldName} должно содержать максимум ${maxLen} символов`;
+                input.classList.add('invalid');
+                return false;
+            }
+            
+            errorDiv.textContent = '';
+            input.classList.remove('invalid');
+            return true;
+        }
+
         // Добавление слова
         document.getElementById('add-word-btn').addEventListener('click', () => {
             document.getElementById('add-word-modal').classList.add('active');
+            document.getElementById('add-word-error').style.display = 'none';
+        });
+
+        const wordTextInput = document.getElementById('word-text');
+        const wordTextError = document.getElementById('word-text-error');
+        
+        // Валидация в реальном времени
+        wordTextInput.addEventListener('input', () => {
+            validateField(wordTextInput, wordTextError, VALIDATION.WORD_MIN, VALIDATION.WORD_MAX, 'Слово');
         });
 
         document.getElementById('add-word-form').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const errorDiv = document.getElementById('add-word-error');
+            errorDiv.style.display = 'none';
+            
             const word = document.getElementById('word-text').value.trim();
             const definition = document.getElementById('word-definition').value.trim();
+            
+            // Валидация перед отправкой
+            if (!validateField(wordTextInput, wordTextError, VALIDATION.WORD_MIN, VALIDATION.WORD_MAX, 'Слово')) {
+                return;
+            }
             
             try {
                 await ApiService.createWord(currentDictionaryId, word, definition);
                 document.getElementById('add-word-modal').classList.remove('active');
                 document.getElementById('add-word-form').reset();
+                wordTextError.textContent = '';
                 await loadWords(currentDictionaryId);
             } catch (error) {
-                alert('Ошибка добавления слова: ' + (error.message || 'Неизвестная ошибка'));
+                errorDiv.textContent = error.message || 'Неизвестная ошибка';
+                errorDiv.style.display = 'block';
             }
         });
 

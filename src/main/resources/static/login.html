@@ -15,18 +15,26 @@
         </div>
         
         <div class="auth-form">
-            <form id="loginForm">
+            <form id="loginForm" novalidate>
                 <div class="form-group">
                     <label for="login-username">Логин</label>
-                    <input type="text" id="login-username" class="form-control" required>
+                    <input type="text" id="login-username" class="form-control" 
+                           required minlength="4" maxlength="8"
+                           placeholder="4-8 символов">
+                    <div class="field-hint">От 4 до 8 символов</div>
+                    <div class="field-error" id="login-error"></div>
                 </div>
                 <div class="form-group">
                     <label for="login-password">Пароль</label>
-                    <input type="password" id="login-password" class="form-control" required>
+                    <input type="password" id="login-password" class="form-control" 
+                           required minlength="4" maxlength="12"
+                           placeholder="4-12 символов">
+                    <div class="field-hint">От 4 до 12 символов</div>
+                    <div class="field-error" id="password-error"></div>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Войти</button>
             </form>
-            <div id="login-error" class="error-message"></div>
+            <div id="form-error" class="error-message"></div>
             
             <div class="auth-switch">
                 <p>Нет аккаунта? <a href="register.html">Зарегистрироваться</a></p>
@@ -36,6 +44,14 @@
 
     <script src="js/api.js"></script>
     <script>
+        // Константы валидации
+        const VALIDATION = {
+            LOGIN_MIN: 4,
+            LOGIN_MAX: 8,
+            PASSWORD_MIN: 4,
+            PASSWORD_MAX: 12
+        };
+
         // Проверяем, авторизован ли пользователь
         const currentUser = localStorage.getItem('currentUser');
         if (currentUser) {
@@ -47,13 +63,63 @@
             }
         }
 
+        // Функция валидации поля
+        function validateField(input, errorDiv, minLen, maxLen, fieldName) {
+            const value = input.value.trim();
+            
+            if (!value) {
+                errorDiv.textContent = `${fieldName} обязателен`;
+                input.classList.add('invalid');
+                return false;
+            }
+            
+            if (value.length < minLen) {
+                errorDiv.textContent = `${fieldName} должен содержать минимум ${minLen} символов`;
+                input.classList.add('invalid');
+                return false;
+            }
+            
+            if (value.length > maxLen) {
+                errorDiv.textContent = `${fieldName} должен содержать максимум ${maxLen} символов`;
+                input.classList.add('invalid');
+                return false;
+            }
+            
+            errorDiv.textContent = '';
+            input.classList.remove('invalid');
+            return true;
+        }
+
+        // Поля формы
+        const loginInput = document.getElementById('login-username');
+        const passwordInput = document.getElementById('login-password');
+        const loginError = document.getElementById('login-error');
+        const passwordError = document.getElementById('password-error');
+        const formError = document.getElementById('form-error');
+
+        // Валидация в реальном времени
+        loginInput.addEventListener('input', () => {
+            validateField(loginInput, loginError, VALIDATION.LOGIN_MIN, VALIDATION.LOGIN_MAX, 'Логин');
+        });
+
+        passwordInput.addEventListener('input', () => {
+            validateField(passwordInput, passwordError, VALIDATION.PASSWORD_MIN, VALIDATION.PASSWORD_MAX, 'Пароль');
+        });
+
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const errorDiv = document.getElementById('login-error');
-            errorDiv.style.display = 'none';
+            formError.style.display = 'none';
             
-            const login = document.getElementById('login-username').value;
-            const password = document.getElementById('login-password').value;
+            // Валидация перед отправкой
+            const isLoginValid = validateField(loginInput, loginError, VALIDATION.LOGIN_MIN, VALIDATION.LOGIN_MAX, 'Логин');
+            const isPasswordValid = validateField(passwordInput, passwordError, VALIDATION.PASSWORD_MIN, VALIDATION.PASSWORD_MAX, 'Пароль');
+            
+            if (!isLoginValid || !isPasswordValid) {
+                return;
+            }
+            
+            const login = loginInput.value.trim();
+            const password = passwordInput.value;
 
             try {
                 const user = await ApiService.login(login, password);
@@ -66,11 +132,10 @@
                     window.location.href = 'user-dashboard.html';
                 }
             } catch (error) {
-                errorDiv.textContent = error.message || 'Ошибка входа';
-                errorDiv.style.display = 'block';
+                formError.textContent = error.message || 'Ошибка входа';
+                formError.style.display = 'block';
             }
         });
     </script>
 </body>
 </html>
-
