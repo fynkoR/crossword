@@ -264,7 +264,9 @@
 
         // Сортировка
         document.getElementById('sort-select').addEventListener('change', () => {
-            renderWords();
+            if (currentDictionaryId) {
+                loadWords(currentDictionaryId);
+            }
         });
 
         // Импорт
