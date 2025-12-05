@@ -336,6 +336,7 @@ public class CrosswordService {
         crossword.setDictionary(dictionary);
         crossword.setGrid_width(result.getGrid().getSize().getWidth());
         crossword.setGrid_height(result.getGrid().getSize().getHeight());
+        crossword.setCrossword_type("AUTO"); // Устанавливаем тип - автоматический
         
         // Устанавливаем пользователя, который создал кроссворд
         if (userId != null) {
@@ -403,6 +404,7 @@ public class CrosswordService {
         crossword.setDictionary(dictionary);
         crossword.setGrid_width(result.getGrid().getSize().getWidth());
         crossword.setGrid_height(result.getGrid().getSize().getHeight());
+        crossword.setCrossword_type("MANUAL"); // Устанавливаем тип - ручной
         
         // Устанавливаем пользователя, который создал кроссворд
         if (userId != null) {

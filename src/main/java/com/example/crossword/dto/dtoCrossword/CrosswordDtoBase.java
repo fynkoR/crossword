@@ -18,4 +18,5 @@ public abstract class CrosswordDtoBase {
     private Integer gridWidth;
     private Integer gridHeight;
     private Integer maxHints; // максимальное количество подсказок
+    private String crosswordType; // тип кроссворда: "AUTO" или "MANUAL"
 }

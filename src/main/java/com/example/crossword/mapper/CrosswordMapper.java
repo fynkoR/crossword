@@ -21,6 +21,7 @@ public interface CrosswordMapper {
     @Mapping(source = "grid_width", target = "gridWidth")
     @Mapping(source = "grid_height", target = "gridHeight")
     @Mapping(source = "max_hints", target = "maxHints")
+    @Mapping(source = "crossword_type", target = "crosswordType")
     @Mapping(source = "dictionary", target = "dictionary")
     @Mapping(source = "createdBy.id", target = "createdByUserId")
     @Mapping(source = "createdBy.login", target = "createdByUserLogin")
@@ -34,6 +35,7 @@ public interface CrosswordMapper {
     @Mapping(source = "grid_width", target = "gridWidth")
     @Mapping(source = "grid_height", target = "gridHeight")
     @Mapping(source = "max_hints", target = "maxHints")
+    @Mapping(source = "crossword_type", target = "crosswordType")
     @Mapping(source = "dictionary", target = "dictionary")
     @Mapping(target = "gridData", ignore = true)
     @Mapping(target = "wordsData", ignore = true)
@@ -53,6 +55,7 @@ public interface CrosswordMapper {
     @Mapping(source = "gridWidth", target = "grid_width")
     @Mapping(source = "gridHeight", target = "grid_height")
     @Mapping(source = "maxHints", target = "max_hints")
+    @Mapping(source = "crosswordType", target = "crossword_type")
     @Mapping(target = "grid_data", ignore = true)
     @Mapping(target = "words_data", ignore = true)
     Crossword toEntity(CrosswordCreateDto crosswordCreateDto);
@@ -67,6 +70,7 @@ public interface CrosswordMapper {
     @Mapping(source = "gridWidth", target = "grid_width")
     @Mapping(source = "gridHeight", target = "grid_height")
     @Mapping(source = "maxHints", target = "max_hints")
+    @Mapping(source = "crosswordType", target = "crossword_type")
     @Mapping(target = "grid_data", ignore = true)
     @Mapping(target = "words_data", ignore = true)
     void updateEntity(CrosswordUpdateDto crosswordUpdateDto, @MappingTarget Crossword crossword);

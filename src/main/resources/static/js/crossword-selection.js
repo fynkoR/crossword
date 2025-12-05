@@ -133,14 +133,12 @@ class CrosswordSelectionManager {
             dictionaryInfo.className = 'info-item';
             dictionaryInfo.innerHTML = `<strong>Словарь:</strong> ${crossword.dictionary?.title || 'N/A'}`;
             
-            // Определяем тип кроссворда из названия
-            const isManual = crossword.title && crossword.title.includes('(Ручной)');
-            const isAuto = crossword.title && crossword.title.includes('(Автоматический)');
+            // Определяем тип кроссворда по полю crosswordType
             const typeInfo = document.createElement('span');
             typeInfo.className = 'info-item';
-            if (isManual) {
+            if (crossword.crosswordType === 'MANUAL') {
                 typeInfo.innerHTML = '<strong>Тип:</strong> <span style="color: #3b82f6;">Ручной</span>';
-            } else if (isAuto) {
+            } else if (crossword.crosswordType === 'AUTO') {
                 typeInfo.innerHTML = '<strong>Тип:</strong> <span style="color: #10b981;">Автоматический</span>';
             } else {
                 typeInfo.innerHTML = '<strong>Тип:</strong> Не указан';
