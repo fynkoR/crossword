@@ -295,11 +295,11 @@ class ManualCrosswordManager {
             
             // Если название не указано, используем дефолтное
             if (!baseTitle) {
-                baseTitle = `Кроссворд (${this.selectedWords.length} слов)`;
+                baseTitle = `Ручн${this.selectedWords.length}`;
             }
             
-            // Добавляем режим создания в скобках
-            const title = `${baseTitle} (Ручной)`;
+            // Не добавляем суффикс "(Ручной)", так как лимит 12 символов
+            const title = baseTitle;
             
             // Получаем текущего пользователя
             const user = typeof authManager !== 'undefined' ? authManager.getCurrentUser() : null;

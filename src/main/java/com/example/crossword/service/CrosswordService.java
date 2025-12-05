@@ -316,6 +316,8 @@ public class CrosswordService {
         if (title == null || title.trim().isEmpty()) {
             throw new RuntimeException("Название кроссворда обязательно");
         }
+        // Применяем trim() к названию перед проверкой длины
+        title = title.trim();
         if (title.length() < 4 || title.length() > 12) {
             throw new RuntimeException("Название кроссворда должно содержать от 4 до 12 символов");
         }
@@ -370,6 +372,8 @@ public class CrosswordService {
         if (title == null || title.trim().isEmpty()) {
             throw new RuntimeException("Название кроссворда обязательно");
         }
+        // Применяем trim() к названию перед проверкой длины
+        title = title.trim();
         if (title.length() < 4 || title.length() > 12) {
             throw new RuntimeException("Название кроссворда должно содержать от 4 до 12 символов");
         }

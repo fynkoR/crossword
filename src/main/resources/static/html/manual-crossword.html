@@ -349,7 +349,7 @@
             if (!title) {
                 title = `Ручн${selectedWordIds.length}`;
             }
-            title = `${title} (Ручной)`;
+            // Не добавляем суффикс "(Ручной)", так как лимит 12 символов
 
             try {
                 await ApiService.createManualCrossword(

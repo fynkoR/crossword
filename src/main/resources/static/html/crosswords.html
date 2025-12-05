@@ -300,7 +300,7 @@
             if (!title) {
                 title = `Авто${selectedDictionaryId}`;
             }
-            title = `${title} (Автоматический)`;
+            // Не добавляем суффикс "(Автоматический)", так как лимит 12 символов
 
             try {
                 await ApiService.generateCrossword(selectedDictionaryId, wordCount, title, maxHints, currentUser.id);
