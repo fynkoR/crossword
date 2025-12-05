@@ -53,7 +53,7 @@ public class UserController {
      * POST /users/auth
      */
     @PostMapping("/auth")
-    public ResponseEntity<UserDto> auth(@Valid @RequestBody UserRegAuthDto userRegAuthDto) {
+    public ResponseEntity<?> auth(@Valid @RequestBody UserRegAuthDto userRegAuthDto) {
         try {
             logger.info("POST /users/auth - Авторизация пользователя: {}", userRegAuthDto.getLogin());
             UserDto authenticatedUser = userService.authUser(userRegAuthDto);
@@ -61,7 +61,10 @@ public class UserController {
             return ResponseEntity.ok(authenticatedUser);
         } catch (RuntimeException e) {
             logger.warn("Ошибка авторизации для пользователя {}: {}", userRegAuthDto.getLogin(), e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("message", "Неверный логин или пароль");
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
     }
 
